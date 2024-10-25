@@ -30,6 +30,11 @@
 @end
 
 @interface MainWindow : NSWindow
+{
+    @public 
+        NSCondition*     m_displaySignal;
+        CVDisplayLinkRef m_displayLink;
+}
 @end
 
 @implementation MainWindow
@@ -38,6 +43,20 @@
 - (bool)windowCanBecomeKey  { return true; }
 
 @end
+
+CVReturn DisplayCallback( CVDisplayLinkRef    displayLink, 
+                      const CVTimeStamp*  in, 
+                      const CVTimeStamp*  out, 
+                      unsigned long long  flagsIn, 
+                      unsigned long long* flagsOut, 
+                      void*               context)
+{
+    MainWindow* window = (MainWindow*)context;
+
+    [window->m_displaySignal signal];
+
+    return kCVReturnSuccess;
+}
 
 MainWindow* CreateMainWindow( bool* running )
 {
@@ -51,7 +70,13 @@ MainWindow* CreateMainWindow( bool* running )
 
     [window setTitle: @"codencandy"];
     [window setDelegate: delegate];
-    [window makeKeyAndOrderFront: NULL];                                                          
+    [window makeKeyAndOrderFront: NULL];            
+
+    window->m_displaySignal = [NSCondition new];          
+
+    CVDisplayLinkCreateWithActiveCGDisplays( &window->m_displayLink );
+    CVDisplayLinkSetOutputCallback( window->m_displayLink, DisplayCallback, (void*)window );
+    CVDisplayLinkStart( window->m_displayLink );                                    
 
     return window;                                                          
 }

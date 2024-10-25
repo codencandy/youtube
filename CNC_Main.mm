@@ -30,6 +30,9 @@ int main()
                 [app updateWindows];
             }
             while( event != NULL );
+
+            // wait for display refresh
+            [window->m_displaySignal wait];
         }
     }
 
