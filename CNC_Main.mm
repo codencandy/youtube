@@ -1,5 +1,6 @@
 #include <AppKit/AppKit.h>
 #include "CNC_Window.mm"
+#include "CNC_Renderer.mm"
 
 int main()
 {
@@ -11,7 +12,10 @@ int main()
     [app setActivationPolicy: NSApplicationActivationPolicyRegular];
     [app finishLaunching];
 
-    MainWindow* window = CreateMainWindow( &running );
+    MainWindow*   window   = CreateMainWindow( &running );
+    MainRenderer* renderer = CreateMainRenderer();
+
+    window.contentView = renderer->m_view;
 
     while( running )
     {
@@ -33,6 +37,9 @@ int main()
 
             // wait for display refresh
             [window->m_displaySignal wait];
+
+            // render a new frame using the GPU
+            Render( renderer );
         }
     }
 
