@@ -1,3 +1,4 @@
+#ifdef UNITY_BUILD
 #include <AppKit/AppKit.h>
 
 @interface MainWindowDelegate : NSObject< NSWindowDelegate >
@@ -9,6 +10,17 @@
 - (instancetype)initWithRunFlag:(bool*)running;
 
 @end
+
+@interface MainWindow : NSWindow
+{
+    @public 
+        NSCondition*     m_displaySignal;
+        CVDisplayLinkRef m_displayLink;
+}
+@end
+#else
+#include "CNC_Window.h"
+#endif
 
 @implementation MainWindowDelegate
 
@@ -27,14 +39,6 @@
     return true;
 }
 
-@end
-
-@interface MainWindow : NSWindow
-{
-    @public 
-        NSCondition*     m_displaySignal;
-        CVDisplayLinkRef m_displayLink;
-}
 @end
 
 @implementation MainWindow

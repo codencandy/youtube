@@ -1,3 +1,4 @@
+#ifdef UNITY_BUILD
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 
@@ -9,6 +10,9 @@
         MTKView*              m_view;
 }
 @end
+#else
+#include "CNC_Renderer.h"
+#endif
 
 @implementation MainRenderer
 
@@ -25,7 +29,7 @@
         red += 0.05f;
 
         MTLRenderPassDescriptor* renderDesc = [m_view currentRenderPassDescriptor];
-        renderDesc.colorAttachments[0].clearColor = MTLClearColorMake( abs(sin(red)), 0.0, 0.0, 1.0 );
+        renderDesc.colorAttachments[0].clearColor = MTLClearColorMake( fabs(sin(red)), 0.0, 0.0, 1.0 );
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
 
