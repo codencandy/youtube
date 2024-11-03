@@ -2,20 +2,14 @@
 
 FRAMEWORKS='-framework AppKit -framework CoreVideo -framework Metal -framework MetalKit'
 IGNORE='-Wno-nullability-completeness'
-FLAGS='-D UNITY_BUILD'
 TIMEFORMAT=%R
-BUILD_TYPE=$1
 
 main ()
 {
-    if [ "$BUILD_TYPE" == "STANDARD" ]
-    then
-    echo "standard build"
-    clang++ CNC_Main.mm CNC_Window.mm CNC_Renderer.mm -o window ${FRAMEWORKS} ${IGNORE}
-    else
     echo "unity build"
-    clang++ CNC_Main.mm -o window ${FRAMEWORKS} ${IGNORE} ${FLAGS}
-    fi
+    clang++ CNC_Main.mm -o window ${FRAMEWORKS} ${IGNORE}
+    LINES_OF_CODE=$(cloc . | grep -o -E '([0-9]+)' | tail -n 1)
+    echo "lines of code:" $LINES_OF_CODE
 }
 
 time main

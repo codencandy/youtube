@@ -1,12 +1,7 @@
 #include <AppKit/AppKit.h>
 
-#ifdef UNITY_BUILD
 #include "CNC_Window.mm"
 #include "CNC_Renderer.mm"
-#else
-#include "CNC_Window.h"
-#include "CNC_Renderer.h"
-#endif
 
 int main()
 {

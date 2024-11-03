@@ -1,4 +1,3 @@
-#ifdef UNITY_BUILD
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 
@@ -10,9 +9,6 @@
         MTKView*              m_view;
 }
 @end
-#else
-#include "CNC_Renderer.h"
-#endif
 
 @implementation MainRenderer
 

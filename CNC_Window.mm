@@ -1,4 +1,3 @@
-#ifdef UNITY_BUILD
 #include <AppKit/AppKit.h>
 
 @interface MainWindowDelegate : NSObject< NSWindowDelegate >
@@ -18,9 +17,6 @@
         CVDisplayLinkRef m_displayLink;
 }
 @end
-#else
-#include "CNC_Window.h"
-#endif
 
 @implementation MainWindowDelegate
 
