@@ -1,3 +1,4 @@
+#include "CNC_Types.h"
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 
@@ -7,7 +8,23 @@
         id< MTLDevice >       m_gpu;
         id< MTLCommandQueue > m_commandQueue;
         MTKView*              m_view;
+
+        id< MTLLibrary >      m_library;
+        VertexInput           m_rectangle[6];
+        UniformData           m_uniform;
+
+        id< MTLBuffer >       m_rectangleBuffer;
+        id< MTLBuffer >       m_uniformBuffer;
+
+        id< MTLRenderPipelineState > m_renderState;
 }
+
+- (bool)checkError:(NSError*)error;
+- (void)createShader;
+- (void)createGeometry;
+- (void)createUniform;
+- (void)createPipeline;
+
 @end
 
 @implementation MainRenderer
@@ -21,18 +38,121 @@
 {
     @autoreleasepool
     {
-        static float red = 0.0f;
-        red += 0.05f;
-
         MTLRenderPassDescriptor* renderDesc = [m_view currentRenderPassDescriptor];
-        renderDesc.colorAttachments[0].clearColor = MTLClearColorMake( fabs(sin(red)), 0.0, 0.0, 1.0 );
+        
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
+
+        [commandEncoder setRenderPipelineState: m_renderState];
+        [commandEncoder setVertexBuffer: m_rectangleBuffer offset: 0 atIndex: 0];
+        [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
+        [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6];
 
         [commandEncoder endEncoding];
         [commandBuffer presentDrawable: [m_view currentDrawable]];
         [commandBuffer commit];
     }
+}
+
+- (bool)checkError:(NSError*)error
+{
+    if( error != NULL )
+    {
+        NSLog( @"%@", [error localizedDescription] );
+        return false;
+    }
+    else
+    {
+        NSLog( @"no error" );
+        return true;
+    }
+}
+
+- (void)createShader
+{
+    NSError*  error        = NULL;
+    NSString* shaderSource = [NSString stringWithContentsOfFile: @"CNC_Shader.metal" 
+                                                       encoding: NSUTF8StringEncoding
+                                                          error: &error];
+    [self checkError: error];
+
+    MTLCompileOptions* options = [MTLCompileOptions new];
+    m_library = [m_gpu newLibraryWithSource: shaderSource
+                                    options: options
+                                      error: &error];
+
+    [self checkError: error];                                      
+}
+
+- (void)createGeometry
+{
+    /*
+        D --- C
+        |     |
+        A --- B
+     */
+
+    v3 A = {   0.0f, 500.0f, 0.0f };
+    v3 B = { 500.0f, 500.0f, 0.0f };
+    v3 C = { 500.0f,   0.0f, 0.0f };
+    v3 D = {   0.0f,   0.0f, 0.0f };
+
+    m_rectangle[0].m_position = A;
+    m_rectangle[1].m_position = B;
+    m_rectangle[2].m_position = C;
+
+    m_rectangle[3].m_position = C;
+    m_rectangle[4].m_position = D;
+    m_rectangle[5].m_position = A;
+
+    m_rectangleBuffer = [m_gpu newBufferWithBytes: &m_rectangle
+                                           length: sizeof( VertexInput ) * 6
+                                          options: MTLResourceCPUCacheModeDefaultCache];
+}
+
+- (void)createUniform
+{
+    f32 a =  2.0f/500.0f;
+    f32 b = -2.0f/500.0f;
+    f32 e = -1.0f;
+    f32 f =  1.0f;
+
+    v4 row1 = {    a, 0.0, 0.0,   e };
+    v4 row2 = { 0.0f,   b, 0.0,   f };
+    v4 row3 = { 0.0f, 0.0, 1.0, 0.0 };
+    v4 row4 = { 0.0f, 0.0, 0.0, 1.0 };
+
+    m_uniform.m_projection2D = simd_matrix_from_rows( row1, row2, row3, row4 );
+    m_uniformBuffer = [m_gpu newBufferWithBytes: &m_uniform
+                                         length: sizeof( UniformData)
+                                        options: MTLResourceCPUCacheModeDefaultCache];
+}
+
+- (void)createPipeline
+{
+    MTLRenderPipelineDescriptor* renderDesc = [MTLRenderPipelineDescriptor new];
+    MTLVertexDescriptor*         vertexDesc = [MTLVertexDescriptor new];
+
+    vertexDesc.attributes[0].format = MTLVertexFormatFloat3;
+    vertexDesc.attributes[1].format = MTLVertexFormatFloat2;
+
+    vertexDesc.attributes[0].bufferIndex = 0;
+    vertexDesc.attributes[1].bufferIndex = 0;
+
+    vertexDesc.attributes[0].offset = offsetof( VertexInput, m_position );
+    vertexDesc.attributes[1].offset = offsetof( VertexInput, m_uv );
+
+    vertexDesc.layouts[0].stride       = sizeof( VertexInput );
+    vertexDesc.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+
+    renderDesc.vertexDescriptor                = vertexDesc;
+    renderDesc.vertexFunction                  = [m_library newFunctionWithName: @"MainVertexShader"];
+    renderDesc.fragmentFunction                = [m_library newFunctionWithName: @"MainFragmentShader"];
+    renderDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+
+    NSError* error = NULL;
+    m_renderState  = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    [self checkError: error];
 }
 
 @end
@@ -55,6 +175,11 @@ MainRenderer* CreateMainRenderer()
     renderer->m_view.paused       = true;
     renderer->m_view.needsDisplay = false;
     renderer->m_view.delegate     = renderer;
+
+    [renderer createShader];
+    [renderer createGeometry];
+    [renderer createUniform];
+    [renderer createPipeline];
     
     return renderer;
 }
