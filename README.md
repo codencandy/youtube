@@ -33,4 +33,8 @@ Just search for the tags to find the correct version of the project.
 - Git tag: **unity-vs-standard-build**
 - YouTube: [Speed up your build time with unity builds](https://youtu.be/49kQwhnBlHs)
 
+### Metal shader pipeline
+
+- Git tag: **metal-shader-pipeline**
+- YouTube: [Build your own Metal shader pipeline](https://www.youtube.com/watch?v=9iE76DMMlvI)
 
