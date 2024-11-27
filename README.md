@@ -1,3 +1,5 @@
+## codencandy computer graphics series
+
 This repository contains the code shown in my graphics programming videos for MacOS and Windows on my YouTube channel [codencandy](https://www.youtube.com/@codencandy)
 
 ## How to build
@@ -5,11 +7,18 @@ This repository contains the code shown in my graphics programming videos for Ma
 In order to build the project just execute 
 ```sh build.sh``` in the terminal.
 
-## Dependencies
+## Dependencies (MacOS)
 
 - XCode commandline tools
 ```xcode-select --install```
 - [cloc](https://formulae.brew.sh/formula/cloc)
+- [Sean T. Berret header only libraries](https://github.com/nothings/stb)
+
+## External links or documents
+
+- [Edwin Catmull 1974 Thesis: A subdivision  for computer display of curved surfaces](https://ohiostate.pressbooks.pub/app/uploads/sites/45/2017/09/catmull_thesis.pdf)
+
+## YouTube videos
 
 Just search for the tags to find the correct version of the project.
 
