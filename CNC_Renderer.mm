@@ -1,6 +1,7 @@
 #include "CNC_Types.h"
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
+#include "CNC_PlatformServices.h"
 
 @interface MainRenderer : NSObject< MTKViewDelegate >
 {
@@ -17,6 +18,8 @@
         id< MTLBuffer >       m_uniformBuffer;
 
         id< MTLRenderPipelineState > m_renderState;
+
+        id< MTLTexture >      m_clockBgr;
 }
 
 - (bool)checkError:(NSError*)error;
@@ -24,6 +27,7 @@
 - (void)createGeometry;
 - (void)createUniform;
 - (void)createPipeline;
+- (void)loadBackground;
 
 @end
 
@@ -46,6 +50,7 @@
         [commandEncoder setRenderPipelineState: m_renderState];
         [commandEncoder setVertexBuffer: m_rectangleBuffer offset: 0 atIndex: 0];
         [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
+        [commandEncoder setFragmentTexture: m_clockBgr atIndex: 0];
         [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6];
 
         [commandEncoder endEncoding];
@@ -92,18 +97,18 @@
         A --- B
      */
 
-    v3 A = {   0.0f, 500.0f, 0.0f };
-    v3 B = { 500.0f, 500.0f, 0.0f };
-    v3 C = { 500.0f,   0.0f, 0.0f };
+    v3 A = {   0.0f, 600.0f, 0.0f };
+    v3 B = { 600.0f, 600.0f, 0.0f };
+    v3 C = { 600.0f,   0.0f, 0.0f };
     v3 D = {   0.0f,   0.0f, 0.0f };
 
-    m_rectangle[0].m_position = A;
-    m_rectangle[1].m_position = B;
-    m_rectangle[2].m_position = C;
+    m_rectangle[0].m_position = A; m_rectangle[0].m_uv = vec2( 0.0f, 1.0f );
+    m_rectangle[1].m_position = B; m_rectangle[1].m_uv = vec2( 1.0f, 1.0f );
+    m_rectangle[2].m_position = C; m_rectangle[2].m_uv = vec2( 1.0f, 0.0f );
 
-    m_rectangle[3].m_position = C;
-    m_rectangle[4].m_position = D;
-    m_rectangle[5].m_position = A;
+    m_rectangle[3].m_position = C; m_rectangle[3].m_uv = vec2( 1.0f, 0.0f );
+    m_rectangle[4].m_position = D; m_rectangle[4].m_uv = vec2( 0.0f, 0.0f );
+    m_rectangle[5].m_position = A; m_rectangle[5].m_uv = vec2( 0.0f, 1.0f );
 
     m_rectangleBuffer = [m_gpu newBufferWithBytes: &m_rectangle
                                            length: sizeof( VertexInput ) * 6
@@ -112,8 +117,8 @@
 
 - (void)createUniform
 {
-    f32 a =  2.0f/500.0f;
-    f32 b = -2.0f/500.0f;
+    f32 a =  2.0f/600.0f;
+    f32 b = -2.0f/600.0f;
     f32 e = -1.0f;
     f32 f =  1.0f;
 
@@ -155,6 +160,21 @@
     [self checkError: error];
 }
 
+- (void)loadBackground
+{
+    Image* bgr = PlatformLoadImage( "res/clock_bgr.png" );
+
+    MTLTextureDescriptor* textureDesc = [MTLTextureDescriptor new];
+    textureDesc.width       = bgr->m_width;
+    textureDesc.height      = bgr->m_height;
+    textureDesc.pixelFormat = MTLPixelFormatBGRA8Unorm;
+
+    m_clockBgr = [m_gpu newTextureWithDescriptor: textureDesc];
+
+    MTLRegion region = MTLRegionMake2D( 0, 0, bgr->m_width, bgr->m_height );
+    [m_clockBgr replaceRegion: region mipmapLevel: 0 withBytes: bgr->m_data bytesPerRow: bgr->m_width * 4];
+}
+
 @end
 
 void Render( MainRenderer* renderer )
@@ -166,7 +186,7 @@ MainRenderer* CreateMainRenderer()
 {
     MainRenderer* renderer = [MainRenderer new];
 
-    CGRect renderFrame = CGRectMake( 0, 0, 500, 500 );
+    CGRect renderFrame = CGRectMake( 0, 0, 600, 600 );
 
     renderer->m_gpu = MTLCreateSystemDefaultDevice();
     renderer->m_commandQueue = [renderer->m_gpu newCommandQueue];
@@ -180,6 +200,7 @@ MainRenderer* CreateMainRenderer()
     [renderer createGeometry];
     [renderer createUniform];
     [renderer createPipeline];
+    [renderer loadBackground];
     
     return renderer;
 }

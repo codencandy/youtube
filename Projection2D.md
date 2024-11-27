@@ -3,7 +3,7 @@
 What problem do we want to solve?
 Our geometry or images are in a different coordinate system than the one the GPU uses. We have an application/world coordinate system and the GPU uses normalized device coordinates.
 
-In our case (which we can chose as we like) the upper left corner in application space is 0,0 and the lower left is e.g. 500, 500.
+In our case (which we can chose as we like) the upper left corner in application space is 0,0 and the lower left is e.g. 600, 600.
 In NDC space (on Apple platforms) the origin (0,0) is in the center of the screen with the dimension 1.0 in each direction. So the upper left corner is now -1.0, 1.0.
 
          0  X---------* world
@@ -42,34 +42,34 @@ That leaves us with two functions
 For the first we already know the outcome for 2 cases
 
     f(0)   = -1.0
-    f(500) =  1.0
+    f(600) =  1.0
 
 With this we can derive a and e like this
 
     f(0)  = 0*a + e           [now replace f(0) with -1.0]
     -1.0  = e
 
-    f(500) = 500*a + (-1.0)   [now replace f(500) with 1.0]
-    1.0    = 500*a - 1.0
-    2.0    = 500*a
-    a      = 2.0/500
+    f(600) = 600*a + (-1.0)   [now replace f(600) with 1.0]
+    1.0    = 600*a - 1.0
+    2.0    = 600*a
+    a      = 2.0/600
 
 For the second we also know two cases
 
     f(0)   =  1.0
-    f(500) = -1.0
+    f(600) = -1.0
 
 Same as before with f(y) = y*b + f
 
     f(0)   = 0*b + f          [replace f(0) with 1.0]
     1.0    = f
 
-    f(500) = 500*b + 1.0      [replace f(500) with -1.0]
-    -1.0   = 500*b + 1.0
-    -2.0   = 500*b
-    b      = -2.0/500
+    f(600) = 600*b + 1.0      [replace f(600) with -1.0]
+    -1.0   = 600*b + 1.0
+    -2.0   = 600*b
+    b      = -2.0/600
 
-So now we have all 4 parameters and can construct the projection matrix where 500 in x is now the maximum width (w) and 500 in y is the maximum height (h) 
+So now we have all 4 parameters and can construct the projection matrix where 600 in x is now the maximum width (w) and 600 in y is the maximum height (h) 
 
     a =  2.0/w
     b = -2.0/h

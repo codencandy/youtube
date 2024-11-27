@@ -3,14 +3,26 @@
 
 #include <simd/simd.h>
 
-typedef float  f32;
-typedef double f64;
+typedef float         f32;
+typedef double        f64;
+typedef unsigned int  u32;
+typedef signed int    s32;
 
 typedef simd::float2   v2;
 typedef simd::float3   v3;
 typedef simd::float4   v4;
 typedef simd::float3x3 m3;
 typedef simd::float4x4 m4;
+
+v2 vec2( f32 x, f32 y )
+{
+    v2 result;
+
+    result.x = x;
+    result.y = y;
+
+    return result;
+}
 
 typedef struct VertexInput
 {
@@ -24,5 +36,14 @@ typedef struct UniformData
     m4 m_projection2D;
 
 } UniformData;
+
+typedef struct Image
+{
+    void* m_data;
+    s32   m_width;
+    s32   m_height;
+    s32   m_channels;
+
+} Image;
 
 #endif//CNC_TYPES_H
