@@ -14,20 +14,30 @@
         VertexInput           m_rectangle[6];
         UniformData           m_uniform;
 
-        id< MTLBuffer >       m_rectangleBuffer;
-        id< MTLBuffer >       m_uniformBuffer;
-
+        id< MTLBuffer >              m_uniformBuffer;
         id< MTLRenderPipelineState > m_renderState;
 
-        id< MTLTexture >      m_clockBgr;
+        u32                   m_nextTextureId;
+        NSMutableArray*       m_textures;
+        NSMutableArray*       m_vertexBuffers;
+        NSMutableArray*       m_modelBuffers;
+
+        u32                   m_numIds;
+        u32                   m_textureIds[10];
 }
 
 - (bool)checkError:(NSError*)error;
 - (void)createShader;
-- (void)createGeometry;
+- (id<MTLBuffer>)createGeometry:(u32)width height:(u32)height;
 - (void)createUniform;
 - (void)createPipeline;
-- (void)loadBackground;
+
+/* 
+    PLATFORMSERVICES
+*/
+- (u32)uploadImage:(Image*) image;
+- (void)renderImage:(u32) textureId;
+- (void)updateImage:(Image*) image;
 
 @end
 
@@ -48,15 +58,23 @@
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
 
         [commandEncoder setRenderPipelineState: m_renderState];
-        [commandEncoder setVertexBuffer: m_rectangleBuffer offset: 0 atIndex: 0];
-        [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
-        [commandEncoder setFragmentTexture: m_clockBgr atIndex: 0];
-        [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6];
+
+        for( u32 i=0; i<m_numIds; ++i )
+        {
+            u32 textureId = m_textureIds[i];
+            [commandEncoder setVertexBuffer:    [m_vertexBuffers objectAtIndex: textureId] offset: 0 atIndex: 0];
+            [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
+            [commandEncoder setVertexBuffer:    [m_modelBuffers objectAtIndex: textureId] offset: 0 atIndex: 2];
+            [commandEncoder setFragmentTexture: [m_textures     objectAtIndex: textureId] atIndex: 0];
+            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6];
+        }
 
         [commandEncoder endEncoding];
         [commandBuffer presentDrawable: [m_view currentDrawable]];
         [commandBuffer commit];
     }
+
+    m_numIds = 0;
 }
 
 - (bool)checkError:(NSError*)error
@@ -89,30 +107,35 @@
     [self checkError: error];                                      
 }
 
-- (void)createGeometry
+- (id<MTLBuffer>)createGeometry:(u32)width height:(u32)height
 {
+    id< MTLBuffer > vertexBuffer;
     /*
         D --- C
         |     |
         A --- B
      */
 
-    v3 A = {   0.0f, 600.0f, 0.0f };
-    v3 B = { 600.0f, 600.0f, 0.0f };
-    v3 C = { 600.0f,   0.0f, 0.0f };
+    v3 A = {   0.0f, height, 0.0f };
+    v3 B = {  width, height, 0.0f };
+    v3 C = {  width,   0.0f, 0.0f };
     v3 D = {   0.0f,   0.0f, 0.0f };
 
-    m_rectangle[0].m_position = A; m_rectangle[0].m_uv = vec2( 0.0f, 1.0f );
-    m_rectangle[1].m_position = B; m_rectangle[1].m_uv = vec2( 1.0f, 1.0f );
-    m_rectangle[2].m_position = C; m_rectangle[2].m_uv = vec2( 1.0f, 0.0f );
+    VertexInput rectangle[6];
 
-    m_rectangle[3].m_position = C; m_rectangle[3].m_uv = vec2( 1.0f, 0.0f );
-    m_rectangle[4].m_position = D; m_rectangle[4].m_uv = vec2( 0.0f, 0.0f );
-    m_rectangle[5].m_position = A; m_rectangle[5].m_uv = vec2( 0.0f, 1.0f );
+    rectangle[0].m_position = A; rectangle[0].m_uv = vec2( 0.0f, 1.0f );
+    rectangle[1].m_position = B; rectangle[1].m_uv = vec2( 1.0f, 1.0f );
+    rectangle[2].m_position = C; rectangle[2].m_uv = vec2( 1.0f, 0.0f );
 
-    m_rectangleBuffer = [m_gpu newBufferWithBytes: &m_rectangle
-                                           length: sizeof( VertexInput ) * 6
-                                          options: MTLResourceCPUCacheModeDefaultCache];
+    rectangle[3].m_position = C; rectangle[3].m_uv = vec2( 1.0f, 0.0f );
+    rectangle[4].m_position = D; rectangle[4].m_uv = vec2( 0.0f, 0.0f );
+    rectangle[5].m_position = A; rectangle[5].m_uv = vec2( 0.0f, 1.0f );
+
+    vertexBuffer = [m_gpu newBufferWithBytes: &rectangle
+                                      length: sizeof( VertexInput ) * 6
+                                    options: MTLResourceCPUCacheModeDefaultCache];
+
+    return vertexBuffer;
 }
 
 - (void)createUniform
@@ -155,24 +178,63 @@
     renderDesc.fragmentFunction                = [m_library newFunctionWithName: @"MainFragmentShader"];
     renderDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
 
+    renderDesc.colorAttachments[0].blendingEnabled = true;
+    renderDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+    renderDesc.colorAttachments[0].rgbBlendOperation   = MTLBlendOperationAdd;
+
+    renderDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+    renderDesc.colorAttachments[0].sourceRGBBlendFactor   = MTLBlendFactorSourceAlpha;
+
+    renderDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+    renderDesc.colorAttachments[0].destinationRGBBlendFactor   = MTLBlendFactorOneMinusSourceAlpha;
+
     NSError* error = NULL;
     m_renderState  = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
     [self checkError: error];
 }
 
-- (void)loadBackground
+- (u32)uploadImage:(Image*) image
 {
-    Image* bgr = PlatformLoadImage( "res/clock_bgr.png" );
-
     MTLTextureDescriptor* textureDesc = [MTLTextureDescriptor new];
-    textureDesc.width       = bgr->m_width;
-    textureDesc.height      = bgr->m_height;
-    textureDesc.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    textureDesc.width       = image->m_width;
+    textureDesc.height      = image->m_height;
+    textureDesc.pixelFormat = MTLPixelFormatRGBA8Unorm;
 
-    m_clockBgr = [m_gpu newTextureWithDescriptor: textureDesc];
+    ModelData modelData = {0};
+    modelData.m_modelMatrix = image->m_modelMatrix;
+    modelData.m_pivotMatrix = image->m_pivotMatrix;
+    modelData.m_rotation    = image->m_rotation;
 
-    MTLRegion region = MTLRegionMake2D( 0, 0, bgr->m_width, bgr->m_height );
-    [m_clockBgr replaceRegion: region mipmapLevel: 0 withBytes: bgr->m_data bytesPerRow: bgr->m_width * 4];
+    id< MTLBuffer >  vertexBuffer = [self createGeometry: image->m_width height: image->m_height];
+    id< MTLTexture > texture      = [m_gpu newTextureWithDescriptor: textureDesc];
+    id< MTLBuffer >  modelBuffer  = [m_gpu newBufferWithBytes: &modelData length: sizeof( ModelData ) options: MTLResourceCPUCacheModeDefaultCache];
+
+    MTLRegion region = MTLRegionMake2D( 0, 0, image->m_width, image->m_height );
+    [texture replaceRegion: region mipmapLevel: 0 withBytes: image->m_data bytesPerRow: image->m_width * 4];
+
+    u32 textureId = m_nextTextureId;
+    [m_textures      insertObject: texture      atIndex: textureId];
+    [m_vertexBuffers insertObject: vertexBuffer atIndex: textureId];
+    [m_modelBuffers  insertObject: modelBuffer  atIndex: textureId];
+    m_nextTextureId++;
+
+    return textureId;
+}
+
+- (void)renderImage:(u32) textureId
+{
+    m_textureIds[m_numIds] = textureId;
+    m_numIds++;
+}
+
+- (void)updateImage:(Image*) image
+{
+    ModelData modelData = {0};
+    modelData.m_modelMatrix = image->m_modelMatrix;
+    modelData.m_pivotMatrix = image->m_pivotMatrix;
+    modelData.m_rotation    = image->m_rotation;
+
+    memcpy( [[m_modelBuffers objectAtIndex: image->m_textureId] contents], &modelData, sizeof( ModelData ) );
 }
 
 @end
@@ -180,6 +242,31 @@
 void Render( MainRenderer* renderer )
 {
     [renderer->m_view draw];
+}
+
+/*
+    PLATFORMSERVICES
+ */
+u32 PlatformUploadImage( void* renderer, Image* image )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+
+    u32 textureId = [r uploadImage: image];
+
+    return textureId;
+}
+
+void PlatformRenderImage( void* renderer, u32 textureId )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+
+    [r renderImage: textureId];
+}
+
+void PlatformUpdateImage( void* renderer, Image* image )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r updateImage: image];
 }
 
 MainRenderer* CreateMainRenderer()
@@ -197,10 +284,14 @@ MainRenderer* CreateMainRenderer()
     renderer->m_view.delegate     = renderer;
 
     [renderer createShader];
-    [renderer createGeometry];
     [renderer createUniform];
     [renderer createPipeline];
-    [renderer loadBackground];
+    
+    renderer->m_nextTextureId = 0;
+    renderer->m_textures      = [[NSMutableArray alloc] initWithCapacity: 10];
+    renderer->m_vertexBuffers = [[NSMutableArray alloc] initWithCapacity: 10];
+    renderer->m_modelBuffers  = [[NSMutableArray alloc] initWithCapacity: 10];
+    renderer->m_numIds        = 0;
     
     return renderer;
 }

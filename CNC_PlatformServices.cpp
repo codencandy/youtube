@@ -12,3 +12,22 @@ Image* PlatformLoadImage( const char* imagePath )
 
     return image;
 }
+
+/*
+
+ ----------------------------
+ implemented in the renderer
+ ----------------------------
+ u32 PlatformUploadImage( void* renderer, Image* image )
+ {
+ }
+
+ void PlatformRenderImage( void* renderer, DrawCall call )
+ {
+ }
+
+ void PlatformUpdateImage( void* renderer, Image* image )
+ {
+ }
+
+*/
