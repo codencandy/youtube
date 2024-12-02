@@ -43,6 +43,7 @@ typedef struct Image
     s32   m_width;
     s32   m_height;
     s32   m_channels;
+    u32   m_textureId;
 
 } Image;
 

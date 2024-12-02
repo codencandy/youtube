@@ -12,3 +12,10 @@ Image* PlatformLoadImage( const char* imagePath )
 
     return image;
 }
+
+/* implemented in the Renderer 
+
+    u32  PlatformUploadImage( void* renderer, Image* image );
+    void PlatformRenderImage( void* renderer, u32 textureId );
+
+ */
