@@ -52,3 +52,8 @@ Just search for the tags to find the correct version of the project.
 - Git tag: **metal-texture-mapping**
 - YouTube: [Load images and render them via Metal texture mapping](https://www.youtube.com/watch?v=dxJziwIALBk)
 
+### Analaog Clock Part 1
+
+- Git Tag: **analog-clock-part1**
+- YouTube: [Build an Anlalog Clock in C on MacOS](https://www.youtube.com/watch?v=dS3natV-HzQ)
+
