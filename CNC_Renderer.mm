@@ -19,6 +19,7 @@
         u32                   m_nextTextureId;
         NSMutableArray*       m_textures;
         NSMutableArray*       m_vertexBuffers;
+        NSMutableArray*       m_modelBuffers;
 
         u32                   m_numRenderIds;
         u32                   m_renderIds[10];
@@ -32,6 +33,7 @@
 
 - (u32)uploadImage:(Image*)image;
 - (void)renderImage:(u32)textureId;
+- (void)updateImage:(Image*)image;
 
 @end
 
@@ -58,8 +60,10 @@
         {
             id< MTLBuffer >  vertexBuffer = m_vertexBuffers[m_renderIds[i]];
             id< MTLTexture > texture      = m_textures[m_renderIds[i]];
+            id< MTLBuffer >  modelBuffer  = m_modelBuffers[m_renderIds[i]];
 
             [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
+            [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
             [commandEncoder setFragmentTexture: texture atIndex: 0];
             [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6];
         }
@@ -198,11 +202,13 @@
 
     id< MTLTexture > texture      = [m_gpu newTextureWithDescriptor: textureDesc];
     id< MTLBuffer >  vertexBuffer = [self createGeometry: image->m_width height: image->m_height];
+    id< MTLBuffer >  modelBuffer  = [m_gpu newBufferWithBytes: &image->m_modelData length: sizeof( ModelData ) options: MTLResourceCPUCacheModeDefaultCache];
 
     MTLRegion region = MTLRegionMake2D( 0, 0, image->m_width, image->m_height );
     [texture replaceRegion: region mipmapLevel: 0 withBytes: image->m_data bytesPerRow: image->m_width * 4];
     [m_textures      insertObject: texture      atIndex: textureId];
     [m_vertexBuffers insertObject: vertexBuffer atIndex: textureId];
+    [m_modelBuffers  insertObject: modelBuffer  atIndex: textureId];
 
     m_nextTextureId++;
 
@@ -213,6 +219,12 @@
 {
     m_renderIds[m_numRenderIds] = textureId;
     m_numRenderIds++;
+}
+
+- (void)updateImage:(Image*)image
+{
+    id< MTLBuffer > modelBuffer = m_modelBuffers[image->m_textureId];
+    memcpy( [modelBuffer contents], &image->m_modelData, sizeof( ModelData ) );
 }
 
 @end
@@ -234,6 +246,12 @@ void PlatformRenderImage( void* renderer, u32 textureId )
     [r renderImage: textureId];
 }
 
+void PlatformUpdateImage( void* renderer, Image* image )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r updateImage: image];
+}
+
 MainRenderer* CreateMainRenderer()
 {
     MainRenderer* renderer = [MainRenderer new];
@@ -252,6 +270,7 @@ MainRenderer* CreateMainRenderer()
     renderer->m_numRenderIds      = 0;
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];
+    renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
 
     [renderer createShader];
     [renderer createUniform];

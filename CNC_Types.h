@@ -37,13 +37,22 @@ typedef struct UniformData
 
 } UniformData;
 
+typedef struct ModelData
+{
+    m4  m_modelMatrix;
+    m4  m_pivotMatrix;
+    f32 m_rotation;
+
+} ModelData;
+
 typedef struct Image
 {
-    void* m_data;
-    s32   m_width;
-    s32   m_height;
-    s32   m_channels;
-    u32   m_textureId;
+    void*     m_data;
+    s32       m_width;
+    s32       m_height;
+    s32       m_channels;
+    u32       m_textureId;
+    ModelData m_modelData;
 
 } Image;
 
