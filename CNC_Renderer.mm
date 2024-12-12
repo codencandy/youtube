@@ -21,8 +21,8 @@
         NSMutableArray*       m_vertexBuffers;
         NSMutableArray*       m_modelBuffers;
 
-        u32                   m_numRenderIds;
-        u32                   m_renderIds[10];
+        u32                   m_numDrawCalls;
+        DrawCall              m_drawCalls[10];
 }
 
 - (bool)checkError:(NSError*)error;
@@ -32,7 +32,7 @@
 - (void)createPipeline;
 
 - (u32)uploadImage:(Image*)image;
-- (void)renderImage:(u32)textureId;
+- (void)renderImage:(u32)textureId instances:(u32)numInstances;
 - (void)updateImage:(Image*)image;
 
 @end
@@ -56,16 +56,17 @@
         [commandEncoder setRenderPipelineState: m_renderState];
         [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
 
-        for( u32 i=0; i<m_numRenderIds; ++i )
+        for( u32 i=0; i<m_numDrawCalls; ++i )
         {
-            id< MTLBuffer >  vertexBuffer = m_vertexBuffers[m_renderIds[i]];
-            id< MTLTexture > texture      = m_textures[m_renderIds[i]];
-            id< MTLBuffer >  modelBuffer  = m_modelBuffers[m_renderIds[i]];
+            DrawCall call = m_drawCalls[i];
+            id< MTLBuffer >  vertexBuffer = m_vertexBuffers[call.m_textureId];
+            id< MTLTexture > texture      = m_textures[call.m_textureId];
+            id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
 
             [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
             [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
             [commandEncoder setFragmentTexture: texture atIndex: 0];
-            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6];
+            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
         }
 
         [commandEncoder endEncoding];
@@ -74,7 +75,7 @@
     }
 
     // reset this after every frame !!!
-    m_numRenderIds = 0;
+    m_numDrawCalls = 0;
 }
 
 - (bool)checkError:(NSError*)error
@@ -215,10 +216,12 @@
     return textureId;
 }
 
-- (void)renderImage:(u32)textureId
+- (void)renderImage:(u32)textureId instances:(u32)numInstances
 {
-    m_renderIds[m_numRenderIds] = textureId;
-    m_numRenderIds++;
+    m_drawCalls[m_numDrawCalls].m_textureId    = textureId;
+    m_drawCalls[m_numDrawCalls].m_numInstances = numInstances;
+    
+    m_numDrawCalls++;
 }
 
 - (void)updateImage:(Image*)image
@@ -240,10 +243,10 @@ u32 PlatformUploadImage( void* renderer, Image* image )
     return [r uploadImage: image];
 }
 
-void PlatformRenderImage( void* renderer, u32 textureId )
+void PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r renderImage: textureId];
+    [r renderImage: textureId instances: numInstances];
 }
 
 void PlatformUpdateImage( void* renderer, Image* image )
@@ -267,7 +270,7 @@ MainRenderer* CreateMainRenderer()
     renderer->m_view.delegate     = renderer;
 
     renderer->m_nextTextureId     = 0;
-    renderer->m_numRenderIds      = 0;
+    renderer->m_numDrawCalls      = 0;
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];

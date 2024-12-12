@@ -27,13 +27,14 @@ struct ModelData
 
 constexpr sampler textureSampler( mag_filter::linear, min_filter::linear );
 
-vertex VertexOutput MainVertexShader( VertexInput           in      [[stage_in]],
-                                      constant UniformData& uniform [[buffer(1)]],
-                                      constant ModelData&   model   [[buffer(2)]] )
+vertex VertexOutput MainVertexShader( VertexInput           in         [[stage_in]],
+                                      constant UniformData& uniform    [[buffer(1)]],
+                                      constant ModelData&   model      [[buffer(2)]],
+                                      uint                  instanceId [[instance_id]] )
 {
     VertexOutput out;
 
-    float angle = model.m_rotation;
+    float angle = model.m_rotation * (instanceId + 1);
 
     float2x2 rotationMatrix = {
         { cos( angle ), -sin( angle )},

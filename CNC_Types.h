@@ -45,6 +45,13 @@ typedef struct ModelData
 
 } ModelData;
 
+typedef struct DrawCall
+{
+    u32 m_textureId;
+    u32 m_numInstances;
+    
+} DrawCall;
+
 typedef struct Image
 {
     void*     m_data;

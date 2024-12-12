@@ -10,6 +10,9 @@ typedef struct ClockApp
     Image* m_hourHand;
     Image* m_minuteHand;
     Image* m_knob;
+    Image* m_highlight;
+
+    u32    m_hours;
 
 } ClockApp;
 
