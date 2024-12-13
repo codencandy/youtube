@@ -20,40 +20,14 @@ In order to build the project just execute
 
 ## YouTube videos
 
-Just search for the tags to find the correct version of the project.
-
-### Simple MacOS window #01
-
-- Git tag: **Simple-MacOS-window**<br>
-- YouTube: [Simple MacOS window done in C and ObjC](https://youtu.be/Q2Mfc369QtI)
-
-### Constant frame rate #02
-
-- Git tag: **Constant-frame-rate**
-- YouTube: [UI application with constant frame rate](https://youtu.be/-3rmEsQ_3Wg)
-
-### GPU based rendering #03
-
-- Git tag: **GPU-based-rendering**
-- YouTube: [GPU rendering with the Metal framework](https://youtu.be/UrHKvAPFxOI)
-
-### Speed up you build time #04 
-
-- Git tag: **unity-vs-standard-build**
-- YouTube: [Speed up your build time with unity builds](https://youtu.be/49kQwhnBlHs)
-
-### Metal shader pipeline #05
-
-- Git tag: **metal-shader-pipeline**
-- YouTube: [Build your own Metal shader pipeline](https://www.youtube.com/watch?v=9iE76DMMlvI)
-
-### Metal texture mapping #06
-
-- Git tag: **metal-texture-mapping**
-- YouTube: [Load images and render them via Metal texture mapping](https://www.youtube.com/watch?v=dxJziwIALBk)
-
-### Analaog Clock Part 1
-
-- Git Tag: **analog-clock-part1**
-- YouTube: [Build an Anlalog Clock in C on MacOS](https://www.youtube.com/watch?v=dS3natV-HzQ)
+|   Title    | YouTube       |  git tag     |       |
+|  ---  |  ---  |  ---  |  ---  |
+|   Simple MacOS window     |  [open a window](https://youtu.be/Q2Mfc369QtI)                   | Simple-MacOS-window      |       |
+|   Constant frame rate     |  [application with 60 FPS](https://youtu.be/-3rmEsQ_3Wg)         | Constant-frame-rate      |       |
+|   GPU based rendering     |  [setting up Metal](https://youtu.be/UrHKvAPFxOI)                | GPU-based-rendering      |       |
+|   Speed up you build time |  [unity builds](https://youtu.be/49kQwhnBlHs)                    | unity-vs-standard-build  |       |
+|   Metal shader pipeline   |  [shader pipeline](https://www.youtube.com/watch?v=9iE76DMMlvI)  | metal-shader-pipelin     |       |
+|   Metal texture mapping   |  [render images](https://www.youtube.com/watch?v=dxJziwIALBk)    | metal-texture-mapping    |       |
+|   Analaog Clock Part 1    |  [part #1](https://www.youtube.com/watch?v=dS3natV-HzQ)          | analog-clock-part1       |       |
+|   Analaog Clock Part 2    |  [part #2](https://youtu.be/rscUEhVD3sQ)                         | analog-clock-part2       |       |
 
