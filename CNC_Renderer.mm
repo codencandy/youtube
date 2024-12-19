@@ -139,8 +139,8 @@
 
 - (void)createUniform
 {
-    f32 a =  2.0f/600.0f;
-    f32 b = -2.0f/600.0f;
+    f32 a =  2.0f/1000.0f;
+    f32 b = -2.0f/500.0f;
     f32 e = -1.0f;
     f32 f =  1.0f;
 
@@ -259,7 +259,7 @@ MainRenderer* CreateMainRenderer()
 {
     MainRenderer* renderer = [MainRenderer new];
 
-    CGRect renderFrame = CGRectMake( 0, 0, 600, 600 );
+    CGRect renderFrame = CGRectMake( 0, 0, 1000, 500 );
 
     renderer->m_gpu = MTLCreateSystemDefaultDevice();
     renderer->m_commandQueue = [renderer->m_gpu newCommandQueue];
