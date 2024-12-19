@@ -69,6 +69,7 @@ fragment float4 MainFragmentShader( VertexOutput in [[stage_in]],
 vertex VertexOutput SnowVertexShader( const    VertexInput  in         [[stage_in]],
                                       constant UniformData& uniform    [[buffer(1)]],
                                       device   Particle*    snowflakes [[buffer(2)]],
+                                      texture2d<float>      snowMask,
                                       uint                  instanceId [[instance_id]] )
 {
     VertexOutput out;
@@ -92,15 +93,19 @@ vertex VertexOutput SnowVertexShader( const    VertexInput  in         [[stage_i
     out.m_position = uniform.m_projection2D * position;
     out.m_uv       = in.m_uv;
 
+    float2 vertexUv = position.xy / float2( 1000.0, 500.0 );
+    float  mask     = snowMask.sample( textureSampler, vertexUv ).a;
+
     if( instanceId < 900 )
     {
         // update the particles
         snowflakes[instanceId].m_position.y  = y + speed;
-        if( y > 510 )
+        if( mask != 0 )
         {
-            snowflakes[instanceId].m_position.y = -40;
+            //snowflakes[instanceId].m_position.y = -40;
+            snowflakes[instanceId].m_speed = 0;
         }
-        out.m_color = float4( 1.0, 1.0, 1.0, 0.3 );
+        out.m_color = float4( 1.0, 1.0, 1.0, 0.2 );
     }
     else
     {

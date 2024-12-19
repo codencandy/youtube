@@ -7,6 +7,7 @@ typedef struct ChristmasApp
 {
     void*  m_renderer;
     Image* m_foreground;
+    Image* m_snowmask;
     Image* m_landscape;
 
 } ChristmasApp;

@@ -7,6 +7,6 @@ Image* PlatformLoadImage( const char* imagePath );
 u32    PlatformUploadImage( void* renderer, Image* image );
 void   PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances = 1, render_type type = CNC_IMAGE );
 void   PlatformUpdateImage( void* renderer, Image* image );
-void   PlatformRenderParticles( void* renderer, u32 maskId );
+void   PlatformRenderParticles( void* renderer, u32 maskId1, u32 maskId2 );
 
 #endif//CNC_PLATFORMSERVICES_H

@@ -55,6 +55,8 @@ enum render_type
 typedef struct DrawCall
 {
     u32         m_textureId;
+    u32         m_maskId1;
+    u32         m_maskId2;
     u32         m_numInstances;
     render_type m_type;
     

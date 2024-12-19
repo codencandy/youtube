@@ -37,7 +37,7 @@
 - (u32)uploadImage:(Image*)image;
 - (void)renderImage:(u32)textureId instances:(u32)numInstances type:(render_type)type;
 - (void)updateImage:(Image*)image;
-- (void)renderParticles:(u32)maskId;
+- (void)renderParticles:(u32)maskId1 mask2:(u32)maskId2;
 
 - (void)initParticles;
 
@@ -84,12 +84,15 @@
 
                 case CNC_PARTICLE:
                 {
-                    id< MTLTexture > texture = m_textures[call.m_textureId];
+                    id< MTLTexture > mask1 = m_textures[call.m_maskId1];
+                    id< MTLTexture > mask2 = m_textures[call.m_maskId2];
 
                     [commandEncoder setRenderPipelineState: m_renderStateParticles];
                     [commandEncoder setVertexBytes: &m_particleVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
                     [commandEncoder setVertexBuffer: m_particleBuffer  offset: 0 atIndex: 2];
-                    [commandEncoder setFragmentTexture: texture atIndex: 0];
+                    [commandEncoder setVertexTexture: mask2 atIndex: 0];
+                    
+                    [commandEncoder setFragmentTexture: mask1 atIndex: 0];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
                     break;
                 }
@@ -313,11 +316,12 @@
     free( snowflakes );                                      
 }
 
-- (void)renderParticles:(u32)maskId
+- (void)renderParticles:(u32)maskId1 mask2:(u32)maskId2
 {
     m_uniform.m_time = (f32)clock_gettime_nsec_np( CLOCK_UPTIME_RAW ) / 1000000000.0;
 
-    m_drawCalls[m_numDrawCalls].m_textureId    = maskId;
+    m_drawCalls[m_numDrawCalls].m_maskId1      = maskId1;
+    m_drawCalls[m_numDrawCalls].m_maskId2      = maskId2;
     m_drawCalls[m_numDrawCalls].m_numInstances = 1000;
     m_drawCalls[m_numDrawCalls].m_type         = CNC_PARTICLE;
     
@@ -349,10 +353,10 @@ void PlatformUpdateImage( void* renderer, Image* image )
     [r updateImage: image];
 }
 
-void PlatformRenderParticles( void* renderer, u32 maskId )
+void PlatformRenderParticles( void* renderer, u32 maskId1, u32 maskId2 )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r renderParticles: maskId];
+    [r renderParticles: maskId1 mask2: maskId2];
 }
 
 MainRenderer* CreateMainRenderer()
