@@ -92,7 +92,7 @@ vertex VertexOutput SnowVertexShader( const    VertexInput  in         [[stage_i
     out.m_position = uniform.m_projection2D * position;
     out.m_uv       = in.m_uv;
 
-    if( instanceId < 800 )
+    if( instanceId < 900 )
     {
         // update the particles
         snowflakes[instanceId].m_position.y  = y + speed;
@@ -100,12 +100,12 @@ vertex VertexOutput SnowVertexShader( const    VertexInput  in         [[stage_i
         {
             snowflakes[instanceId].m_position.y = -40;
         }
-        out.m_color = float4( 1.0, 1.0, 1.0, 0.7 );
+        out.m_color = float4( 1.0, 1.0, 1.0, 0.3 );
     }
     else
     {
-        out.m_color = float4( 235.0 / 255.0, 222.0 / 255.0, 10.0 / 255, 0.7 );
-        out.m_color.a += sin( uniform.m_time + pos.y ) * 0.3;
+        out.m_color = float4( 235.0 / 255.0, 222.0 / 255.0, 10.0 / 255, 0.5 );
+        out.m_color.a += sin( uniform.m_time * 5 + pos.y ) * 0.5;
     }
 
     return out;

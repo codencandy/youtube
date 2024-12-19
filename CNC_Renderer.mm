@@ -264,8 +264,8 @@
 - (void)initParticles
 {
     u32       numParticles  = 1000;
-    u32       numSnowFlakes = 800;
-    u32       numStars      = 200;
+    u32       numSnowFlakes = 900;
+    u32       numStars      = 100;
     Particle* snowflakes    = (Particle*)malloc( sizeof( Particle ) * numParticles );
 
     srand( 300 );
