@@ -33,7 +33,8 @@ typedef struct VertexInput
 
 typedef struct UniformData
 {
-    m4 m_projection2D;
+    m4  m_projection2D;
+    f32 m_time;
 
 } UniformData;
 
@@ -45,10 +46,17 @@ typedef struct ModelData
 
 } ModelData;
 
+enum render_type
+{
+    CNC_IMAGE    = 0,
+    CNC_PARTICLE = 1
+};
+
 typedef struct DrawCall
 {
-    u32 m_textureId;
-    u32 m_numInstances;
+    u32         m_textureId;
+    u32         m_numInstances;
+    render_type m_type;
     
 } DrawCall;
 
@@ -62,5 +70,13 @@ typedef struct Image
     ModelData m_modelData;
 
 } Image;
+
+typedef struct Particle
+{
+    v2  m_position;
+    f32 m_speed;
+    f32 m_size;
+
+} Particle;
 
 #endif//CNC_TYPES_H

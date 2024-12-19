@@ -2,6 +2,7 @@
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 #include "CNC_PlatformServices.h"
+#include <time.h>
 
 @interface MainRenderer : NSObject< MTKViewDelegate >
 {
@@ -12,9 +13,11 @@
 
         id< MTLLibrary >      m_library;
         UniformData           m_uniform;
-        id< MTLBuffer >       m_uniformBuffer;
+        id< MTLBuffer >       m_particleBuffer;
+        VertexInput           m_particleVertices[6];
 
-        id< MTLRenderPipelineState > m_renderState;
+        id< MTLRenderPipelineState > m_renderStateDefault;
+        id< MTLRenderPipelineState > m_renderStateParticles;
 
         u32                   m_nextTextureId;
         NSMutableArray*       m_textures;
@@ -32,8 +35,11 @@
 - (void)createPipeline;
 
 - (u32)uploadImage:(Image*)image;
-- (void)renderImage:(u32)textureId instances:(u32)numInstances;
+- (void)renderImage:(u32)textureId instances:(u32)numInstances type:(render_type)type;
 - (void)updateImage:(Image*)image;
+- (void)renderParticles:(u32)maskId;
+
+- (void)initParticles;
 
 @end
 
@@ -52,21 +58,43 @@
         
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
-
-        [commandEncoder setRenderPipelineState: m_renderState];
-        [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
-
+                    
+        [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData )atIndex: 1];                    
+        
         for( u32 i=0; i<m_numDrawCalls; ++i )
         {
             DrawCall call = m_drawCalls[i];
-            id< MTLBuffer >  vertexBuffer = m_vertexBuffers[call.m_textureId];
-            id< MTLTexture > texture      = m_textures[call.m_textureId];
-            id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
 
-            [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
-            [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
-            [commandEncoder setFragmentTexture: texture atIndex: 0];
-            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+            switch( call.m_type )
+            {
+                case CNC_IMAGE:
+                {
+                    [commandEncoder setRenderPipelineState: m_renderStateDefault];
+
+                    id< MTLBuffer >  vertexBuffer = m_vertexBuffers[call.m_textureId];
+                    id< MTLTexture > texture      = m_textures[call.m_textureId];
+                    id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
+
+                    [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
+                    [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
+                    [commandEncoder setFragmentTexture: texture atIndex: 0];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+                    break;
+                }
+
+                case CNC_PARTICLE:
+                {
+                    id< MTLTexture > texture = m_textures[call.m_textureId];
+
+                    [commandEncoder setRenderPipelineState: m_renderStateParticles];
+                    [commandEncoder setVertexBytes: &m_particleVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
+                    [commandEncoder setVertexBuffer: m_particleBuffer  offset: 0 atIndex: 2];
+                    [commandEncoder setFragmentTexture: texture atIndex: 0];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+                    break;
+                }
+
+            }
         }
 
         [commandEncoder endEncoding];
@@ -150,9 +178,6 @@
     v4 row4 = { 0.0f, 0.0, 0.0, 1.0 };
 
     m_uniform.m_projection2D = simd_matrix_from_rows( row1, row2, row3, row4 );
-    m_uniformBuffer = [m_gpu newBufferWithBytes: &m_uniform
-                                         length: sizeof( UniformData)
-                                        options: MTLResourceCPUCacheModeDefaultCache];
 }
 
 - (void)createPipeline
@@ -188,7 +213,12 @@
     renderDesc.colorAttachments[0].destinationRGBBlendFactor   = MTLBlendFactorOneMinusSourceAlpha;
 
     NSError* error = NULL;
-    m_renderState  = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    m_renderStateDefault  = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+
+    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"SnowVertexShader"];
+    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"SnowFragmentShader"];
+
+    m_renderStateParticles = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
     [self checkError: error];
 }
 
@@ -216,10 +246,11 @@
     return textureId;
 }
 
-- (void)renderImage:(u32)textureId instances:(u32)numInstances
+- (void)renderImage:(u32)textureId instances:(u32)numInstances type:(render_type)type
 {
     m_drawCalls[m_numDrawCalls].m_textureId    = textureId;
     m_drawCalls[m_numDrawCalls].m_numInstances = numInstances;
+    m_drawCalls[m_numDrawCalls].m_type         = type;
     
     m_numDrawCalls++;
 }
@@ -228,6 +259,69 @@
 {
     id< MTLBuffer > modelBuffer = m_modelBuffers[image->m_textureId];
     memcpy( [modelBuffer contents], &image->m_modelData, sizeof( ModelData ) );
+}
+
+- (void)initParticles
+{
+    u32       numParticles  = 1000;
+    u32       numSnowFlakes = 800;
+    u32       numStars      = 200;
+    Particle* snowflakes    = (Particle*)malloc( sizeof( Particle ) * numParticles );
+
+    srand( 300 );
+
+    for( u32 i=0; i<numSnowFlakes; ++i )
+    {
+        Particle* p = &snowflakes[i];
+        p->m_position.x = rand() % 1000;
+        p->m_position.y = (rand() % 600) - 50.0f;
+        p->m_speed      = (rand() % 2);
+        p->m_size       = (rand() % 11);
+
+        if( p->m_speed < 0.8f ) p->m_speed = 0.8f;
+        if( p->m_size  < 3.0f ) p->m_size  = 3.0f;
+    }
+
+    for( u32 i=numParticles - numStars; i<numParticles; ++i )
+    {
+        Particle* p = &snowflakes[i];
+        p->m_position.x = rand() % 1000;
+        p->m_position.y = (rand() % 300);
+        p->m_size       = (rand() % 8);
+    }
+
+    m_particleBuffer = [m_gpu newBufferWithBytes: snowflakes 
+                                          length: sizeof( Particle ) * numParticles 
+                                         options: MTLResourceStorageModeShared];
+
+    f32 width  = 1.0f;
+    f32 height = 1.0f;
+
+    v3 A = {   0.0f, height, 0.0f };
+    v3 B = {  width, height, 0.0f };
+    v3 C = {  width,   0.0f, 0.0f };
+    v3 D = {   0.0f,   0.0f, 0.0f };
+
+    m_particleVertices[0].m_position = A; m_particleVertices[0].m_uv = vec2( 0.0f, 1.0f );
+    m_particleVertices[1].m_position = B; m_particleVertices[1].m_uv = vec2( 1.0f, 1.0f );
+    m_particleVertices[2].m_position = C; m_particleVertices[2].m_uv = vec2( 1.0f, 0.0f );
+
+    m_particleVertices[3].m_position = C; m_particleVertices[3].m_uv = vec2( 1.0f, 0.0f );
+    m_particleVertices[4].m_position = D; m_particleVertices[4].m_uv = vec2( 0.0f, 0.0f );
+    m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );      
+
+    free( snowflakes );                                      
+}
+
+- (void)renderParticles:(u32)maskId
+{
+    m_uniform.m_time = (f32)clock_gettime_nsec_np( CLOCK_UPTIME_RAW ) / 1000000000.0;
+
+    m_drawCalls[m_numDrawCalls].m_textureId    = maskId;
+    m_drawCalls[m_numDrawCalls].m_numInstances = 1000;
+    m_drawCalls[m_numDrawCalls].m_type         = CNC_PARTICLE;
+    
+    m_numDrawCalls++;
 }
 
 @end
@@ -243,16 +337,22 @@ u32 PlatformUploadImage( void* renderer, Image* image )
     return [r uploadImage: image];
 }
 
-void PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances )
+void PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances, render_type type )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r renderImage: textureId instances: numInstances];
+    [r renderImage: textureId instances: numInstances type: type];
 }
 
 void PlatformUpdateImage( void* renderer, Image* image )
 {
     MainRenderer* r = (MainRenderer*)renderer;
     [r updateImage: image];
+}
+
+void PlatformRenderParticles( void* renderer, u32 maskId )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r renderParticles: maskId];
 }
 
 MainRenderer* CreateMainRenderer()
@@ -278,6 +378,7 @@ MainRenderer* CreateMainRenderer()
     [renderer createShader];
     [renderer createUniform];
     [renderer createPipeline];
+    [renderer initParticles];
     
     return renderer;
 }

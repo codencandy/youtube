@@ -22,4 +22,5 @@ void UpdateChristmas( ChristmasApp* app )
 void RenderChristmas( ChristmasApp* app )
 {
     PlatformRenderImage( app->m_renderer, app->m_landscape->m_textureId );
+    PlatformRenderParticles( app->m_renderer, app->m_foreground->m_textureId );
 }
