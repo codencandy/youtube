@@ -266,8 +266,8 @@
 
 - (void)initParticles
 {
-    u32       numParticles  = 1000;
-    u32       numSnowFlakes = 900;
+    u32       numParticles  = 3000;
+    u32       numSnowFlakes = 2900;
     u32       numStars      = 100;
     Particle* snowflakes    = (Particle*)malloc( sizeof( Particle ) * numParticles );
 
@@ -277,7 +277,7 @@
     {
         Particle* p = &snowflakes[i];
         p->m_position.x = rand() % 1000;
-        p->m_position.y = (rand() % 600) - 50.0f;
+        p->m_position.y = (rand() % 2000) - 1500.0f;
         p->m_speed      = (rand() % 2);
         p->m_size       = (rand() % 11);
 
@@ -322,7 +322,7 @@
 
     m_drawCalls[m_numDrawCalls].m_maskId1      = maskId1;
     m_drawCalls[m_numDrawCalls].m_maskId2      = maskId2;
-    m_drawCalls[m_numDrawCalls].m_numInstances = 1000;
+    m_drawCalls[m_numDrawCalls].m_numInstances = 3000;
     m_drawCalls[m_numDrawCalls].m_type         = CNC_PARTICLE;
     
     m_numDrawCalls++;

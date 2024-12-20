@@ -93,17 +93,17 @@ vertex VertexOutput SnowVertexShader( const    VertexInput  in         [[stage_i
     out.m_position = uniform.m_projection2D * position;
     out.m_uv       = in.m_uv;
 
-    float2 vertexUv = position.xy / float2( 1000.0, 500.0 );
-    float  mask     = snowMask.sample( textureSampler, vertexUv ).a;
-
-    if( instanceId < 900 )
+    if( instanceId < 2900 )
     {
+        float2 vertexUv = position.xy / float2( 1000.0, 500.0 );
+        float  mask     = snowMask.sample( textureSampler, vertexUv ).a;
+
         // update the particles
         snowflakes[instanceId].m_position.y  = y + speed;
         if( mask != 0 )
         {
             //snowflakes[instanceId].m_position.y = -40;
-            snowflakes[instanceId].m_speed = 0;
+            snowflakes[instanceId].m_speed = 0.05;
         }
         out.m_color = float4( 1.0, 1.0, 1.0, 0.2 );
     }
@@ -124,7 +124,7 @@ fragment float4 SnowFragmentShader( VertexOutput     in   [[stage_in]],
 
     float2 center    = float2(0.5, 0.5);  // Circle center in UV space
     float  radius    = 0.4;               // Circle radius
-    float  edgeWidth = 0.01;              // Smooth edge width
+    float  edgeWidth = 0.08;              // Smooth edge width
 
     // Compute the distance from the fragment to the circle center.
     float dist = distance(in.m_uv, center);
@@ -135,6 +135,9 @@ fragment float4 SnowFragmentShader( VertexOutput     in   [[stage_in]],
     color.a   *= alpha;
     color.rgb  = pow( color.rgb, 1.0/gamma);
 
+    // these are the stars
+    // which are only visible in the sky masked out 
+    // by the incoming texture
     if( color.r != 1.0 )
     {
         float2 inPos = in.m_position.xy;
