@@ -91,8 +91,8 @@
                     [commandEncoder setVertexBytes: &m_particleVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
                     [commandEncoder setVertexBuffer: m_particleBuffer  offset: 0 atIndex: 2];
                     [commandEncoder setVertexTexture: mask2 atIndex: 0];
+                    [commandEncoder setVertexTexture: mask1 atIndex: 1];
                     
-                    [commandEncoder setFragmentTexture: mask1 atIndex: 0];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
                     break;
                 }
@@ -218,8 +218,8 @@
     NSError* error = NULL;
     m_renderStateDefault  = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
 
-    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"SnowVertexShader"];
-    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"SnowFragmentShader"];
+    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"ParticleVertexShader"];
+    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"ParticleFragmentShader"];
 
     m_renderStateParticles = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
     [self checkError: error];
@@ -290,7 +290,7 @@
         Particle* p = &snowflakes[i];
         p->m_position.x = rand() % 1000;
         p->m_position.y = (rand() % 300);
-        p->m_size       = (rand() % 8);
+        p->m_size       = (rand() % 12);
     }
 
     m_particleBuffer = [m_gpu newBufferWithBytes: snowflakes 

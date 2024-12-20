@@ -12,6 +12,7 @@ struct VertexOutput
     float4 m_position [[position]];
     float2 m_uv;
     float4 m_color;
+    float  m_edgeWidth;
 };
 
 struct UniformData
@@ -66,18 +67,19 @@ fragment float4 MainFragmentShader( VertexOutput in [[stage_in]],
     return color;
 }
 
-vertex VertexOutput SnowVertexShader( const    VertexInput  in         [[stage_in]],
-                                      constant UniformData& uniform    [[buffer(1)]],
-                                      device   Particle*    snowflakes [[buffer(2)]],
-                                      texture2d<float>      snowMask,
-                                      uint                  instanceId [[instance_id]] )
+vertex VertexOutput ParticleVertexShader( const    VertexInput  in         [[stage_in]],
+                                          constant UniformData& uniform    [[buffer(1)]],
+                                          device   Particle*    particles  [[buffer(2)]],
+                                          texture2d<float>      snowMask   [[texture(0)]],
+                                          texture2d<float>      skyMask    [[texture(1)]],
+                                          uint                  instanceId [[instance_id]] )
 {
     VertexOutput out;
 
     float4 position = float4( in.m_position, 1.0 );
-    float  s        = snowflakes[instanceId].m_size;
-    float  speed    = snowflakes[instanceId].m_speed;
-    float2 pos      = snowflakes[instanceId].m_position;
+    float  s        = particles[instanceId].m_size;
+    float  speed    = particles[instanceId].m_speed;
+    float2 pos      = particles[instanceId].m_position;
     float  x        = pos.x;
     float  y        = pos.y;
 
@@ -93,56 +95,59 @@ vertex VertexOutput SnowVertexShader( const    VertexInput  in         [[stage_i
     out.m_position = uniform.m_projection2D * position;
     out.m_uv       = in.m_uv;
 
+    float2 vertexUv = position.xy / float2( 1000.0, 500.0 );
+
+    // snow
     if( instanceId < 2900 )
     {
-        float2 vertexUv = position.xy / float2( 1000.0, 500.0 );
-        float  mask     = snowMask.sample( textureSampler, vertexUv ).a;
+        float mask = snowMask.sample( textureSampler, vertexUv ).a;
 
         // update the particles
-        snowflakes[instanceId].m_position.y  = y + speed;
+        particles[instanceId].m_position.y  = y + speed;
         if( mask != 0 )
         {
             //snowflakes[instanceId].m_position.y = -40;
-            snowflakes[instanceId].m_speed = 0.05;
+            particles[instanceId].m_speed = 0.05;
         }
-        out.m_color = float4( 1.0, 1.0, 1.0, 0.2 );
+        out.m_color     = float4( 1.0, 1.0, 1.0, 0.2 );
+        out.m_edgeWidth = 0.08;
     }
+    // stars
     else
     {
+        float mask = skyMask.sample( textureSampler, vertexUv ).a;
+
         out.m_color = float4( 235.0 / 255.0, 222.0 / 255.0, 10.0 / 255, 0.5 );
         out.m_color.a += sin( uniform.m_time * 5 + pos.y ) * 0.5;
+        out.m_edgeWidth = 0.01 + abs(sin( uniform.m_time * 5 + pos.y )) * 0.07;
+
+        if( mask != 0.0 )
+        {
+            out.m_color = float4( 0.0 );
+        }
     }
 
     return out;
 }
 
-fragment float4 SnowFragmentShader( VertexOutput     in   [[stage_in]],
-                                    texture2d<float> mask )
+fragment float4 ParticleFragmentShader( VertexOutput in [[stage_in]] )
 {
     const float gamma = 2.2;
     float4      color = in.m_color;
 
-    float2 center    = float2(0.5, 0.5);  // Circle center in UV space
-    float  radius    = 0.4;               // Circle radius
-    float  edgeWidth = 0.08;              // Smooth edge width
+    // center in UV space
+    float2 center    = float2(0.5, 0.5);  
+    float  radius    = 0.3;               
+    float  edgeWidth = 0.08;              
 
-    // Compute the distance from the fragment to the circle center.
+    // compute the distance from the fragment to the circle center.
     float dist = distance(in.m_uv, center);
 
-    // Use smoothstep to create a smooth edge.
-    float alpha = smoothstep(radius, radius - edgeWidth, dist);
+    // smoothstep to create a smooth edge.
+    float alpha = smoothstep(radius, radius - in.m_edgeWidth, dist);
 
     color.a   *= alpha;
     color.rgb  = pow( color.rgb, 1.0/gamma);
-
-    // these are the stars
-    // which are only visible in the sky masked out 
-    // by the incoming texture
-    if( color.r != 1.0 )
-    {
-        float2 inPos = in.m_position.xy;
-        color.a -=  mask.sample( textureSampler, inPos / float2( 2000.0, 1000.0 ) ).a;
-    }
 
     return color;
 }
