@@ -33,6 +33,7 @@ struct Particle
     float2 m_position;
     float  m_speed;
     float  m_size;
+    float  m_time;
 };
 
 constexpr sampler textureSampler( mag_filter::linear, min_filter::linear );
@@ -100,17 +101,31 @@ vertex VertexOutput ParticleVertexShader( const    VertexInput  in         [[sta
     // snow
     if( instanceId < 2900 )
     {
+        out.m_color     = float4( 1.0, 1.0, 1.0, 0.2 );
+        out.m_edgeWidth = 0.08;
+
         float mask = snowMask.sample( textureSampler, vertexUv ).a;
 
         // update the particles
         particles[instanceId].m_position.y  = y + speed;
-        if( mask != 0 )
+
+        float t = particles[instanceId].m_time;
+        if( t != 0 )
         {
-            //snowflakes[instanceId].m_position.y = -40;
-            particles[instanceId].m_speed = 0.05;
+            float dt = uniform.m_time - t;
+            if( dt > 10.0 )
+            {
+                particles[instanceId].m_speed      = 1.5 + sin(dt);
+                particles[instanceId].m_time       = 0.0;
+                particles[instanceId].m_position.y = -40.0;
+            }
+            out.m_color.a = 0.5;
         }
-        out.m_color     = float4( 1.0, 1.0, 1.0, 0.2 );
-        out.m_edgeWidth = 0.08;
+        else if( mask != 0 && position.y > s )
+        {
+            particles[instanceId].m_speed = 0.025;
+            particles[instanceId].m_time  = uniform.m_time;
+        }
     }
     // stars
     else

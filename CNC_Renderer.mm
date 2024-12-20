@@ -273,24 +273,27 @@
 
     srand( 300 );
 
+    // snow
     for( u32 i=0; i<numSnowFlakes; ++i )
     {
         Particle* p = &snowflakes[i];
         p->m_position.x = rand() % 1000;
-        p->m_position.y = (rand() % 2000) - 1500.0f;
-        p->m_speed      = (rand() % 2);
-        p->m_size       = (rand() % 11);
-
+        p->m_position.y = (rand() % 2000) - 1800.0f;
+        p->m_speed      = (f32)(rand() % 200) / 100.0f;
+        p->m_size       = (f32)(rand() % 110) / 10.0f;
+        p->m_time       = 0.0f;
+        
         if( p->m_speed < 0.8f ) p->m_speed = 0.8f;
         if( p->m_size  < 3.0f ) p->m_size  = 3.0f;
     }
 
+    // stars
     for( u32 i=numParticles - numStars; i<numParticles; ++i )
     {
         Particle* p = &snowflakes[i];
         p->m_position.x = rand() % 1000;
         p->m_position.y = (rand() % 300);
-        p->m_size       = (rand() % 12);
+        p->m_size       = (f32)(rand() % 120) / 10.0f;
     }
 
     m_particleBuffer = [m_gpu newBufferWithBytes: snowflakes 

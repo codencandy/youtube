@@ -78,6 +78,7 @@ typedef struct Particle
     v2  m_position;
     f32 m_speed;
     f32 m_size;
+    f32 m_time;
 
 } Particle;
 
