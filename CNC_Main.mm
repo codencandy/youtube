@@ -4,7 +4,7 @@
 #include "CNC_Window.mm"
 #include "CNC_Renderer.mm"
 #include "CNC_PlatformServices.cpp"
-#include "CNC_ClockApp.cpp"
+#include "CNC_Christmas.cpp"
 
 int main()
 {
@@ -21,10 +21,10 @@ int main()
 
     window.contentView = renderer->m_view;
 
-    ClockApp clock = {0};
-    clock.m_renderer = renderer;
+    Christmas christmas = {0};
+    christmas.m_renderer = renderer;
 
-    LoadClockApp( &clock );
+    LoadChristmas( &christmas );
 
     while( running )
     {
@@ -47,8 +47,8 @@ int main()
             // wait for display refresh
             [window->m_displaySignal wait];
 
-            UpdateClockApp( &clock );
-            RenderClockApp( &clock );
+            UpdateChristmas( &christmas );
+            RenderChristmas( &christmas );
 
             // render a new frame using the GPU
             Render( renderer );

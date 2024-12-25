@@ -16,7 +16,9 @@ Image* PlatformLoadImage( const char* imagePath )
 /* implemented in the Renderer 
 
     u32  PlatformUploadImage( void* renderer, Image* image );
+    void PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles );
     void PlatformRenderImage( void* renderer, u32 textureId );
+    void PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask );
     void PlatformUpdateImage( void* renderer, Image* image );
 
  */

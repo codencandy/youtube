@@ -1,6 +1,8 @@
-#include "CNC_Types.h"
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
+
+#include "CNC_Constants.h"
+#include "CNC_Types.h"
 #include "CNC_PlatformServices.h"
 
 @interface MainRenderer : NSObject< MTKViewDelegate >
@@ -14,7 +16,8 @@
         UniformData           m_uniform;
         id< MTLBuffer >       m_uniformBuffer;
 
-        id< MTLRenderPipelineState > m_renderState;
+        id< MTLRenderPipelineState > m_renderStateImage;
+        id< MTLRenderPipelineState > m_renderStateParticle;
 
         u32                   m_nextTextureId;
         NSMutableArray*       m_textures;
@@ -23,6 +26,9 @@
 
         u32                   m_numDrawCalls;
         DrawCall              m_drawCalls[10];
+
+        id< MTLBuffer >       m_particleBuffer;
+        VertexInput           m_particleVertices[6];
 }
 
 - (bool)checkError:(NSError*)error;
@@ -32,7 +38,9 @@
 - (void)createPipeline;
 
 - (u32)uploadImage:(Image*)image;
+- (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
 - (void)renderImage:(u32)textureId instances:(u32)numInstances;
+- (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
 - (void)updateImage:(Image*)image;
 
 @end
@@ -53,20 +61,44 @@
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
 
-        [commandEncoder setRenderPipelineState: m_renderState];
         [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
 
         for( u32 i=0; i<m_numDrawCalls; ++i )
         {
             DrawCall call = m_drawCalls[i];
-            id< MTLBuffer >  vertexBuffer = m_vertexBuffers[call.m_textureId];
-            id< MTLTexture > texture      = m_textures[call.m_textureId];
-            id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
 
-            [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
-            [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
-            [commandEncoder setFragmentTexture: texture atIndex: 0];
-            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+            switch( call.m_type )
+            {
+                case CNC_IMAGE:
+                {
+                    [commandEncoder setRenderPipelineState: m_renderStateImage];
+                    id< MTLBuffer >  vertexBuffer = m_vertexBuffers[call.m_textureId];
+                    id< MTLTexture > texture      = m_textures[call.m_textureId];
+                    id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
+
+                    [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
+                    [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
+                    [commandEncoder setFragmentTexture: texture atIndex: 0];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+                    break;
+                }
+
+                case CNC_PARTICLE:
+                {
+                    [commandEncoder setRenderPipelineState: m_renderStateParticle];
+
+                    id< MTLTexture > snowMask = m_textures[call.m_snowMask];
+                    id< MTLTexture > skyMask  = m_textures[call.m_skyMask];
+
+                    [commandEncoder setVertexBytes: &m_particleVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
+                    [commandEncoder setVertexBuffer: m_particleBuffer  offset: 0 atIndex: 2];
+                    [commandEncoder setVertexTexture: snowMask atIndex: 0];
+                    [commandEncoder setVertexTexture: skyMask  atIndex: 1];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+                    break;
+                }
+            }
+            
         }
 
         [commandEncoder endEncoding];
@@ -139,8 +171,8 @@
 
 - (void)createUniform
 {
-    f32 a =  2.0f/600.0f;
-    f32 b = -2.0f/600.0f;
+    f32 a =  2.0f/CNC_WINDOW_WIDTH;
+    f32 b = -2.0f/CNC_WINDOW_HEIGHT;
     f32 e = -1.0f;
     f32 f =  1.0f;
 
@@ -150,6 +182,8 @@
     v4 row4 = { 0.0f, 0.0, 0.0, 1.0 };
 
     m_uniform.m_projection2D = simd_matrix_from_rows( row1, row2, row3, row4 );
+    m_uniform.m_screenWidth  = CNC_WINDOW_WIDTH;
+    m_uniform.m_screenHeight = CNC_WINDOW_HEIGHT;
     m_uniformBuffer = [m_gpu newBufferWithBytes: &m_uniform
                                          length: sizeof( UniformData)
                                         options: MTLResourceCPUCacheModeDefaultCache];
@@ -188,7 +222,14 @@
     renderDesc.colorAttachments[0].destinationRGBBlendFactor   = MTLBlendFactorOneMinusSourceAlpha;
 
     NSError* error = NULL;
-    m_renderState  = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    m_renderStateImage = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    [self checkError: error];
+
+    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"ParticleVertexShader"];
+    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"ParticleFragmentShader"];
+
+    error = NULL;
+    m_renderStateParticle = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
     [self checkError: error];
 }
 
@@ -216,10 +257,45 @@
     return textureId;
 }
 
+- (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles
+{
+    m_particleBuffer = [m_gpu newBufferWithBytes: particles 
+                                          length: sizeof( Particle ) * numParticles 
+                                         options: MTLStorageModeShared];
+
+    f32 width  = 1.0f;
+    f32 height = 1.0f;
+    
+    v3 A = {   0.0f, height, 0.0f };
+    v3 B = {  width, height, 0.0f };
+    v3 C = {  width,   0.0f, 0.0f };
+    v3 D = {   0.0f,   0.0f, 0.0f };
+
+    m_particleVertices[0].m_position = A; m_particleVertices[0].m_uv = vec2( 0.0f, 1.0f );
+    m_particleVertices[1].m_position = B; m_particleVertices[1].m_uv = vec2( 1.0f, 1.0f );
+    m_particleVertices[2].m_position = C; m_particleVertices[2].m_uv = vec2( 1.0f, 0.0f );
+
+    m_particleVertices[3].m_position = C; m_particleVertices[3].m_uv = vec2( 1.0f, 0.0f );
+    m_particleVertices[4].m_position = D; m_particleVertices[4].m_uv = vec2( 0.0f, 0.0f );
+    m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );                                         
+}
+
 - (void)renderImage:(u32)textureId instances:(u32)numInstances
 {
+    m_drawCalls[m_numDrawCalls].m_type         = CNC_IMAGE;
     m_drawCalls[m_numDrawCalls].m_textureId    = textureId;
     m_drawCalls[m_numDrawCalls].m_numInstances = numInstances;
+    
+    m_numDrawCalls++;
+}
+
+- (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask
+{
+    m_drawCalls[m_numDrawCalls].m_type         = CNC_PARTICLE;
+    m_drawCalls[m_numDrawCalls].m_textureId    = 0;
+    m_drawCalls[m_numDrawCalls].m_snowMask     = snowMask;
+    m_drawCalls[m_numDrawCalls].m_skyMask      = skyMask;
+    m_drawCalls[m_numDrawCalls].m_numInstances = numParticles;
     
     m_numDrawCalls++;
 }
@@ -243,10 +319,22 @@ u32 PlatformUploadImage( void* renderer, Image* image )
     return [r uploadImage: image];
 }
 
+void PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r uploadParticles: particles numParticles: numParticles];
+}
+
 void PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances )
 {
     MainRenderer* r = (MainRenderer*)renderer;
     [r renderImage: textureId instances: numInstances];
+}
+
+void PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r renderParticles: numParticles snowMask:snowMask skyMask:skyMask];
 }
 
 void PlatformUpdateImage( void* renderer, Image* image )
@@ -259,7 +347,7 @@ MainRenderer* CreateMainRenderer()
 {
     MainRenderer* renderer = [MainRenderer new];
 
-    CGRect renderFrame = CGRectMake( 0, 0, 600, 600 );
+    CGRect renderFrame = CGRectMake( 0, 0, CNC_WINDOW_WIDTH, CNC_WINDOW_HEIGHT );
 
     renderer->m_gpu = MTLCreateSystemDefaultDevice();
     renderer->m_commandQueue = [renderer->m_gpu newCommandQueue];
