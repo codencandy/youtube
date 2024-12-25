@@ -36,6 +36,7 @@ typedef struct UniformData
     m4  m_projection2D;
     f32 m_screenWidth;
     f32 m_screenHeight;
+    f32 m_time;
 
 } UniformData;
 
@@ -79,6 +80,7 @@ typedef struct Particle
     v2  m_position;
     f32 m_speed;
     f32 m_size;
+    f32 m_time;
     
 } Particle;
 

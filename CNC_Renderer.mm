@@ -14,8 +14,7 @@
 
         id< MTLLibrary >      m_library;
         UniformData           m_uniform;
-        id< MTLBuffer >       m_uniformBuffer;
-
+        
         id< MTLRenderPipelineState > m_renderStateImage;
         id< MTLRenderPipelineState > m_renderStateParticle;
 
@@ -61,7 +60,7 @@
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
 
-        [commandEncoder setVertexBuffer: m_uniformBuffer   offset: 0 atIndex: 1];
+        [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData ) atIndex: 1];
 
         for( u32 i=0; i<m_numDrawCalls; ++i )
         {
@@ -184,9 +183,6 @@
     m_uniform.m_projection2D = simd_matrix_from_rows( row1, row2, row3, row4 );
     m_uniform.m_screenWidth  = CNC_WINDOW_WIDTH;
     m_uniform.m_screenHeight = CNC_WINDOW_HEIGHT;
-    m_uniformBuffer = [m_gpu newBufferWithBytes: &m_uniform
-                                         length: sizeof( UniformData)
-                                        options: MTLResourceCPUCacheModeDefaultCache];
 }
 
 - (void)createPipeline
@@ -310,6 +306,7 @@
 
 void Render( MainRenderer* renderer )
 {
+    renderer->m_uniform.m_time = (f32)(clock_gettime_nsec_np( CLOCK_UPTIME_RAW ) / 1000000000.0);
     [renderer->m_view draw];
 }
 
