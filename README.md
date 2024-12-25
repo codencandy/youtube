@@ -30,4 +30,5 @@ In order to build the project just execute
 |   Metal texture mapping   |  [render images](https://www.youtube.com/watch?v=dxJziwIALBk)    | metal-texture-mapping    |       |
 |   Analaog Clock Part 1    |  [part #1](https://www.youtube.com/watch?v=dS3natV-HzQ)          | analog-clock-part1       |       |
 |   Analaog Clock Part 2    |  [part #2](https://youtu.be/rscUEhVD3sQ)                         | analog-clock-part2       |       |
+|   Analaog Clock Part 3    |  [part #3](https://youtu.be/FKXx3EizUyU)                         | instanced-rendering      |       |
 
