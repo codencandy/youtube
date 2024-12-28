@@ -31,5 +31,5 @@ In order to build the project just execute
 |   Analaog Clock Part 1    |  [part #1](https://www.youtube.com/watch?v=dS3natV-HzQ)          | analog-clock-part1       |       |
 |   Analaog Clock Part 2    |  [part #2](https://youtu.be/rscUEhVD3sQ)                         | analog-clock-part2       |       |
 |   Analaog Clock Part 3    |  [part #3](https://youtu.be/FKXx3EizUyU)                         | instanced-rendering      |       |
-|   Snow Particle System    |  [snow particles](https://youtu.be/jeTSjqUOKJ4)                  | snow-particles           |       |
+|   Snow Particle System    |  [snow particles](https://youtu.be/jeTSjqUOKJ4)                  | christmas-particles      |       |
 
