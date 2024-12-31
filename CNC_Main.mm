@@ -4,7 +4,7 @@
 #include "CNC_Window.mm"
 #include "CNC_Renderer.mm"
 #include "CNC_PlatformServices.cpp"
-#include "CNC_Christmas.cpp"
+#include "CNC_Breakout.cpp"
 
 int main()
 {
@@ -16,15 +16,17 @@ int main()
     [app setActivationPolicy: NSApplicationActivationPolicyRegular];
     [app finishLaunching];
 
-    MainWindow*   window   = CreateMainWindow( &running );
-    MainRenderer* renderer = CreateMainRenderer();
+    MainWindow*   window    = CreateMainWindow( &running );
+    MainRenderer* renderer  = CreateMainRenderer();
+    UserInput     userInput = {0};
 
     window.contentView = renderer->m_view;
 
-    Christmas christmas = {0};
-    christmas.m_renderer = renderer;
+    Breakout breakout = {0};
+    breakout.m_renderer = renderer;
+    breakout.m_input    = &userInput;
 
-    LoadChristmas( &christmas );
+    LoadBreakout( &breakout );
 
     while( running )
     {
@@ -39,16 +41,19 @@ int main()
                                             inMode: NSDefaultRunLoopMode
                                            dequeue: true];
 
-                [app sendEvent: event];
-                [app updateWindows];
+                if( !ProcessInput( &userInput, event ) )
+                {
+                    [app sendEvent: event];
+                    [app updateWindows];
+                }
             }
             while( event != NULL );
 
             // wait for display refresh
             [window->m_displaySignal wait];
 
-            UpdateChristmas( &christmas );
-            RenderChristmas( &christmas );
+            UpdateBreakout( &breakout );
+            RenderBreakout( &breakout );
 
             // render a new frame using the GPU
             Render( renderer );
@@ -56,4 +61,35 @@ int main()
     }
 
     return 0;
+}
+
+bool ProcessInput( UserInput* input, void* event )
+{
+    NSEvent* e = (NSEvent*)event;
+
+    if( e.type == NSEventTypeKeyDown )
+    {
+        switch( e.keyCode )
+        {
+            case ARROW_UP_CODE:    { input->m_up.m_isDown    = true;  return true; }
+            case ARROW_DOWN_CODE:  { input->m_down.m_isDown  = true;  return true; }
+            case ARROW_LEFT_CODE:  { input->m_left.m_isDown  = true;  return true; }
+            case ARROW_RIGHT_CODE: { input->m_right.m_isDown = true;  return true; }
+            default: break;
+        }
+    }
+
+    if( e.type == NSEventTypeKeyUp )
+    {
+        switch( e.keyCode )
+        {
+            case ARROW_UP_CODE:    { input->m_up.m_isDown    = false;  return true; }
+            case ARROW_DOWN_CODE:  { input->m_down.m_isDown  = false;  return true; }
+            case ARROW_LEFT_CODE:  { input->m_left.m_isDown  = false;  return true; }
+            case ARROW_RIGHT_CODE: { input->m_right.m_isDown = false;  return true; }
+            default: break;
+        }
+    }
+
+    return false;
 }
