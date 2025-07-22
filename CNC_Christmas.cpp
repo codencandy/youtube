@@ -3,18 +3,22 @@
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
 
-void LoadChristmas( Christmas* app )
+Application* LoadApplication( PlatformServices* services, void* renderer )
 {
-    app->m_landscape = PlatformLoadImage( "res/landscape.png" );
-    app->m_skymask   = PlatformLoadImage( "res/skymask.png" );
-    app->m_snowmask  = PlatformLoadImage( "res/snowmask.png" );
+    Christmas* app = (Christmas*)malloc( sizeof( Christmas ) );
+    app->m_services = services;
+    app->m_renderer = renderer;
+
+    app->m_landscape = services->f_loadImage( "res/landscape.png" );
+    app->m_skymask   = services->f_loadImage( "res/skymask.png" );
+    app->m_snowmask  = services->f_loadImage( "res/snowmask.png" );
 
     app->m_landscape->m_modelData.m_pivotMatrix = identityMatrix();
     app->m_landscape->m_modelData.m_modelMatrix = identityMatrix();
 
-    app->m_landscape->m_textureId = PlatformUploadImage( app->m_renderer, app->m_landscape );
-    app->m_skymask->m_textureId   = PlatformUploadImage( app->m_renderer, app->m_skymask );
-    app->m_snowmask->m_textureId  = PlatformUploadImage( app->m_renderer, app->m_snowmask );
+    app->m_landscape->m_textureId = services->f_uploadImage( app->m_renderer, app->m_landscape );
+    app->m_skymask->m_textureId   = services->f_uploadImage( app->m_renderer, app->m_skymask );
+    app->m_snowmask->m_textureId  = services->f_uploadImage( app->m_renderer, app->m_snowmask );
 
     app->m_numParticles = 3000;
     app->m_particles    = (Particle*)malloc( sizeof( Particle ) * app->m_numParticles );
@@ -53,16 +57,21 @@ void LoadChristmas( Christmas* app )
         p->m_time     = 0.0f;
     }
 
-    PlatformUploadParticles( app->m_renderer, app->m_particles, app->m_numParticles );
+    services->f_uploadParticles( app->m_renderer, app->m_particles, app->m_numParticles );
+
+    return app;
 }
 
-void UpdateChristmas( Christmas* app )
+void UpdateApplication( Application* app )
 {
 
 }
 
-void RenderChristmas( Christmas* app )
+void RenderApplication( Application* application )
 {
-    PlatformRenderImage( app->m_renderer, app->m_landscape->m_textureId );
-    PlatformRenderParticles( app->m_renderer, app->m_numParticles, app->m_snowmask->m_textureId, app->m_skymask->m_textureId );
+    Christmas* app = (Christmas*)application;
+    PlatformServices* services = app->m_services;
+
+    services->f_renderImage( app->m_renderer, app->m_landscape->m_textureId, 1 );
+    services->f_renderParticles( app->m_renderer, app->m_numParticles, app->m_snowmask->m_textureId, app->m_skymask->m_textureId );
 }

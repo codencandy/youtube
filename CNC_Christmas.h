@@ -2,11 +2,10 @@
 #define CNC_CHRISTMAS_H
 
 #include "CNC_Types.h"
+#include "CNC_Application.h"
 
-typedef struct Christmas
+typedef struct Christmas : Application
 {
-    void* m_renderer;
-
     Image* m_landscape;
     Image* m_skymask;
     Image* m_snowmask;
@@ -15,9 +14,5 @@ typedef struct Christmas
     Particle* m_particles;
 
 } Christmas;
-
-void LoadChristmas( Christmas* app );
-void UpdateChristmas( Christmas* app );
-void RenderChristmas( Christmas* app );
 
 #endif//CNC_CHRISTMAS_H

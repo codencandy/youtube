@@ -22,3 +22,17 @@ Image* PlatformLoadImage( const char* imagePath )
     void PlatformUpdateImage( void* renderer, Image* image );
 
  */
+
+PlatformServices* CreatePlatformServices()
+{
+    PlatformServices* services = (PlatformServices*)malloc( sizeof( PlatformServices ) );
+
+    services->f_loadImage       = &PlatformLoadImage;
+    services->f_uploadImage     = &PlatformUploadImage;
+    services->f_uploadParticles = &PlatformUploadParticles;
+    services->f_renderImage     = &PlatformRenderImage;
+    services->f_renderParticles = &PlatformRenderParticles;
+    services->f_updateImage     = &PlatformUpdateImage;
+
+    return services;
+}

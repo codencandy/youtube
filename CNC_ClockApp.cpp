@@ -3,13 +3,17 @@
 #include "CNC_Math.h"
 #include <time.h>
 
-void LoadClockApp( ClockApp* app )
+Application* LoadApplication( PlatformServices* services, void* renderer )
 {
-    app->m_background  = PlatformLoadImage( "res/clock_bgr.png" );
-    app->m_hourHand    = PlatformLoadImage( "res/clock_hours.png" );
-    app->m_minuteHand  = PlatformLoadImage( "res/clock_minutes.png" );
-    app->m_knob        = PlatformLoadImage( "res/clock_knob.png" );
-    app->m_highlight   = PlatformLoadImage( "res/clock_highlight.png" );
+    ClockApp* app = (ClockApp*)malloc( sizeof( ClockApp ) );
+    app->m_services = services;
+    app->m_renderer = renderer;
+
+    app->m_background  = services->f_loadImage( "res/clock_bgr.png" );
+    app->m_hourHand    = services->f_loadImage( "res/clock_hours.png" );
+    app->m_minuteHand  = services->f_loadImage( "res/clock_minutes.png" );
+    app->m_knob        = services->f_loadImage( "res/clock_knob.png" );
+    app->m_highlight   = services->f_loadImage( "res/clock_highlight.png" );
 
     ModelData bgrData   = {0};
     ModelData hourData  = {0};
@@ -48,15 +52,20 @@ void LoadClockApp( ClockApp* app )
     app->m_knob->m_modelData       = knobData;
     app->m_highlight->m_modelData  = highlight;
 
-    app->m_background->m_textureId = PlatformUploadImage( app->m_renderer, app->m_background );
-    app->m_hourHand->m_textureId   = PlatformUploadImage( app->m_renderer, app->m_hourHand );
-    app->m_minuteHand->m_textureId = PlatformUploadImage( app->m_renderer, app->m_minuteHand );
-    app->m_knob->m_textureId       = PlatformUploadImage( app->m_renderer, app->m_knob );
-    app->m_highlight->m_textureId  = PlatformUploadImage( app->m_renderer, app->m_highlight );
+    app->m_background->m_textureId = services->f_uploadImage( app->m_renderer, app->m_background );
+    app->m_hourHand->m_textureId   = services->f_uploadImage( app->m_renderer, app->m_hourHand );
+    app->m_minuteHand->m_textureId = services->f_uploadImage( app->m_renderer, app->m_minuteHand );
+    app->m_knob->m_textureId       = services->f_uploadImage( app->m_renderer, app->m_knob );
+    app->m_highlight->m_textureId  = services->f_uploadImage( app->m_renderer, app->m_highlight );
+
+    return app;
 }
 
-void UpdateClockApp( ClockApp* app )
+void UpdateApplication( Application* application )
 {
+    ClockApp*         app      = (ClockApp*)application;
+    PlatformServices* services = app->m_services;
+
     time_t rawTime;
     tm*    timeInfo;
 
@@ -73,17 +82,20 @@ void UpdateClockApp( ClockApp* app )
     app->m_hourHand->m_modelData.m_rotation   = toRadians( -(hourAngle + minsPerHour) );
     app->m_minuteHand->m_modelData.m_rotation = toRadians( -minuteAngle );
 
-    PlatformUpdateImage( app->m_renderer, app->m_hourHand );
-    PlatformUpdateImage( app->m_renderer, app->m_minuteHand );
+    services->f_updateImage( app->m_renderer, app->m_hourHand );
+    services->f_updateImage( app->m_renderer, app->m_minuteHand );
 
     app->m_hours = hours;
 }
 
-void RenderClockApp( ClockApp* app )
+void RenderApplication( Application* application )
 {
-    PlatformRenderImage( app->m_renderer, app->m_background->m_textureId );
-    PlatformRenderImage( app->m_renderer, app->m_hourHand->m_textureId );
-    PlatformRenderImage( app->m_renderer, app->m_minuteHand->m_textureId );
-    PlatformRenderImage( app->m_renderer, app->m_knob->m_textureId );
-    PlatformRenderImage( app->m_renderer, app->m_highlight->m_textureId, app->m_hours );
+    ClockApp*         app      = (ClockApp*)application;
+    PlatformServices* services = app->m_services;
+
+    services->f_renderImage( app->m_renderer, app->m_background->m_textureId, 1 );
+    services->f_renderImage( app->m_renderer, app->m_hourHand->m_textureId, 1 );
+    services->f_renderImage( app->m_renderer, app->m_minuteHand->m_textureId, 1 );
+    services->f_renderImage( app->m_renderer, app->m_knob->m_textureId, 1 );
+    services->f_renderImage( app->m_renderer, app->m_highlight->m_textureId, app->m_hours );
 }

@@ -2,10 +2,10 @@
 #define CNC_CLOCKAPP_H
 
 #include "CNC_Types.h"
+#include "CNC_Application.h"
 
-typedef struct ClockApp
+typedef struct ClockApp : Application
 {
-    void*  m_renderer;
     Image* m_background;
     Image* m_hourHand;
     Image* m_minuteHand;
@@ -15,9 +15,5 @@ typedef struct ClockApp
     u32    m_hours;
 
 } ClockApp;
-
-void LoadClockApp( ClockApp* app );
-void UpdateClockApp( ClockApp* app );
-void RenderClockApp( ClockApp* app );
 
 #endif//CNC_CLOCKAPP_H
