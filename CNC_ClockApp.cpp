@@ -1,7 +1,11 @@
+#include <stddef.h>
+#include <time.h>
+
 #include "CNC_ClockApp.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
-#include <time.h>
+
+extern "C" void* malloc( size_t size );
 
 Application* LoadApplication( PlatformServices* services, void* renderer )
 {

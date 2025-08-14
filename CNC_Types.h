@@ -1,26 +1,21 @@
 #ifndef CNC_TYPES_H
 #define CNC_TYPES_H
 
-#include <simd/simd.h>
-
 typedef float         f32;
 typedef double        f64;
 typedef unsigned int  u32;
 typedef signed int    s32;
 
-typedef simd::float2   v2;
-typedef simd::float3   v3;
-typedef simd::float4   v4;
-typedef simd::float3x3 m3;
-typedef simd::float4x4 m4;
+typedef __attribute__((__ext_vector_type__(2))) float v2;
+typedef __attribute__((__ext_vector_type__(3))) float v3;
+typedef __attribute__((__ext_vector_type__(4))) float v4;
+
+typedef struct { v3 columns[3]; } m3;
+typedef struct { v4 columns[4]; } m4;
 
 v2 vec2( f32 x, f32 y )
 {
-    v2 result;
-
-    result.x = x;
-    result.y = y;
-
+    v2 result = { x, y };
     return result;
 }
 

@@ -1,6 +1,9 @@
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 
+#include "libs/imgui/backends/imgui_impl_osx.h"
+#include "libs/imgui/backends/imgui_impl_metal.h"
+
 #include "CNC_Constants.h"
 #include "CNC_Types.h"
 #include "CNC_PlatformServices.h"
@@ -96,9 +99,13 @@
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
                     break;
                 }
-            }
-            
+            }            
         }
+
+        // ImGui Rendering
+        ImGui::Render();
+        ImDrawData* draw_data = ImGui::GetDrawData();
+        ImGui_ImplMetal_RenderDrawData( draw_data, commandBuffer, commandEncoder );
 
         [commandEncoder endEncoding];
         [commandBuffer presentDrawable: [m_view currentDrawable]];
@@ -146,12 +153,15 @@
         D --- C
         |     |
         A --- B
-     */
+    */
 
-    v3 A = {   0.0f, height, 0.0f };
-    v3 B = {  width, height, 0.0f };
-    v3 C = {  width,   0.0f, 0.0f };
-    v3 D = {   0.0f,   0.0f, 0.0f };
+    f32 w = (f32)width;
+    f32 h = (f32)height;
+
+    v3 A = {   0.0f,    h, 0.0f };
+    v3 B = {      w,    h, 0.0f };
+    v3 C = {      w, 0.0f, 0.0f };
+    v3 D = {   0.0f, 0.0f, 0.0f };
 
     rectangle[0].m_position = A; rectangle[0].m_uv = vec2( 0.0f, 1.0f );
     rectangle[1].m_position = B; rectangle[1].m_uv = vec2( 1.0f, 1.0f );
@@ -175,12 +185,18 @@
     f32 e = -1.0f;
     f32 f =  1.0f;
 
-    v4 row1 = {    a, 0.0, 0.0,   e };
-    v4 row2 = { 0.0f,   b, 0.0,   f };
-    v4 row3 = { 0.0f, 0.0, 1.0, 0.0 };
-    v4 row4 = { 0.0f, 0.0, 0.0, 1.0 };
+    v4 col1 = {    a, 0.0f, 0.0f, 0.0f };
+    v4 col2 = { 0.0f,    b, 0.0f, 0.0f };
+    v4 col3 = { 0.0f, 0.0f, 1.0f, 0.0f};
+    v4 col4 = {    e,    f, 0.0f, 1.0f };
 
-    m_uniform.m_projection2D = simd_matrix_from_rows( row1, row2, row3, row4 );
+    m4 projection2D = {
+        .columns {
+            col1, col2, col3, col4
+        }
+    };
+
+    m_uniform.m_projection2D = projection2D;
     m_uniform.m_screenWidth  = CNC_WINDOW_WIDTH;
     m_uniform.m_screenHeight = CNC_WINDOW_HEIGHT;
 }

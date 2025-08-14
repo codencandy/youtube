@@ -1,7 +1,11 @@
+#include <stddef.h>
+
 #include "CNC_Christmas.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
+
+extern "C" void* malloc( size_t size );
 
 Application* LoadApplication( PlatformServices* services, void* renderer )
 {
@@ -23,7 +27,7 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     app->m_numParticles = 3000;
     app->m_particles    = (Particle*)malloc( sizeof( Particle ) * app->m_numParticles );
 
-    srand( 300 );
+    cnc_srand( 300 );
 
     u32 snowFlakes = 2900;
     u32 stars      = 100;
@@ -32,10 +36,10 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     {
         Particle* p = &app->m_particles[i];
 
-        f32 x     = (f32)(rand() % CNC_WINDOW_WIDTH );
-        f32 y     = (f32)(rand() % CNC_WINDOW_HEIGHT ) - 300.0f;
-        f32 speed = (f32)(rand() % 20)  / 10.0f;
-        f32 size  = (f32)(rand() % 100) / 10.0f;
+        f32 x     = (f32)(cnc_rand() % CNC_WINDOW_WIDTH );
+        f32 y     = (f32)(cnc_rand() % CNC_WINDOW_HEIGHT ) - 300.0f;
+        f32 speed = (f32)(cnc_rand() % 20)  / 10.0f;
+        f32 size  = (f32)(cnc_rand() % 100) / 10.0f;
 
         p->m_position = vec2( x, y );
         p->m_speed    = speed;
@@ -47,9 +51,9 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     {
         Particle* p = &app->m_particles[snowFlakes + i];
 
-        f32 x     = (f32)(rand() % CNC_WINDOW_WIDTH );
-        f32 y     = (f32)(rand() % CNC_WINDOW_HEIGHT - 150);
-        f32 size  = (f32)(rand() % 150) / 10.0f;
+        f32 x     = (f32)(cnc_rand() % CNC_WINDOW_WIDTH );
+        f32 y     = (f32)(cnc_rand() % CNC_WINDOW_HEIGHT - 150);
+        f32 size  = (f32)(cnc_rand() % 150) / 10.0f;
 
         p->m_position = vec2( x, y );
         p->m_speed    = 0.0f;

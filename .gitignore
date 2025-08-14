@@ -4,3 +4,5 @@ demo
 *.dSYM
 *.dylib
 .DS_Store
+imgui.ini
+CNC_ImGui.o
