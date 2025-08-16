@@ -7,6 +7,7 @@
 #include "CNC_Constants.h"
 #include "CNC_Types.h"
 #include "CNC_PlatformServices.h"
+#include "CNC_Libs.h"
 
 @interface MainRenderer : NSObject< MTKViewDelegate >
 {
@@ -26,8 +27,7 @@
         NSMutableArray*       m_vertexBuffers;
         NSMutableArray*       m_modelBuffers;
 
-        u32                   m_numDrawCalls;
-        DrawCall              m_drawCalls[10];
+        DrawCall*             m_drawCalls;
 
         id< MTLBuffer >       m_particleBuffer;
         VertexInput           m_particleVertices[6];
@@ -65,7 +65,8 @@
 
         [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData ) atIndex: 1];
 
-        for( u32 i=0; i<m_numDrawCalls; ++i )
+        u32 numDrawCalls = arrlen( m_drawCalls );
+        for( u32 i=0; i<numDrawCalls; ++i )
         {
             DrawCall call = m_drawCalls[i];
 
@@ -99,6 +100,11 @@
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
                     break;
                 }
+
+                case CNC_RECT:   break;
+                case CNC_CIRCLE: break;
+                case CNC_LINE:   break;
+                default: break;
             }            
         }
 
@@ -113,7 +119,7 @@
     }
 
     // reset this after every frame !!!
-    m_numDrawCalls = 0;
+    arrfree( m_drawCalls );
 }
 
 - (bool)checkError:(NSError*)error
@@ -294,22 +300,25 @@
 
 - (void)renderImage:(u32)textureId instances:(u32)numInstances
 {
-    m_drawCalls[m_numDrawCalls].m_type         = CNC_IMAGE;
-    m_drawCalls[m_numDrawCalls].m_textureId    = textureId;
-    m_drawCalls[m_numDrawCalls].m_numInstances = numInstances;
+    DrawCall call;
+    call.m_type = CNC_IMAGE;
+    call.m_textureId = textureId;
+    call.m_numInstances = numInstances;
     
-    m_numDrawCalls++;
+    arrput( m_drawCalls, call );
 }
 
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask
 {
-    m_drawCalls[m_numDrawCalls].m_type         = CNC_PARTICLE;
-    m_drawCalls[m_numDrawCalls].m_textureId    = 0;
-    m_drawCalls[m_numDrawCalls].m_snowMask     = snowMask;
-    m_drawCalls[m_numDrawCalls].m_skyMask      = skyMask;
-    m_drawCalls[m_numDrawCalls].m_numInstances = numParticles;
+    DrawCall call;
+
+    call.m_type         = CNC_PARTICLE;
+    call.m_textureId    = 0;
+    call.m_snowMask     = snowMask;
+    call.m_skyMask      = skyMask;
+    call.m_numInstances = numParticles;
     
-    m_numDrawCalls++;
+    arrput( m_drawCalls, call );
 }
 
 - (void)updateImage:(Image*)image
@@ -371,7 +380,7 @@ MainRenderer* CreateMainRenderer()
     renderer->m_view.delegate     = renderer;
 
     renderer->m_nextTextureId     = 0;
-    renderer->m_numDrawCalls      = 0;
+    renderer->m_drawCalls         = NULL;
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];

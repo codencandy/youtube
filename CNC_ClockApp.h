@@ -13,6 +13,7 @@ typedef struct ClockApp : Application
     Image* m_highlight;
 
     u32    m_hours;
+    u32    m_minutes;
 
 } ClockApp;
 

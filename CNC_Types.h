@@ -1,17 +1,17 @@
 #ifndef CNC_TYPES_H
 #define CNC_TYPES_H
 
-typedef float         f32;
-typedef double        f64;
-typedef unsigned int  u32;
-typedef signed int    s32;
+typedef float                                        f32;
+typedef double                                       f64;
+typedef unsigned int                                 u32;
+typedef signed int                                   s32;
 
 typedef __attribute__((__ext_vector_type__(2))) float v2;
 typedef __attribute__((__ext_vector_type__(3))) float v3;
 typedef __attribute__((__ext_vector_type__(4))) float v4;
 
-typedef struct { v3 columns[3]; } m3;
-typedef struct { v4 columns[4]; } m4;
+typedef struct { v3 columns[3]; }                     m3;
+typedef struct { v4 columns[4]; }                     m4;
 
 v2 vec2( f32 x, f32 y )
 {
@@ -46,7 +46,10 @@ typedef struct ModelData
 enum draw_type
 {
     CNC_IMAGE    = 0,
-    CNC_PARTICLE = 1
+    CNC_PARTICLE = 1,
+    CNC_RECT     = 2,
+    CNC_CIRCLE   = 3,
+    CNC_LINE     = 4
 };
 
 typedef struct DrawCall
@@ -56,6 +59,8 @@ typedef struct DrawCall
     u32       m_snowMask;
     u32       m_skyMask;
     u32       m_numInstances;
+    v2        m_position;
+    v2        m_size;
     
 } DrawCall;
 
@@ -78,5 +83,11 @@ typedef struct Particle
     f32 m_time;
     
 } Particle;
+
+typedef struct Colour
+{
+    v4 m_color;
+
+} Colour;
 
 #endif//CNC_TYPES_H

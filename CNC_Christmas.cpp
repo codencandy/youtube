@@ -1,29 +1,22 @@
 #include <stddef.h>
 
+extern "C" void* malloc( size_t size );
+
 #include "CNC_Christmas.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
-
-extern "C" void* malloc( size_t size );
+#include "CNC_CandyEngine.cpp"
 
 Application* LoadApplication( PlatformServices* services, void* renderer )
 {
-    Christmas* app = (Christmas*)malloc( sizeof( Christmas ) );
-    app->m_services = services;
-    app->m_renderer = renderer;
+    Christmas* app   = (Christmas*)malloc( sizeof( Christmas ) );
+    app->m_services  = services;
+    app->m_renderer  = renderer;
 
-    app->m_landscape = services->f_loadImage( "res/landscape.png" );
-    app->m_skymask   = services->f_loadImage( "res/skymask.png" );
-    app->m_snowmask  = services->f_loadImage( "res/snowmask.png" );
-
-    app->m_landscape->m_modelData.m_pivotMatrix = identityMatrix();
-    app->m_landscape->m_modelData.m_modelMatrix = identityMatrix();
-
-    app->m_landscape->m_textureId = services->f_uploadImage( app->m_renderer, app->m_landscape );
-    app->m_skymask->m_textureId   = services->f_uploadImage( app->m_renderer, app->m_skymask );
-    app->m_snowmask->m_textureId  = services->f_uploadImage( app->m_renderer, app->m_snowmask );
-
+    app->m_landscape    = cnc::LoadImage( app, "res/landscape.png" );
+    app->m_skymask      = cnc::LoadImage( app, "res/skymask.png" );
+    app->m_snowmask     = cnc::LoadImage( app, "res/snowmask.png" );
     app->m_numParticles = 3000;
     app->m_particles    = (Particle*)malloc( sizeof( Particle ) * app->m_numParticles );
 
@@ -76,6 +69,6 @@ void RenderApplication( Application* application )
     Christmas* app = (Christmas*)application;
     PlatformServices* services = app->m_services;
 
-    services->f_renderImage( app->m_renderer, app->m_landscape->m_textureId, 1 );
+    cnc::DrawImage( app, app->m_landscape, vec2( 0.0f, 0.0f ) );
     services->f_renderParticles( app->m_renderer, app->m_numParticles, app->m_snowmask->m_textureId, app->m_skymask->m_textureId );
 }
