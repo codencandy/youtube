@@ -1,6 +1,15 @@
 #include <metal_stdlib>
 using namespace metal;
 
+enum draw_type
+{
+    CNC_IMAGE    = 0,
+    CNC_PARTICLE = 1,
+    CNC_RECT     = 2,
+    CNC_CIRCLE   = 3,
+    CNC_LINE     = 4
+};
+
 struct VertexInput
 {
     float3 m_position [[attribute(0)]];
@@ -24,9 +33,10 @@ struct UniformData
 
 struct ModelData
 {
-    float4x4 m_modelMatrix;
-    float4x4 m_pivotMatrix;
-    float    m_rotation;
+    float4x4  m_modelMatrix;
+    float4x4  m_pivotMatrix;
+    float4    m_rotation;
+    uint4     m_data; // x -> shape
 };
 
 struct Particle
@@ -46,7 +56,7 @@ vertex VertexOutput MainVertexShader( VertexInput           in         [[stage_i
 {
     VertexOutput out;
 
-    float angle = model.m_rotation * (instanceId + 1);
+    float angle = model.m_rotation.x * (instanceId + 1);
 
     float2x2 rotationMatrix = {
         { cos( angle ), -sin( angle )},
@@ -62,10 +72,44 @@ vertex VertexOutput MainVertexShader( VertexInput           in         [[stage_i
     return out;
 }
 
-fragment float4 MainFragmentShader( VertexOutput in [[stage_in]],
+fragment float4 MainFragmentShader( VertexOutput          in    [[stage_in]],
+                                    constant ModelData&   model [[buffer(1)]],
                                     texture2d<float> image )
 {
-    float4 color = image.sample( textureSampler, in.m_uv );
+    float4 color;
+
+    switch( model.m_data.x )
+    {
+        case CNC_IMAGE:
+        {
+            color = image.sample( textureSampler, in.m_uv );
+            break;
+        }
+
+        case CNC_RECT:
+        {
+            color = float4( 1.0, 1.0, 0.0, 1.0 );
+            break;
+        }
+
+        case CNC_CIRCLE:
+        {
+            color = float4( 1.0, 1.0, 0.0, 1.0 );
+            break;
+        }
+
+        case CNC_LINE:
+        {
+            color = float4( 1.0, 1.0, 0.0, 1.0 );
+            break;
+        }
+
+        default:
+        {
+            color = float4( 1.0, 1.0, 0.0, 1.0 );
+        }
+    }
+
     return color;
 }
 

@@ -1,8 +1,7 @@
 #include <stddef.h>
 #include <time.h>
 
-extern "C" void* malloc( size_t size );
-
+#include "CNC_Memory.h"
 #include "CNC_ClockApp.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
@@ -45,10 +44,7 @@ void RenderApplication( Application* application )
     ClockApp*         app      = (ClockApp*)application;
     PlatformServices* services = app->m_services;
     
-    f32               centerX  = app->m_background->m_width  / 2.0f;
-    f32               centerY  = app->m_background->m_height / 2.0f;
-    v2                center   = vec2( centerX, centerY );
-
+    v2                center   = vec2(  app->m_background->m_width / 2.0f,  app->m_background->m_height / 2.0f );
     v2                knobP    = vec2(  app->m_knob->m_width       / 2.0f,  app->m_knob->m_height / 2.0f );
     v2                minuteR  = vec2( -app->m_minuteHand->m_width / 2.0f, -app->m_minuteHand->m_height );
     v2                hourR    = vec2( -app->m_hourHand->m_width   / 2.0f, -app->m_hourHand->m_height );

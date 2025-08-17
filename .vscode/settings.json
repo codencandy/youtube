@@ -1,5 +1,7 @@
 {
     "files.associations": {
         "*.mm" : "objective-c"
-    }
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/clang++",
+    "C_Cpp.intelliSenseEngine": "Tag Parser"
 }

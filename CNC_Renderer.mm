@@ -79,8 +79,9 @@
                     id< MTLTexture > texture      = m_textures[call.m_textureId];
                     id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
 
-                    [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
-                    [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
+                    [commandEncoder setVertexBuffer:    vertexBuffer offset: 0 atIndex: 0];
+                    [commandEncoder setVertexBuffer:    modelBuffer  offset: 0 atIndex: 2];
+                    [commandEncoder setFragmentBuffer:  modelBuffer  offset: 0 atIndex: 1];
                     [commandEncoder setFragmentTexture: texture atIndex: 0];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
                     break;

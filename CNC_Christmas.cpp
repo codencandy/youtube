@@ -1,7 +1,4 @@
-#include <stddef.h>
-
-extern "C" void* malloc( size_t size );
-
+#include "CNC_Memory.h"
 #include "CNC_Christmas.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Math.h"

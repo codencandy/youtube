@@ -199,6 +199,11 @@ int main()
 
             // render a new frame using the GPU
             Render( renderer );
+
+            if( ImGui::IsKeyDown( ImGuiKey_Escape ) )
+            {
+                running = false;
+            }
         }
     }
 

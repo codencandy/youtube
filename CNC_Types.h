@@ -9,6 +9,7 @@ typedef signed int                                   s32;
 typedef __attribute__((__ext_vector_type__(2))) float v2;
 typedef __attribute__((__ext_vector_type__(3))) float v3;
 typedef __attribute__((__ext_vector_type__(4))) float v4;
+typedef __attribute__((__ext_vector_type__(4))) u32  uv4;
 
 typedef struct { v3 columns[3]; }                     m3;
 typedef struct { v4 columns[4]; }                     m4;
@@ -35,14 +36,6 @@ typedef struct UniformData
 
 } UniformData;
 
-typedef struct ModelData
-{
-    m4  m_modelMatrix;
-    m4  m_pivotMatrix;
-    f32 m_rotation;
-
-} ModelData;
-
 enum draw_type
 {
     CNC_IMAGE    = 0,
@@ -51,6 +44,15 @@ enum draw_type
     CNC_CIRCLE   = 3,
     CNC_LINE     = 4
 };
+
+typedef struct ModelData
+{
+    m4        m_modelMatrix;
+    m4        m_pivotMatrix;
+    v4        m_rotation;
+    uv4       m_data; // x -> shape
+
+} ModelData;
 
 typedef struct DrawCall
 {
