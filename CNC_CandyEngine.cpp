@@ -39,16 +39,12 @@ void cnc::DrawImage( Application* app, Image* image, v2 position, v2 pivotPoint,
 
 Image* cnc::LoadImage( Application* app, const char* imageName )
 {
-    Image* image = (Image*)malloc( sizeof( Image ) );
+    Image* image = ALLOC_STRUCT( app->m_pool, Image );
 
     PlatformServices* services = app->m_services;
     void*             renderer = app->m_renderer;
 
     image              = services->f_loadImage( imageName );
-
-    image->m_modelData.m_pivotMatrix = identityMatrix();
-    image->m_modelData.m_modelMatrix = identityMatrix();
-    
     image->m_textureId = services->f_uploadImage( renderer, image );
 
     return image;

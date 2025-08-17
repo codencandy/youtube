@@ -1,17 +1,14 @@
-#include <stddef.h>
-#include <time.h>
-
-#include "CNC_Memory.h"
 #include "CNC_ClockApp.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
 
 #include "CNC_CandyEngine.cpp"
 
-Application* LoadApplication( PlatformServices* services, void* renderer )
+Application* LoadApplication( MemoryPool* pool, PlatformServices* services, void* renderer )
 {
-    ClockApp* app = (ClockApp*)malloc( sizeof( ClockApp ) );
+    ClockApp* app = ALLOC_STRUCT( pool, ClockApp );
 
+    app->m_pool        = pool;
     app->m_renderer    = renderer;
     app->m_services    = services;
 
@@ -29,14 +26,8 @@ void UpdateApplication( Application* application )
     ClockApp*         app      = (ClockApp*)application;
     PlatformServices* services = app->m_services;
 
-    time_t rawTime;
-    tm*    timeInfo;
-
-    time( &rawTime );
-    timeInfo = localtime( &rawTime );
-
-    app->m_hours   = (timeInfo->tm_hour) % 12;
-    app->m_minutes = timeInfo->tm_min;
+    app->m_hours   = app->m_timeInfo.m_hours;
+    app->m_minutes = app->m_timeInfo.m_minute;
 }
 
 void RenderApplication( Application* application )

@@ -2,32 +2,32 @@
 
 FRAMEWORKS='-framework AppKit -framework CoreVideo -framework Metal -framework MetalKit -framework GameController'
 IGNORE='-Wno-nullability-completeness'
-FLAGS='--debug -std=c++20 -Ilibs -Ilibs/imgui'
+FLAGS='-O2 -std=c++20 -Ilibs -Ilibs/imgui'
 TIMEFORMAT=%R
 BUILD_TYPE=$1
 
 imgui ()
 {
     echo "build imgui"
-    clang++ -c CNC_ImGui.mm ${FLAGS} ${IGNORE} -o CNC_ImGui.o
+    clang++ -c CNC_ImGui.mm ${FLAGS} ${IGNORE} -o bin/CNC_ImGui.o
 }
 
 christmas ()
 {
     echo "build christmas app"
-    clang++ -dynamiclib -o christmas.dylib CNC_Christmas.cpp ${FRAMEWORKS} ${IGNORE} ${FLAGS}
+    clang++ -dynamiclib -o bin/christmas.dylib CNC_Christmas.cpp -nostdlib -nodefaultlibs ${FRAMEWORKS} ${IGNORE} ${FLAGS}
 }
 
 clock ()
 {
     echo "build clock app"
-    clang++ -dynamiclib -o clock.dylib CNC_ClockApp.cpp ${FRAMEWORKS} ${IGNORE} ${FLAGS}
+    clang++ -dynamiclib -o bin/clock.dylib CNC_ClockApp.cpp -nostdlib -nodefaultlibs ${FRAMEWORKS} ${IGNORE} ${FLAGS}
 }
 
 platform ()
 {
     echo "build platform"
-    clang++ CNC_Main.mm -o demo CNC_ImGui.o ${FRAMEWORKS} ${IGNORE}  ${FLAGS}
+    clang++ CNC_Main.mm -o demo bin/CNC_ImGui.o ${FRAMEWORKS} ${IGNORE}  ${FLAGS}
 }
 
 main ()

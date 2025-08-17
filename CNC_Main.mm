@@ -1,13 +1,17 @@
 #include <AppKit/AppKit.h>
 #include <dlfcn.h>
+#include <time.h>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "libs/imgui/imgui.h"
 #include "libs/imgui/backends/imgui_impl_osx.h"
 #include "libs/imgui/backends/imgui_impl_metal.h"
 
+#define CNC_MEMORY_IMPLEMENTATION
+#include "CNC_Memory.h"
 #include "CNC_Types.h"
 #include "CNC_Application.h"
+#include "CNC_Constants.h"
 
 #include "CNC_Window.mm"
 #include "CNC_Renderer.mm"
@@ -135,8 +139,10 @@ int main()
 {
     bool running = true;
 
-    AppLib christmasLib = loadLib( "christmas.dylib" );
-    AppLib clockLib     = loadLib( "clock.dylib" );
+    static MemoryPool* permanent = CreateMemoryPool( CNC_MEGABYTES(10) );
+
+    AppLib christmasLib = loadLib( "bin/christmas.dylib" );
+    AppLib clockLib     = loadLib( "bin/clock.dylib" );
 
     NSApplication* app = [NSApplication sharedApplication];
 
@@ -151,8 +157,8 @@ int main()
 
     window.contentView = renderer->m_view;
 
-    Application* christmas = christmasLib.f_loadApp( services, renderer );
-    Application* clock     = clockLib.f_loadApp( services, renderer );
+    Application* christmas = christmasLib.f_loadApp( permanent, services, renderer );
+    Application* clock     = clockLib.f_loadApp( permanent, services, renderer );
 
     setupImGui( renderer );
     
@@ -177,6 +183,17 @@ int main()
             // wait for display refresh
             [window->m_displaySignal wait];
 
+            time_t rawTime;
+            tm*    timeInfo;
+
+            time( &rawTime );
+            timeInfo = localtime( &rawTime );
+
+            christmas->m_timeInfo.m_hours  = (timeInfo->tm_hour) % 12;
+            christmas->m_timeInfo.m_minute = timeInfo->tm_min;
+            clock->m_timeInfo.m_hours      = (timeInfo->tm_hour) % 12;
+            clock->m_timeInfo.m_minute     = timeInfo->tm_min;
+            
             if( ui->m_christmasApp )
             {
                 christmasLib.f_updateApp( christmas );

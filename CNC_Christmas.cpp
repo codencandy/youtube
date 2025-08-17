@@ -1,13 +1,14 @@
-#include "CNC_Memory.h"
 #include "CNC_Christmas.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
 #include "CNC_CandyEngine.cpp"
 
-Application* LoadApplication( PlatformServices* services, void* renderer )
+Application* LoadApplication( MemoryPool* pool, PlatformServices* services, void* renderer )
 {
-    Christmas* app   = (Christmas*)malloc( sizeof( Christmas ) );
+    Christmas* app   = ALLOC_STRUCT( pool, Christmas );
+
+    app->m_pool      = pool;
     app->m_services  = services;
     app->m_renderer  = renderer;
 
@@ -15,7 +16,7 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     app->m_skymask      = cnc::LoadImage( app, "res/skymask.png" );
     app->m_snowmask     = cnc::LoadImage( app, "res/snowmask.png" );
     app->m_numParticles = 3000;
-    app->m_particles    = (Particle*)malloc( sizeof( Particle ) * app->m_numParticles );
+    app->m_particles    = ALLOC_ARRAY( app->m_pool, Particle, app->m_numParticles );
 
     cnc_srand( 300 );
 

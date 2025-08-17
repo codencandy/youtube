@@ -1,2 +1,6 @@
 libs
 doc
+imgui.ini
+build.sh
+.gitignore
+.gitmodules
