@@ -125,6 +125,7 @@ typedef struct Shape
     v2        m_position;
     v2        m_size;
     v4        m_color;
+    f32       m_angle;
     draw_type m_type;
 
 } Shape;

@@ -52,6 +52,7 @@ struct Shape
     float2 m_position;
     float2 m_size;
     float4 m_color;
+    float  m_angle;
     uint   m_type;
 };
 
@@ -95,11 +96,12 @@ vertex VertexOutput ShapeVertexShader( VertexInput           in         [[stage_
 {
     VertexOutput out;
 
-    float sX   = shapes[instanceId].m_size.x;
-    float sY   = shapes[instanceId].m_size.y;
-    float posX = shapes[instanceId].m_position.x;
-    float posY = shapes[instanceId].m_position.y;
-    float4 pos = float4( in.m_position, 1.0 );
+    float sX    = shapes[instanceId].m_size.x;
+    float sY    = shapes[instanceId].m_size.y;
+    float posX  = shapes[instanceId].m_position.x;
+    float posY  = shapes[instanceId].m_position.y;
+    float4 pos  = float4( in.m_position, 1.0 );
+    float angle = shapes[instanceId].m_angle;
 
     float4 s1 = float4( sX, 0.0,  0.0, 0.0 );
     float4 s2 = float4( 0.0, sY,  0.0, 0.0 );
@@ -113,16 +115,15 @@ vertex VertexOutput ShapeVertexShader( VertexInput           in         [[stage_
     float4 p4 = float4( posX, posY, 0.0, 1.0 );
     float4x4 positionMatrix = float4x4( p1, p2, p3, p4 );
 
-    float4x4 rotationMatrix = {
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    };
-
+    float4 r1 = float4( cos( angle ), -sin( angle ), 0.0, 0.0 );
+    float4 r2 = float4( sin( angle ),  cos( angle ), 0.0, 0.0 );
+    float4 r3 = float4(          0.0,           0.0, 1.0, 0.0 );
+    float4 r4 = float4(          0.0,           0.0, 0.0, 1.0 );
+    float4x4 rotationMatrix = float4x4( r1, r2, r3, r4 );
+        
     float4 position;
-    
     position = scaleMatrix    * pos;
+    position = rotationMatrix * position;
     position = positionMatrix * position;
     
     out.m_position = uniform.m_projection2D * position;

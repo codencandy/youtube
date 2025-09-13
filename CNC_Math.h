@@ -18,6 +18,50 @@ f32 cnc_sqr( f32 x )
     return root;
 }
 
+f32 cnc_atan( f32 z) 
+{
+    // constants for approximation
+    const double a = 0.280872;
+    if (z > 1.0) {
+        return CNC_PI/2 - cnc_atan(1.0 / z);
+    } else if (z < -1.0) {
+        return -CNC_PI/2 - cnc_atan(1.0 / z);
+    } else {
+        // polynomial approximation
+        return (z / (1.0 + a * z * z));
+    }
+}
+
+// atan2 built on top of our atan approximation
+f32 cnc_atan2( f32 y, f32 x) {
+    if( x > 0.0 ) 
+    {
+        return cnc_atan(y / x);
+    } else if (x < 0.0 && y >= 0.0) 
+    {
+        return cnc_atan(y / x) + CNC_PI;
+    } else if (x < 0.0 && y < 0.0) 
+    {
+        return cnc_atan(y / x) - CNC_PI;
+    } else if (x == 0.0 && y > 0.0) 
+    {
+        return CNC_PI / 2.0;
+    } else if (x == 0.0 && y < 0.0) 
+    {
+        return -CNC_PI / 2.0;
+    } else 
+    {
+        return 0.0; // undefined for (0,0)
+    }
+}
+
+f32 cnc_lineangle( v2 a, v2 b )
+{
+    f32 angle = cnc_atan2( (b.y - a.y), (b.x - a.x) );
+
+    return angle;
+}
+
 m4 translationMatrix( f32 x, f32 y )
 {
     v4 col1 = { 1.0f, 0.0f, 0.0f, 0.0f };

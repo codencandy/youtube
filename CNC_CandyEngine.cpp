@@ -41,6 +41,7 @@ void cnc::DrawLine( Application* app, v2 start, v2 end, Colour c )
     call.m_type     = CNC_LINE;
     call.m_position = start;
     call.m_size     = vec2( d, 1.0f );
+    call.m_angle    = -cnc_lineangle( start, end );
     call.m_color    = c;
 
     services->f_submitDrawCall( renderer, call );
