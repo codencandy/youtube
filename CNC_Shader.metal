@@ -140,11 +140,24 @@ fragment float4 ShapeFragmentShader( VertexOutput in [[stage_in]] )
     switch( in.m_type )
     {
         case CNC_RECT:   
+        {
             color = in.m_color;
             break;
-            
-        case CNC_CIRCLE: break;
-        case CNC_LINE:   break;
+        }
+
+        case CNC_CIRCLE: 
+        {
+            float2 center = float2( 0.5, 0.5 );
+            float  d      = length( in.m_uv - center );
+            color         = in.m_color;
+            color.a       = 1.0 - smoothstep( 0.45, 0.5, d );
+            break;
+        }
+        case CNC_LINE:   
+        {
+            color = in.m_color;
+            break;
+        }
     }
 
     return color;

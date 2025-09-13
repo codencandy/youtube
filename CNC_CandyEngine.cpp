@@ -30,6 +30,22 @@ void cnc::DrawCircle( Application* app, v2 position, f32 radius, Colour c )
     services->f_submitDrawCall( renderer, call );
 }
 
+void cnc::DrawLine( Application* app, v2 start, v2 end, Colour c )
+{
+    void*             renderer = app->m_renderer;
+    PlatformServices* services = app->m_services;
+
+    DrawCall call;
+
+    f32 d           = distance( start, end );
+    call.m_type     = CNC_LINE;
+    call.m_position = start;
+    call.m_size     = vec2( d, 1.0f );
+    call.m_color    = c;
+
+    services->f_submitDrawCall( renderer, call );
+}
+
 void cnc::DrawRectangle( Application* app, Rectangle& rect )
 {
     cnc::DrawRectangle( app, rect.m_position, rect.m_size, rect.m_color );
@@ -40,17 +56,9 @@ void cnc::DrawCircle( Application* app, Circle& circle )
     cnc::DrawCircle( app, circle.m_center, circle.m_radius, circle.m_color );
 }
 
-void cnc::DrawLine( Application* app, v2 start, v2 end, Colour c )
+void cnc::DrawLine( Application* app, Line& line )
 {
-    void*             renderer = app->m_renderer;
-    PlatformServices* services = app->m_services;
-
-    DrawCall call;
-    call.m_type     = CNC_LINE;
-    call.m_position = start;
-    call.m_color    = c;
-
-    services->f_submitDrawCall( renderer, call );
+    cnc::DrawLine( app, line.m_start, line.m_end, line.m_color );
 }
 
 void cnc::DrawImage( Application* app, Image* image, v2 position, v2 pivotPoint, f32 angle )

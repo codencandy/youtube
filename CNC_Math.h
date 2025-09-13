@@ -5,6 +5,19 @@
 
 #define CNC_PI 3.141592653589793
 
+f32 cnc_sqr( f32 x )
+{
+    f32 root = x / 3.0f;
+    int i;
+    if( x <= 0 ) 
+        return 0;
+    for( i=0; i<32; i++ )
+    {
+        root = (root + x / root) / 2;
+    }
+    return root;
+}
+
 m4 translationMatrix( f32 x, f32 y )
 {
     v4 col1 = { 1.0f, 0.0f, 0.0f, 0.0f };
@@ -36,6 +49,18 @@ f32 toRadians( f32 degrees )
 {
     f32 radians = (CNC_PI / 180.0f) * degrees;
     return radians;
+}
+
+f32 distance( v2 a, v2 b )
+{
+    f32 d;
+
+    f32 x = (b.x - a.x) * (b.x - a.x);
+    f32 y = (b.y - a.y) * (b.y - a.y);
+
+    d = cnc_sqr( x + y );
+
+    return d;
 }
 
 static u32 xorshift_state = 2463534242u; /* default seed (nonzero) */

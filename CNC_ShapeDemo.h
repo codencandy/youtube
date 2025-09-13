@@ -8,6 +8,7 @@ typedef struct ShapeDemo : Application
 {
     Rectangle m_testRect;
     Circle    m_testCircle;
+    Line      m_testLine;
 
 } ShapeDemo;
 
