@@ -21,6 +21,12 @@ m4 translationMatrix( f32 x, f32 y )
     return result;
 }
 
+m4 translationMatrix( v2 position )
+{
+    m4 result = translationMatrix( position.x, position.y );
+    return result;
+}
+
 m4 identityMatrix()
 {
     return translationMatrix( 0.0f, 0.0f );

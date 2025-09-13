@@ -21,6 +21,7 @@ struct VertexOutput
     float4 m_position [[position]];
     float4 m_color;
     float2 m_uv;
+    uint   m_type;
 };
 
 struct UniformData
@@ -36,7 +37,6 @@ struct ModelData
     float4x4  m_modelMatrix;
     float4x4  m_pivotMatrix;
     float4    m_rotation;
-    uint4     m_data; // x -> shape
 };
 
 struct Particle
@@ -45,6 +45,14 @@ struct Particle
     float  m_speed;
     float  m_size;
     float  m_time;
+};
+
+struct Shape
+{
+    float2 m_position;
+    float2 m_size;
+    float4 m_color;
+    uint   m_type;
 };
 
 constexpr sampler textureSampler( mag_filter::linear, min_filter::linear );
@@ -76,38 +84,67 @@ fragment float4 MainFragmentShader( VertexOutput          in    [[stage_in]],
                                     constant ModelData&   model [[buffer(1)]],
                                     texture2d<float> image )
 {
+    float4 color = image.sample( textureSampler, in.m_uv );
+    return color;
+}
+
+vertex VertexOutput ShapeVertexShader( VertexInput           in         [[stage_in]],
+                                       constant UniformData& uniform    [[buffer(1)]],
+                                       device Shape*         shapes     [[buffer(2)]],
+                                       uint                  instanceId [[instance_id]] )
+{
+    VertexOutput out;
+
+    float sX   = shapes[instanceId].m_size.x;
+    float sY   = shapes[instanceId].m_size.y;
+    float posX = shapes[instanceId].m_position.x;
+    float posY = shapes[instanceId].m_position.y;
+    float4 pos = float4( in.m_position, 1.0 );
+
+    float4 s1 = float4( sX, 0.0,  0.0, 0.0 );
+    float4 s2 = float4( 0.0, sY,  0.0, 0.0 );
+    float4 s3 = float4( 0.0, 0.0, 1.0, 0.0 );
+    float4 s4 = float4( 0.0, 0.0, 0.0, 1.0 );
+    float4x4 scaleMatrix = float4x4( s1, s2, s3, s4 );
+
+    float4 p1 = float4( 1.0, 0.0, 0.0, 0.0 );
+    float4 p2 = float4( 0.0, 1.0, 0.0, 0.0 );
+    float4 p3 = float4( 0.0, 0.0, 1.0, 0.0 );
+    float4 p4 = float4( posX, posY, 0.0, 1.0 );
+    float4x4 positionMatrix = float4x4( p1, p2, p3, p4 );
+
+    float4x4 rotationMatrix = {
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    };
+
+    float4 position;
+    
+    position = scaleMatrix    * pos;
+    position = positionMatrix * position;
+    
+    out.m_position = uniform.m_projection2D * position;
+    out.m_uv       = in.m_uv;
+    out.m_color    = shapes[instanceId].m_color;
+    out.m_type     = shapes[instanceId].m_type;
+
+    return out;
+}
+
+fragment float4 ShapeFragmentShader( VertexOutput in [[stage_in]] )
+{
     float4 color;
 
-    switch( model.m_data.x )
+    switch( in.m_type )
     {
-        case CNC_IMAGE:
-        {
-            color = image.sample( textureSampler, in.m_uv );
+        case CNC_RECT:   
+            color = in.m_color;
             break;
-        }
-
-        case CNC_RECT:
-        {
-            color = float4( 1.0, 1.0, 0.0, 1.0 );
-            break;
-        }
-
-        case CNC_CIRCLE:
-        {
-            color = float4( 1.0, 1.0, 0.0, 1.0 );
-            break;
-        }
-
-        case CNC_LINE:
-        {
-            color = float4( 1.0, 1.0, 0.0, 1.0 );
-            break;
-        }
-
-        default:
-        {
-            color = float4( 1.0, 1.0, 0.0, 1.0 );
-        }
+            
+        case CNC_CIRCLE: break;
+        case CNC_LINE:   break;
     }
 
     return color;

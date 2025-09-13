@@ -5,8 +5,9 @@ UserInterface* CreateUserinterface()
 {
     UserInterface* ui = (UserInterface*)malloc( sizeof( UserInterface ) );
 
-    ui->m_clockApp     = true;
-    ui->m_christmasApp = true;
+    ui->m_clockApp     = false;
+    ui->m_christmasApp = false;
+    ui->m_shapeApp     = true;
 
     return ui;
 }
@@ -25,6 +26,11 @@ void ShowUserInterface( UserInterface* ui )
     if( ImGui::Button( "christmas app", buttonSize ) )
     {
         ui->m_christmasApp = !ui->m_christmasApp;
+    }
+
+    if( ImGui::Button( "shape app", buttonSize ) )
+    {
+        ui->m_shapeApp = !ui->m_shapeApp;
     }
 
     ImGui::End();

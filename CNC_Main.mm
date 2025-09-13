@@ -140,9 +140,11 @@ int main()
     bool running = true;
 
     static MemoryPool* permanent = CreateMemoryPool( CNC_MEGABYTES(10) );
+    static MemoryPool* transient = CreateMemoryPool( CNC_MEGABYTES(10) );
 
     AppLib christmasLib = loadLib( "bin/christmas.dylib" );
     AppLib clockLib     = loadLib( "bin/clock.dylib" );
+    AppLib shapeLib     = loadLib( "bin/shape.dylib" );
 
     NSApplication* app = [NSApplication sharedApplication];
 
@@ -157,8 +159,9 @@ int main()
 
     window.contentView = renderer->m_view;
 
-    Application* christmas = christmasLib.f_loadApp( permanent, services, renderer );
-    Application* clock     = clockLib.f_loadApp( permanent, services, renderer );
+    Application* christmas = christmasLib.f_loadApp( permanent, transient, services, renderer );
+    Application* clock     = clockLib.f_loadApp(     permanent, transient, services, renderer );
+    Application* shape     = shapeLib.f_loadApp(     permanent, transient, services, renderer );
 
     setupImGui( renderer );
     
@@ -204,6 +207,12 @@ int main()
             {
                 clockLib.f_updateApp( clock );
                 clockLib.f_renderApp( clock );
+            }
+
+            if( ui->m_shapeApp )
+            {
+                shapeLib.f_updateApp( shape );
+                shapeLib.f_renderApp( shape );
             }
 
             ImGui_ImplMetal_NewFrame( [renderer->m_view currentRenderPassDescriptor] );

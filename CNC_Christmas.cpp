@@ -1,16 +1,13 @@
 #include "CNC_Christmas.h"
-#include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
 #include "CNC_CandyEngine.cpp"
 
-Application* LoadApplication( MemoryPool* pool, PlatformServices* services, void* renderer )
+Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
 {
     Christmas* app   = ALLOC_STRUCT( pool, Christmas );
 
-    app->m_pool      = pool;
-    app->m_services  = services;
-    app->m_renderer  = renderer;
+    InitApplication( app, pool, transient, services, renderer );
 
     app->m_landscape    = cnc::LoadImage( app, "res/landscape.png" );
     app->m_skymask      = cnc::LoadImage( app, "res/skymask.png" );

@@ -1,7 +1,6 @@
 #ifndef CNC_MEMORY_H
 #define CNC_MEMORY_H
 
-
 typedef struct MemoryPool
 {
     unsigned int   m_size;
@@ -10,12 +9,9 @@ typedef struct MemoryPool
 
 } MemoryPool;
 
-MemoryPool* CreateMemoryPool( unsigned int size );
-
 void* _allocateMemory( MemoryPool* pool, unsigned int size )
 {
-    void* memory = (unsigned char*)pool->m_base + pool->m_used;
-
+    void* memory  = (unsigned char*)pool->m_base + pool->m_used;
     pool->m_used += size;
 
     return memory;
@@ -25,6 +21,7 @@ void* _allocateMemory( MemoryPool* pool, unsigned int size )
 #define ALLOC_ARRAY( p, t, n ) (t*)_allocateMemory( p, n * sizeof( t ) )
 
 #ifdef CNC_MEMORY_IMPLEMENTATION
+
 #include <stddef.h>
 extern "C" void* malloc( size_t size );
 

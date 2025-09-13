@@ -1,16 +1,13 @@
 #include "CNC_ClockApp.h"
-#include "CNC_PlatformServices.h"
 #include "CNC_Math.h"
 
 #include "CNC_CandyEngine.cpp"
 
-Application* LoadApplication( MemoryPool* pool, PlatformServices* services, void* renderer )
+Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
 {
     ClockApp* app = ALLOC_STRUCT( pool, ClockApp );
 
-    app->m_pool        = pool;
-    app->m_renderer    = renderer;
-    app->m_services    = services;
+    InitApplication( app, pool, transient, services, renderer );
 
     app->m_background  = cnc::LoadImage( app, "res/clock_bgr.png" );
     app->m_hourHand    = cnc::LoadImage( app, "res/clock_hours.png" );

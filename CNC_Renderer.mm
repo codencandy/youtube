@@ -5,6 +5,7 @@
 #include "libs/imgui/backends/imgui_impl_metal.h"
 
 #include "CNC_Constants.h"
+#include "CNC_Math.h"
 #include "CNC_Types.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Libs.h"
@@ -21,12 +22,16 @@
         
         id< MTLRenderPipelineState > m_renderStateImage;
         id< MTLRenderPipelineState > m_renderStateParticle;
+        id< MTLRenderPipelineState > m_renderStateShape;
 
         u32                   m_nextTextureId;
         NSMutableArray*       m_textures;
         NSMutableArray*       m_vertexBuffers;
         NSMutableArray*       m_modelBuffers;
 
+        id< MTLBuffer >       m_shapeVertexBuffer;
+        id< MTLBuffer >       m_shapesBuffer;
+        Shape*                m_shapes;
         DrawCall*             m_drawCalls;
 
         id< MTLBuffer >       m_particleBuffer;
@@ -40,10 +45,9 @@
 - (void)createPipeline;
 
 - (u32)uploadImage:(Image*)image;
+- (void)uploadShapes;
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
-- (void)renderImage:(u32)textureId instances:(u32)numInstances;
-- (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
-- (void)updateImage:(Image*)image;
+- (void)submitDrawCall:(DrawCall)call;
 
 @end
 
@@ -66,19 +70,28 @@
         [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData ) atIndex: 1];
 
         u32 numDrawCalls = arrlen( m_drawCalls );
+        [self uploadShapes];
+
         for( u32 i=0; i<numDrawCalls; ++i )
         {
-            DrawCall call = m_drawCalls[i];
+            DrawCall& call = m_drawCalls[i];
 
             switch( call.m_type )
             {
                 case CNC_IMAGE:
                 {
+                    ModelData data;
+                    data.m_modelMatrix = translationMatrix( call.m_position );
+                    data.m_pivotMatrix = translationMatrix( call.m_pivotPoint );
+                    data.m_rotation    = call.m_angle;
+
+                    id< MTLBuffer > modelBuffer = m_modelBuffers[call.m_textureId];
+                    memcpy( [modelBuffer contents], &data, sizeof( ModelData ) );
+
                     [commandEncoder setRenderPipelineState: m_renderStateImage];
                     id< MTLBuffer >  vertexBuffer = m_vertexBuffers[call.m_textureId];
                     id< MTLTexture > texture      = m_textures[call.m_textureId];
-                    id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
-
+                    
                     [commandEncoder setVertexBuffer:    vertexBuffer offset: 0 atIndex: 0];
                     [commandEncoder setVertexBuffer:    modelBuffer  offset: 0 atIndex: 2];
                     [commandEncoder setFragmentBuffer:  modelBuffer  offset: 0 atIndex: 1];
@@ -102,11 +115,24 @@
                     break;
                 }
 
-                case CNC_RECT:   break;
-                case CNC_CIRCLE: break;
-                case CNC_LINE:   break;
+                case CNC_RECT:
+                case CNC_CIRCLE:
+                case CNC_LINE:
+                    break;
+
                 default: break;
             }            
+        }
+
+        u32 numShapes = arrlen( m_shapes );
+        if( numShapes != 0 )
+        {
+            [commandEncoder setRenderPipelineState: m_renderStateShape];
+            [commandEncoder setVertexBuffer: m_shapeVertexBuffer  offset: 0 atIndex: 0];
+            [commandEncoder setVertexBuffer: m_shapesBuffer       offset: 0 atIndex: 2];
+            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: numShapes];
+
+            arrfree( m_shapes );
         }
 
         // ImGui Rendering
@@ -121,6 +147,7 @@
 
     // reset this after every frame !!!
     arrfree( m_drawCalls );
+    
 }
 
 - (bool)checkError:(NSError*)error
@@ -212,44 +239,53 @@
 {
     MTLRenderPipelineDescriptor* renderDesc = [MTLRenderPipelineDescriptor new];
     MTLVertexDescriptor*         vertexDesc = [MTLVertexDescriptor new];
+    NSError*                     error      = NULL;
 
-    vertexDesc.attributes[0].format = MTLVertexFormatFloat3;
-    vertexDesc.attributes[1].format = MTLVertexFormatFloat2;
+    vertexDesc.attributes[0].format                            = MTLVertexFormatFloat3;
+    vertexDesc.attributes[1].format                            = MTLVertexFormatFloat2;
+    vertexDesc.attributes[0].bufferIndex                       = 0;
+    vertexDesc.attributes[1].bufferIndex                       = 0;
+    vertexDesc.attributes[0].offset                            = offsetof( VertexInput, m_position );
+    vertexDesc.attributes[1].offset                            = offsetof( VertexInput, m_uv );
+    vertexDesc.layouts[0].stride                               = sizeof( VertexInput );
+    vertexDesc.layouts[0].stepFunction                         = MTLVertexStepFunctionPerVertex;
+    renderDesc.vertexDescriptor                                = vertexDesc;
 
-    vertexDesc.attributes[0].bufferIndex = 0;
-    vertexDesc.attributes[1].bufferIndex = 0;
-
-    vertexDesc.attributes[0].offset = offsetof( VertexInput, m_position );
-    vertexDesc.attributes[1].offset = offsetof( VertexInput, m_uv );
-
-    vertexDesc.layouts[0].stride       = sizeof( VertexInput );
-    vertexDesc.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
-
-    renderDesc.vertexDescriptor                = vertexDesc;
-    renderDesc.vertexFunction                  = [m_library newFunctionWithName: @"MainVertexShader"];
-    renderDesc.fragmentFunction                = [m_library newFunctionWithName: @"MainFragmentShader"];
-    renderDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
-
-    renderDesc.colorAttachments[0].blendingEnabled = true;
-    renderDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
-    renderDesc.colorAttachments[0].rgbBlendOperation   = MTLBlendOperationAdd;
-
-    renderDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
-    renderDesc.colorAttachments[0].sourceRGBBlendFactor   = MTLBlendFactorSourceAlpha;
-
+    renderDesc.colorAttachments[0].pixelFormat                 = MTLPixelFormatBGRA8Unorm;
+    renderDesc.colorAttachments[0].blendingEnabled             = true;
+    renderDesc.colorAttachments[0].alphaBlendOperation         = MTLBlendOperationAdd;
+    renderDesc.colorAttachments[0].rgbBlendOperation           = MTLBlendOperationAdd;
+    renderDesc.colorAttachments[0].sourceAlphaBlendFactor      = MTLBlendFactorSourceAlpha;
+    renderDesc.colorAttachments[0].sourceRGBBlendFactor        = MTLBlendFactorSourceAlpha;
     renderDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
     renderDesc.colorAttachments[0].destinationRGBBlendFactor   = MTLBlendFactorOneMinusSourceAlpha;
 
-    NSError* error = NULL;
-    m_renderStateImage = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
-    [self checkError: error];
+    // Main Shader
+    {
+        error = NULL;
+        renderDesc.vertexFunction   = [m_library newFunctionWithName: @"MainVertexShader"];
+        renderDesc.fragmentFunction = [m_library newFunctionWithName: @"MainFragmentShader"];
+        m_renderStateImage          = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+        [self checkError: error];
+    }
 
-    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"ParticleVertexShader"];
-    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"ParticleFragmentShader"];
+    // Shape Shader
+    {
+        error = NULL;
+        renderDesc.fragmentFunction = [m_library newFunctionWithName: @"ShapeFragmentShader"];
+        renderDesc.vertexFunction   = [m_library newFunctionWithName: @"ShapeVertexShader"];
+        m_renderStateShape          = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+        [self checkError: error];
+    }
 
-    error = NULL;
-    m_renderStateParticle = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
-    [self checkError: error];
+    // Particle Shader
+    {
+        error = NULL;
+        renderDesc.fragmentFunction = [m_library newFunctionWithName: @"ParticleFragmentShader"];
+        renderDesc.vertexFunction   = [m_library newFunctionWithName: @"ParticleVertexShader"];
+        m_renderStateParticle       = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+        [self checkError: error];
+    }
 }
 
 - (u32)uploadImage:(Image*)image
@@ -276,6 +312,18 @@
     return textureId;
 }
 
+- (void)uploadShapes
+{
+    if( m_shapesBuffer != NULL )
+    {
+        m_shapesBuffer = nil;
+    }
+
+    m_shapesBuffer = [m_gpu newBufferWithBytes: m_shapes 
+                                        length: arrlen( m_shapes ) * sizeof( Shape ) 
+                                        options: MTLResourceCPUCacheModeDefaultCache];
+}
+
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles
 {
     m_particleBuffer = [m_gpu newBufferWithBytes: particles 
@@ -299,14 +347,29 @@
     m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );                                         
 }
 
-- (void)renderImage:(u32)textureId instances:(u32)numInstances
+- (void)submitDrawCall:(DrawCall)call
 {
-    DrawCall call;
-    call.m_type = CNC_IMAGE;
-    call.m_textureId = textureId;
-    call.m_numInstances = numInstances;
-    
     arrput( m_drawCalls, call );
+
+    switch( call.m_type )
+    {
+        case CNC_RECT:
+        {
+            Shape rect;
+            rect.m_position = call.m_position;
+            rect.m_size     = call.m_size;
+            rect.m_color    = toVec4( call.m_color );
+            rect.m_type     = CNC_RECT;
+
+            arrput( m_shapes, rect );
+            break;
+        }
+
+        case CNC_CIRCLE:   break;
+        case CNC_LINE:     break;
+        case CNC_IMAGE:    break;
+        case CNC_PARTICLE: break;
+    }
 }
 
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask
@@ -320,12 +383,6 @@
     call.m_numInstances = numParticles;
     
     arrput( m_drawCalls, call );
-}
-
-- (void)updateImage:(Image*)image
-{
-    id< MTLBuffer > modelBuffer = m_modelBuffers[image->m_textureId];
-    memcpy( [modelBuffer contents], &image->m_modelData, sizeof( ModelData ) );
 }
 
 @end
@@ -348,10 +405,10 @@ void PlatformUploadParticles( void* renderer, Particle* particles, u32 numPartic
     [r uploadParticles: particles numParticles: numParticles];
 }
 
-void PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances )
+void PlatformSubmitDrawCall( void* renderer, DrawCall call )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r renderImage: textureId instances: numInstances];
+    [r submitDrawCall: call];
 }
 
 void PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask )
@@ -360,19 +417,13 @@ void PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u3
     [r renderParticles: numParticles snowMask:snowMask skyMask:skyMask];
 }
 
-void PlatformUpdateImage( void* renderer, Image* image )
-{
-    MainRenderer* r = (MainRenderer*)renderer;
-    [r updateImage: image];
-}
-
 MainRenderer* CreateMainRenderer()
 {
     MainRenderer* renderer = [MainRenderer new];
 
     CGRect renderFrame = CGRectMake( 0, 0, CNC_WINDOW_WIDTH, CNC_WINDOW_HEIGHT );
 
-    renderer->m_gpu = MTLCreateSystemDefaultDevice();
+    renderer->m_gpu          = MTLCreateSystemDefaultDevice();
     renderer->m_commandQueue = [renderer->m_gpu newCommandQueue];
     renderer->m_view         = [[MTKView alloc] initWithFrame: renderFrame device: renderer->m_gpu];
 
@@ -385,6 +436,9 @@ MainRenderer* CreateMainRenderer()
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
+    renderer->m_shapeVertexBuffer = [renderer createGeometry: 1 height: 1];
+    renderer->m_shapes            = NULL;
+    renderer->m_shapesBuffer      = NULL;
 
     [renderer createShader];
     [renderer createUniform];

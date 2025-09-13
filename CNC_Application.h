@@ -3,6 +3,12 @@
 
 #include "CNC_Memory.h"
 #include "CNC_PlatformServices.h"
+#include "CNC_Libs.h"
+#include "libs/imgui/imgui.h"
+
+#ifndef NULL
+#define NULL 0x00
+#endif
 
 typedef struct TimeInfo
 {
@@ -13,19 +19,21 @@ typedef struct TimeInfo
 typedef struct Application
 {
     MemoryPool*       m_pool;
+    MemoryPool*       m_transient;
     PlatformServices* m_services;
     void*             m_renderer;
     TimeInfo          m_timeInfo;
+    ImGuiIO*          m_io;
 
 } Application;
 
 extern "C"
 {
-    Application* LoadApplication( MemoryPool* pool, PlatformServices* services, void* renderer );
+    Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer );
     void         UpdateApplication( Application* app );
     void         RenderApplication( Application* app );
 
-    typedef Application*(*loadapp_fcn)(MemoryPool*, PlatformServices*, void*);
+    typedef Application*(*loadapp_fcn)(MemoryPool*, MemoryPool*, PlatformServices*, void*);
     typedef void (*updateapp_fcn)(Application*);
     typedef void (*renderapp_fcn)(Application*);
 }
@@ -37,5 +45,13 @@ typedef struct AppLib
     renderapp_fcn f_renderApp;
 
 } AppLib;
+
+void InitApplication( Application* app, MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
+{
+    app->m_pool      = pool;
+    app->m_transient = transient;
+    app->m_services  = services;
+    app->m_renderer  = renderer;
+}
 
 #endif//CNC_APPLICATION_H
