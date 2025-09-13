@@ -157,6 +157,7 @@ fragment float4 ShapeFragmentShader( VertexOutput in [[stage_in]] )
         case CNC_LINE:   
         {
             color = in.m_color;
+            color.a = smoothstep( 0.2, 0.5, in.m_uv.y ) * (1.0 - smoothstep( 0.5, 0.8, in.m_uv.y ));
             break;
         }
     }

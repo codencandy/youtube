@@ -43,7 +43,7 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
 
     app->m_testRect   = AddRectangle( vec2( 10.0f, 10.0f ), vec2( 100.0f, 20.0f ), purple );
     app->m_testCircle = AddCircle(    vec2( 100.0f, 100.0f ), 20.0f, red );
-    app->m_testLine   = AddLine(      vec2( 10.0f, 200.0f), vec2( 300.0f, 400.0f ), white );
+    app->m_testLine   = AddLine(      vec2( 0.0f, 0.0f), vec2( 400.0f, 400.0f ), white );
 
     return app;
 }

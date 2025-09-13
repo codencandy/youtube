@@ -40,7 +40,7 @@ void cnc::DrawLine( Application* app, v2 start, v2 end, Colour c )
     f32 d           = distance( start, end );
     call.m_type     = CNC_LINE;
     call.m_position = start;
-    call.m_size     = vec2( d, 1.0f );
+    call.m_size     = vec2( d, 3.0f );
     call.m_angle    = -cnc_lineangle( start, end );
     call.m_color    = c;
 

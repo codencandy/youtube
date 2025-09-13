@@ -387,7 +387,10 @@
         {
             Shape line;
 
-            line.m_position = call.m_position;
+            f32 x = call.m_position.x;
+            f32 y = call.m_position.y - 1.5f;
+
+            line.m_position = vec2( x, y );
             line.m_size     = call.m_size;
             line.m_color    = toVec4( call.m_color );
             line.m_angle    = call.m_angle;
