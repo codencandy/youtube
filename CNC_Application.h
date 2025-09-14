@@ -1,6 +1,7 @@
 #ifndef CNC_APPLICATION_H
 #define CNC_APPLICATION_H
 
+#include "CNC_Constants.h"
 #include "CNC_Memory.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_Libs.h"
@@ -24,6 +25,7 @@ typedef struct Application
     void*             m_renderer;
     TimeInfo          m_timeInfo;
     ImGuiIO*          m_io;
+    v2                m_screenSize;
 
 } Application;
 
@@ -48,10 +50,11 @@ typedef struct AppLib
 
 void InitApplication( Application* app, MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
 {
-    app->m_pool      = pool;
-    app->m_transient = transient;
-    app->m_services  = services;
-    app->m_renderer  = renderer;
+    app->m_pool       = pool;
+    app->m_transient  = transient;
+    app->m_services   = services;
+    app->m_renderer   = renderer;
+    app->m_screenSize = vec2( CNC_WINDOW_WIDTH, CNC_WINDOW_HEIGHT );
 }
 
 #endif//CNC_APPLICATION_H

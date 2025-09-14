@@ -10,6 +10,9 @@ typedef struct ShapeDemo : Application
     Circle    m_testCircle;
     Line      m_testLine;
 
+    u32       m_numGridLines;
+    Line*     m_grid;
+
 } ShapeDemo;
 
 #endif//CNC_SHAPEDEMO_H
