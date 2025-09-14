@@ -6,9 +6,9 @@
 
 typedef struct Christmas : Application
 {
-    Image* m_landscape;
-    Image* m_skymask;
-    Image* m_snowmask;
+    Image*    m_landscape;
+    Image*    m_skymask;
+    Image*    m_snowmask;
 
     u32       m_numParticles;
     Particle* m_particles;

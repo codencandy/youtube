@@ -9,11 +9,11 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
 
     InitApplication( app, pool, transient, services, renderer );
 
-    app->m_background  = cnc::LoadImage( app, "res/clock_bgr.png" );
-    app->m_hourHand    = cnc::LoadImage( app, "res/clock_hours.png" );
-    app->m_minuteHand  = cnc::LoadImage( app, "res/clock_minutes.png" );
-    app->m_knob        = cnc::LoadImage( app, "res/clock_knob.png" );
-    app->m_highlight   = cnc::LoadImage( app, "res/clock_highlight.png" );
+    app->m_background  = cnc::CreateImage( app, "res/clock_bgr.png" );
+    app->m_hourHand    = cnc::CreateImage( app, "res/clock_hours.png" );
+    app->m_minuteHand  = cnc::CreateImage( app, "res/clock_minutes.png" );
+    app->m_knob        = cnc::CreateImage( app, "res/clock_knob.png" );
+    app->m_highlight   = cnc::CreateImage( app, "res/clock_highlight.png" );
 
     return app;
 }

@@ -9,9 +9,9 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
 
     InitApplication( app, pool, transient, services, renderer );
 
-    app->m_landscape    = cnc::LoadImage( app, "res/landscape.png" );
-    app->m_skymask      = cnc::LoadImage( app, "res/skymask.png" );
-    app->m_snowmask     = cnc::LoadImage( app, "res/snowmask.png" );
+    app->m_landscape    = cnc::CreateImage( app, "res/landscape.png" );
+    app->m_skymask      = cnc::CreateImage( app, "res/skymask.png" );
+    app->m_snowmask     = cnc::CreateImage( app, "res/snowmask.png" );
     app->m_numParticles = 3000;
     app->m_particles    = ALLOC_ARRAY( app->m_pool, Particle, app->m_numParticles );
 
