@@ -314,14 +314,15 @@
 
 - (void)uploadShapes
 {
-    if( m_shapesBuffer != NULL )
-    {
-        m_shapesBuffer = nil;
-    }
+    u32 numShapes = arrlen( m_shapes );
 
-    m_shapesBuffer = [m_gpu newBufferWithBytes: m_shapes 
-                                        length: arrlen( m_shapes ) * sizeof( Shape ) 
-                                        options: MTLResourceCPUCacheModeDefaultCache];
+    if( numShapes > 10000 )
+    {
+        NSLog( @"too many shapes" );
+        return;
+    }
+     
+    memcpy( [m_shapesBuffer contents], m_shapes, sizeof( Shape ) * numShapes );
 }
 
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles
@@ -470,8 +471,8 @@ MainRenderer* CreateMainRenderer()
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_shapeVertexBuffer = [renderer createGeometry: 1 height: 1];
     renderer->m_shapes            = NULL;
-    renderer->m_shapesBuffer      = NULL;
-
+    renderer->m_shapesBuffer      = [renderer->m_gpu newBufferWithLength: 10000 * sizeof( Shape )
+                                                     options:             MTLStorageModeShared];
     [renderer createShader];
     [renderer createUniform];
     [renderer createPipeline];

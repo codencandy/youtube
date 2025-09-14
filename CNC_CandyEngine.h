@@ -6,6 +6,7 @@
 
 namespace cnc
 {
+    // 2D drawing
     void      DrawRectangle  ( Application* app, v2 position, v2 size, Colour c );
     void      DrawRectangle  ( Application* app, Rectangle& rect );
     void      DrawCircle     ( Application* app, v2 position, f32 radius, Colour c );    

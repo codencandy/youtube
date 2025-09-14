@@ -145,6 +145,7 @@ int main()
     AppLib christmasLib = loadLib( "bin/christmas.dylib" );
     AppLib clockLib     = loadLib( "bin/clock.dylib" );
     AppLib shapeLib     = loadLib( "bin/shape.dylib" );
+    AppLib pongLib      = loadLib( "bin/pong.dylib" );
 
     NSApplication* app = [NSApplication sharedApplication];
 
@@ -162,6 +163,7 @@ int main()
     Application* christmas = christmasLib.f_loadApp( permanent, transient, services, renderer );
     Application* clock     = clockLib.f_loadApp(     permanent, transient, services, renderer );
     Application* shape     = shapeLib.f_loadApp(     permanent, transient, services, renderer );
+    Application* pong      = pongLib.f_loadApp(      permanent, transient, services, renderer );
 
     setupImGui( renderer );
     
@@ -213,6 +215,12 @@ int main()
             {
                 shapeLib.f_updateApp( shape );
                 shapeLib.f_renderApp( shape );
+            }
+
+            if( ui->m_pongApp )
+            {
+                pongLib.f_updateApp( pong );
+                pongLib.f_renderApp( pong );
             }
 
             ImGui_ImplMetal_NewFrame( [renderer->m_view currentRenderPassDescriptor] );

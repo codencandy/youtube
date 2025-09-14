@@ -6,6 +6,7 @@ typedef struct UserInterface
     bool m_clockApp;
     bool m_christmasApp;
     bool m_shapeApp;
+    bool m_pongApp;
 
 } UserInterface;
 

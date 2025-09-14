@@ -12,6 +12,12 @@ imgui ()
     clang++ -c CNC_ImGui.mm ${FLAGS} ${IGNORE} -o bin/CNC_ImGui.o
 }
 
+pong ()
+{
+    echo "build pong"
+    clang++ -dynamiclib -o bin/pong.dylib CNC_Pong.cpp ${FRAMEWORKS} ${IGNORE} ${FLAGS}
+}
+
 shape ()
 {
     echo "build shape demo"
@@ -48,6 +54,7 @@ main ()
         time christmas
         time clock
         time shape
+        time pong
     fi
 
     LINES_OF_CODE=$(cloc . --exclude-list-file=clocignore | grep -o -E '([0-9]+)' | tail -n 1)

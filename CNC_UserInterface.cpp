@@ -7,7 +7,8 @@ UserInterface* CreateUserinterface()
 
     ui->m_clockApp     = false;
     ui->m_christmasApp = false;
-    ui->m_shapeApp     = true;
+    ui->m_shapeApp     = false;
+    ui->m_pongApp      = true;
 
     return ui;
 }
@@ -31,6 +32,11 @@ void ShowUserInterface( UserInterface* ui )
     if( ImGui::Button( "shape app", buttonSize ) )
     {
         ui->m_shapeApp = !ui->m_shapeApp;
+    }
+
+    if( ImGui::Button( "pong app", buttonSize ) )
+    {
+        ui->m_pongApp = !ui->m_pongApp;
     }
 
     ImGui::End();
