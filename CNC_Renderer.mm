@@ -371,8 +371,8 @@
         {
             Shape circle;
 
-            f32 x = call.m_position.x - (call.m_position.x / 2.0f);
-            f32 y = call.m_position.y - (call.m_position.y / 2.0f);
+            f32 x = call.m_position.x - call.m_radius;
+            f32 y = call.m_position.y - call.m_radius;
 
             circle.m_position = vec2( x, y );
             circle.m_size     = call.m_radius * 2;

@@ -62,6 +62,15 @@ void cnc::DrawLine( Application* app, Line& line )
     cnc::DrawLine( app, line.m_start, line.m_end, line.m_color );
 }
 
+void cnc::DrawGrid( Application* app, Line* grid, u32 numLines )
+{
+    for( u32 i=0; i<numLines; ++i )
+    {
+        Line l = grid[i];
+        cnc::DrawLine( app, l );
+    }
+}
+
 void cnc::DrawImage( Application* app, Image* image, v2 position, v2 pivotPoint, f32 angle )
 {
     void*             renderer = app->m_renderer;
@@ -91,7 +100,7 @@ Image* cnc::CreateImage( Application* app, const char* imageName )
     return image;
 }
 
-Rectangle CreateRectangle( v2 position, v2 size, Colour c )
+Rectangle cnc::CreateRectangle( v2 position, v2 size, Colour c )
 {
     Rectangle rect;
     rect.m_position = position;
@@ -101,7 +110,7 @@ Rectangle CreateRectangle( v2 position, v2 size, Colour c )
     return rect;
 }
 
-Circle CreateCircle( v2 center, f32 radius, Colour c )
+Circle cnc::CreateCircle( v2 center, f32 radius, Colour c )
 {
     Circle circle;
     circle.m_center = center;
@@ -111,7 +120,7 @@ Circle CreateCircle( v2 center, f32 radius, Colour c )
     return circle;
 }
 
-Line CreateLine( v2 start, v2 end, Colour c )
+Line cnc::CreateLine( v2 start, v2 end, Colour c )
 {
     Line line;
     line.m_start = start;
@@ -121,7 +130,7 @@ Line CreateLine( v2 start, v2 end, Colour c )
     return line;
 }
 
-Line* CreateGrid( MemoryPool* pool, v2 screenSize, f32 cellSize, u32* numLines )
+Line* cnc::CreateGrid( MemoryPool* pool, v2 screenSize, f32 cellSize, u32* numLines )
 {
     f32    w        = screenSize.x;
     f32    h        = screenSize.y;

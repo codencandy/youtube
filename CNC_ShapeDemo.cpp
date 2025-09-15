@@ -11,10 +11,10 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
     Colour purple = colour( 1.0f, 0.0f, 1.0f, 1.0f );
     Colour white  = colour( 1.0f, 1.0f, 1.0f, 1.0f );
 
-    app->m_testRect   = CreateRectangle( vec2( 10.0f, 10.0f ), vec2( 100.0f, 20.0f ), purple );
-    app->m_testCircle = CreateCircle(    vec2( 100.0f, 100.0f ), 20.0f, red );
-    app->m_testLine   = CreateLine(      vec2( 0.0f, 0.0f), vec2( 400.0f, 400.0f ), white );
-    app->m_grid       = CreateGrid( pool, app->m_screenSize, 20.0f, &app->m_numGridLines );
+    app->m_testRect   = cnc::CreateRectangle( vec2( 10.0f, 10.0f ), vec2( 100.0f, 20.0f ), purple );
+    app->m_testCircle = cnc::CreateCircle(    vec2( 100.0f, 100.0f ), 20.0f, red );
+    app->m_testLine   = cnc::CreateLine(      vec2( 0.0f, 0.0f), vec2( 400.0f, 400.0f ), white );
+    app->m_grid       = cnc::CreateGrid( pool, app->m_screenSize, 20.0f, &app->m_numGridLines );
 
     return app;
 }
@@ -28,12 +28,7 @@ void RenderApplication( Application* application )
 {
     ShapeDemo* app = (ShapeDemo*)application;
     
-    for( u32 i=0; i<app->m_numGridLines; ++i )
-    {
-        Line l = app->m_grid[i];
-        cnc::DrawLine( app, l );
-    }
-    
+    cnc::DrawGrid     ( app, app->m_grid, app->m_numGridLines );    
     cnc::DrawRectangle( app, app->m_testRect );
     cnc::DrawCircle   ( app, app->m_testCircle );
     cnc::DrawLine     ( app, app->m_testLine );
