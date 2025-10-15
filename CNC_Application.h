@@ -15,6 +15,9 @@ typedef struct TimeInfo
 {
     u32 m_hours;
     u32 m_minute;
+    f64 m_startTime;
+    f64 m_elspaseTime;
+    f64 m_dt;
 
 } TimeInfo;
 typedef struct Application

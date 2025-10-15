@@ -30,7 +30,8 @@
         NSMutableArray*       m_modelBuffers;
 
         id< MTLBuffer >       m_shapeVertexBuffer;
-        id< MTLBuffer >       m_shapesBuffer;
+        u32                   m_shapeBufferIndex;
+        NSMutableArray*       m_shapeBuffers;
         Shape*                m_shapes;
         DrawCall*             m_drawCalls;
 
@@ -70,8 +71,7 @@
         [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData ) atIndex: 1];
 
         u32 numDrawCalls = arrlen( m_drawCalls );
-        [self uploadShapes];
-
+        
         for( u32 i=0; i<numDrawCalls; ++i )
         {
             DrawCall& call = m_drawCalls[i];
@@ -128,8 +128,8 @@
         if( numShapes != 0 )
         {
             [commandEncoder setRenderPipelineState: m_renderStateShape];
-            [commandEncoder setVertexBuffer: m_shapeVertexBuffer  offset: 0 atIndex: 0];
-            [commandEncoder setVertexBuffer: m_shapesBuffer       offset: 0 atIndex: 2];
+            [commandEncoder setVertexBuffer: m_shapeVertexBuffer                 offset: 0 atIndex: 0];
+            [commandEncoder setVertexBuffer: m_shapeBuffers[m_shapeBufferIndex]  offset: 0 atIndex: 2];
             [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: numShapes];
 
             arrfree( m_shapes );
@@ -314,15 +314,17 @@
 
 - (void)uploadShapes
 {
+    m_shapeBufferIndex = (++m_shapeBufferIndex % 2);
     u32 numShapes = arrlen( m_shapes );
 
-    if( numShapes > 10000 )
+    if( numShapes > 1000 )
     {
         NSLog( @"too many shapes" );
         return;
     }
      
-    memcpy( [m_shapesBuffer contents], m_shapes, sizeof( Shape ) * numShapes );
+    memcpy( [m_shapeBuffers[m_shapeBufferIndex] contents], m_shapes, sizeof( Shape ) * numShapes );
+    [m_shapeBuffers[m_shapeBufferIndex] didModifyRange: NSMakeRange( 0, numShapes)];    
 }
 
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles
@@ -423,6 +425,7 @@
 void Render( MainRenderer* renderer )
 {
     renderer->m_uniform.m_time = (f32)(clock_gettime_nsec_np( CLOCK_UPTIME_RAW ) / 1000000000.0);
+    [renderer uploadShapes];
     [renderer->m_view draw];
 }
 
@@ -471,8 +474,14 @@ MainRenderer* CreateMainRenderer()
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_shapeVertexBuffer = [renderer createGeometry: 1 height: 1];
     renderer->m_shapes            = NULL;
-    renderer->m_shapesBuffer      = [renderer->m_gpu newBufferWithLength: 10000 * sizeof( Shape )
-                                                     options:             MTLStorageModeShared];
+
+    renderer->m_shapeBufferIndex  = 0;
+    renderer->m_shapeBuffers      = [[NSMutableArray alloc] initWithCapacity: 2];
+    id< MTLBuffer > shapeBuffer_0 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( Shape ) options: MTLResourceStorageModeShared];
+    id< MTLBuffer > shapeBuffer_1 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( Shape ) options: MTLResourceStorageModeShared];
+    [renderer->m_shapeBuffers insertObject: shapeBuffer_0 atIndex: 0];
+    [renderer->m_shapeBuffers insertObject: shapeBuffer_1 atIndex: 1];
+
     [renderer createShader];
     [renderer createUniform];
     [renderer createPipeline];

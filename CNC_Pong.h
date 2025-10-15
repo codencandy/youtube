@@ -6,13 +6,18 @@
 
 typedef struct Ball
 {
-    Circle m_cirlce;
+    Circle m_circle;
+    f32    m_radius;
+    v2     m_position;
+    v2     m_velocity;
+    f32    m_acceleration;
 
 } Ball;
 
 typedef struct Pad
 {
     Rectangle m_rect;
+    v2        m_normal;
 
 } Pad;
 
