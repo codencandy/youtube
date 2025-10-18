@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/platform/*",
-                "${workspaceFolder}/engine/*",
+                "${workspaceFolder}*/engine/*",
                 "${workspaceFolder}/libs/imgui/*",
                 "${workspaceFolder}*/../libs/imgui/*"
             ],

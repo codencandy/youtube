@@ -1,5 +1,4 @@
 #include "CNC_ShapeDemo.h"
-#include "CNC_CandyEngine.cpp"
 
 Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
 {
@@ -32,5 +31,4 @@ void RenderApplication( Application* application )
     cnc::DrawRectangle( app, app->m_testRect );
     cnc::DrawCircle   ( app, app->m_testCircle );
     cnc::DrawLine     ( app, app->m_testLine );
-
 }

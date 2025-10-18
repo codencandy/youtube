@@ -3,7 +3,9 @@
 
 #include "CNC_Types.h"
 #include "CNC_Application.h"
-
+#include "CNC_Math.h"
+#include "CNC_Memory.h"
+#include "CNC_Constants.h"
 namespace cnc
 {
     // 2D drawing
@@ -22,6 +24,10 @@ namespace cnc
     Line      CreateLine     ( v2 start, v2 end, Colour c );
     Line*     CreateGrid     ( MemoryPool* pool, v2 screenSize, f32 cellSize, u32* numLines );
 }
+
+#ifdef CNC_CANDYENGINE_IMPLEMENTATION
+#include "CNC_CandyEngine.cpp"
+#endif
 
 #endif//CNC_CANDYENGINE_H
  

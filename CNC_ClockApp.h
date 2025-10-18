@@ -1,8 +1,8 @@
 #ifndef CNC_CLOCKAPP_H
 #define CNC_CLOCKAPP_H
 
-#include "CNC_Types.h"
-#include "CNC_Application.h"
+#define CNC_CANDYENGINE_IMPLEMENTATION
+#include "engine/CNC_CandyEngine.h"
 
 typedef struct ClockApp : Application
 {

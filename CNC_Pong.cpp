@@ -1,6 +1,4 @@
 #include "CNC_Pong.h"
-#include "CNC_Application.h"
-#include "CNC_CandyEngine.cpp"
 
 Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
 {

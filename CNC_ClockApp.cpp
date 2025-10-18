@@ -1,7 +1,4 @@
 #include "CNC_ClockApp.h"
-#include "CNC_Math.h"
-
-#include "CNC_CandyEngine.cpp"
 
 Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
 {
