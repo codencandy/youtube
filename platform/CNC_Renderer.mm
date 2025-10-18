@@ -1,8 +1,8 @@
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 
-#include "libs/imgui/backends/imgui_impl_osx.h"
-#include "libs/imgui/backends/imgui_impl_metal.h"
+#include "../libs/imgui/backends/imgui_impl_osx.h"
+#include "../libs/imgui/backends/imgui_impl_metal.h"
 
 #include "CNC_Constants.h"
 #include "CNC_Math.h"
