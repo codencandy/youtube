@@ -2,14 +2,14 @@
 
 FRAMEWORKS='-framework AppKit -framework CoreVideo -framework Metal -framework MetalKit -framework GameController'
 IGNORE='-Wno-nullability-completeness'
-FLAGS='--debug -std=c++20 -Ilibs -Ilibs/imgui'
+FLAGS='--debug -std=c++20 -Ilibs -Ilibs/imgui -Iplatform -Iplatform/.. -Iengine -Iengine/..'
 TIMEFORMAT=%R
 BUILD_TYPE=$1
 
 imgui ()
 {
     echo "build imgui"
-    clang++ -c CNC_ImGui.mm ${FLAGS} ${IGNORE} -o bin/CNC_ImGui.o
+    clang++ -c platform/CNC_ImGui.mm ${FLAGS} ${IGNORE} -o bin/CNC_ImGui.o
 }
 
 pong ()
@@ -39,7 +39,7 @@ clock ()
 platform ()
 {
     echo "build platform"
-    clang++ CNC_Main.mm -o demo bin/CNC_ImGui.o ${FRAMEWORKS} ${IGNORE}  ${FLAGS}
+    clang++ platform/CNC_Main.mm -o demo bin/CNC_ImGui.o ${FRAMEWORKS} ${IGNORE}  ${FLAGS}
 }
 
 main ()

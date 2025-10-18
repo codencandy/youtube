@@ -11,9 +11,9 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
     Colour white    = colour( 1.0f, 1.0f, 1.0f, 1.0f );
     Colour red      = colour( 1.0f, 0.0f, 0.0f, 1.0f );
     v2     center   = vec2( pong->m_screenSize.x / 2.0f, pong->m_screenSize.y / 2.0f );
-    v2     padLeft  = vec2( 50.0f, pong->m_screenSize.y / 2.0f );
-    v2     padRight = vec2( pong->m_screenSize.x - 50.0f, pong->m_screenSize.y / 2.0f );
     v2     padSize  = vec2( 20.0f, 200.0f );
+    v2     padLeft  = vec2( 50.0f,                        pong->m_screenSize.y / 2.0f - padSize.y / 2.0f );
+    v2     padRight = vec2( pong->m_screenSize.x - 50.0f, pong->m_screenSize.y / 2.0f - padSize.y / 2.0f );
 
     pong->m_ball.m_circle       = cnc::CreateCircle( center, 20.0f, white );
     pong->m_ball.m_position     = center;
@@ -53,5 +53,4 @@ void RenderApplication( Application* app )
     cnc::DrawCircle   ( pong, pong->m_ball.m_circle );
     cnc::DrawRectangle( pong, pong->m_padLeft.m_rect );
     cnc::DrawRectangle( pong, pong->m_padRight.m_rect );
-    
 }

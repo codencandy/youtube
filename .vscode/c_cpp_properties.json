@@ -3,7 +3,9 @@
         {
             "name": "Mac-Clang",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/platform/*",
+                "${workspaceFolder}/engine/*"
             ],
             "defines": [],
             "macFrameworkPath": [

@@ -167,7 +167,7 @@
 - (void)createShader
 {
     NSError*  error        = NULL;
-    NSString* shaderSource = [NSString stringWithContentsOfFile: @"CNC_Shader.metal" 
+    NSString* shaderSource = [NSString stringWithContentsOfFile: @"platform/CNC_Shader.metal" 
                                                        encoding: NSUTF8StringEncoding
                                                           error: &error];
     [self checkError: error];
