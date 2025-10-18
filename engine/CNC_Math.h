@@ -91,7 +91,7 @@ v2 cnc_reflect( v2 a, v2 n)
     return  result;
 }
 
-m4 translationMatrix( f32 x, f32 y )
+m4 cnc_translationMatrix( f32 x, f32 y )
 {
     v4 col1 = { 1.0f, 0.0f, 0.0f, 0.0f };
     v4 col2 = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -107,24 +107,24 @@ m4 translationMatrix( f32 x, f32 y )
     return result;
 }
 
-m4 translationMatrix( v2 position )
+m4 cnc_translationMatrix( v2 position )
 {
-    m4 result = translationMatrix( position.x, position.y );
+    m4 result = cnc_translationMatrix( position.x, position.y );
     return result;
 }
 
-m4 identityMatrix()
+m4 cnc_identityMatrix()
 {
-    return translationMatrix( 0.0f, 0.0f );
+    return cnc_translationMatrix( 0.0f, 0.0f );
 }
 
-f32 toRadians( f32 degrees )
+f32 cnc_toRadians( f32 degrees )
 {
     f32 radians = (CNC_PI / 180.0f) * degrees;
     return radians;
 }
 
-f32 distance( v2 a, v2 b )
+f32 cnc_distance( v2 a, v2 b )
 {
     f32 d;
 

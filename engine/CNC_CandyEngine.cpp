@@ -37,7 +37,7 @@ void cnc::DrawLine( Application* app, v2 start, v2 end, Colour c )
 
     DrawCall call;
 
-    f32 d           = distance( start, end );
+    f32 d           = cnc_distance( start, end );
     call.m_type     = CNC_LINE;
     call.m_position = start;
     call.m_size     = vec2( d, 3.0f );

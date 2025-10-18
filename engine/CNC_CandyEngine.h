@@ -6,6 +6,7 @@
 #include "CNC_Math.h"
 #include "CNC_Memory.h"
 #include "CNC_Constants.h"
+#include "CNC_Physix.h"
 namespace cnc
 {
     // 2D drawing

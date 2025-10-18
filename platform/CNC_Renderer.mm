@@ -81,8 +81,8 @@
                 case CNC_IMAGE:
                 {
                     ModelData data;
-                    data.m_modelMatrix = translationMatrix( call.m_position );
-                    data.m_pivotMatrix = translationMatrix( call.m_pivotPoint );
+                    data.m_modelMatrix = cnc_translationMatrix( call.m_position );
+                    data.m_pivotMatrix = cnc_translationMatrix( call.m_pivotPoint );
                     data.m_rotation    = call.m_angle;
 
                     id< MTLBuffer > modelBuffer = m_modelBuffers[call.m_textureId];

@@ -117,6 +117,12 @@ typedef struct Shape
     v2         m_size;
     v4         m_color;
     f32        m_angle;
+
+    v2         m_velocity;
+    v2         m_acceleration;
+    f32        m_mass;        // mass > 0. For "static" objects supply mass <= 0 to indicate infinite mass.
+    bool       m_static;
+
     shape_type m_type;
 
 } Shape;
@@ -139,6 +145,13 @@ typedef struct Line : Shape
 
 } Line;
 
+typedef struct Contact 
+{
+    bool       m_colliding;
+    v2         m_normal;      // from A → B
+    f32        m_penetration; // overlap distance
+    
+} Contact;
 
 
 #endif//CNC_TYPES_H
