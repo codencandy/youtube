@@ -147,7 +147,6 @@
 
     // reset this after every frame !!!
     arrfree( m_drawCalls );
-    
 }
 
 - (bool)checkError:(NSError*)error
