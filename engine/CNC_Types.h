@@ -15,7 +15,7 @@ typedef __attribute__((__ext_vector_type__(4))) u32  uv4;
 typedef struct { v3 columns[3]; }                     m3;
 typedef struct { v4 columns[4]; }                     m4;
 
-enum draw_type
+enum shape_type
 {
     CNC_IMAGE    = 0,
     CNC_PARTICLE = 1,
@@ -66,38 +66,28 @@ typedef struct ModelData
     v4        m_rotation;
 
 } ModelData;
-typedef struct Colour
-{
-    v4 m_color;
-
-} Colour;
+typedef v4 Colour;
 
 Colour colour( f32 r, f32 g, f32 b, f32 a )
 {
     Colour result;
-    result.m_color = vec4( r, g, b, a );
-    return result;
-}
-
-v4 toVec4( Colour c )
-{
-    v4 result = c.m_color;
+    result = vec4( r, g, b, a );
     return result;
 }
 
 typedef struct DrawCall
 {
-    draw_type m_type;
-    u32       m_textureId;
-    u32       m_snowMask;
-    u32       m_skyMask;
-    u32       m_numInstances;
-    v2        m_position;
-    v2        m_pivotPoint;
-    v2        m_size;
-    f32       m_angle;
-    f32       m_radius;
-    Colour    m_color;
+    shape_type m_type;
+    u32        m_textureId;
+    u32        m_snowMask;
+    u32        m_skyMask;
+    u32        m_numInstances;
+    v2         m_position;
+    v2         m_pivotPoint;
+    v2         m_size;
+    f32        m_angle;
+    f32        m_radius;
+    Colour     m_color;
     
 } DrawCall;
 
@@ -123,35 +113,30 @@ typedef struct Particle
 
 typedef struct Shape
 {
-    v2        m_position;
-    v2        m_size;
-    v4        m_color;
-    f32       m_angle;
-    draw_type m_type;
+    v2         m_position;
+    v2         m_size;
+    v4         m_color;
+    f32        m_angle;
+    shape_type m_type;
 
 } Shape;
 
-typedef struct Rectangle
+typedef struct Rectangle : Shape
 { 
-    v2        m_position;
-    v2        m_size;
-    Colour    m_color;
-
 } Rectangle;
 
-typedef struct Circle
+typedef struct Circle : Shape
 {
-    v2        m_center;
-    f32       m_radius;
-    Colour    m_color;
+    v2         m_center;
+    f32        m_radius;
 
 } Circle;
 
-typedef struct Line
+typedef struct Line : Shape
 {
-    v2        m_start;
-    v2        m_end;
-    Colour    m_color;
+    v2         m_start;
+    v2         m_end;
+
 } Line;
 
 

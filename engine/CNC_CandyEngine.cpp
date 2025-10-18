@@ -106,6 +106,7 @@ Rectangle cnc::CreateRectangle( v2 position, v2 size, Colour c )
     rect.m_position = position;
     rect.m_size     = size;
     rect.m_color    = c;
+    rect.m_type     = CNC_RECT;
 
     return rect;
 }
@@ -116,6 +117,7 @@ Circle cnc::CreateCircle( v2 center, f32 radius, Colour c )
     circle.m_center = center;
     circle.m_radius = radius;
     circle.m_color  = c;
+    circle.m_type   = CNC_CIRCLE;
 
     return circle;
 }
@@ -126,6 +128,7 @@ Line cnc::CreateLine( v2 start, v2 end, Colour c )
     line.m_start = start;
     line.m_end   = end;
     line.m_color = c;
+    line.m_type  = CNC_LINE;
 
     return line;
 }
@@ -138,7 +141,7 @@ Line* cnc::CreateGrid( MemoryPool* pool, v2 screenSize, f32 cellSize, u32* numLi
     u32    rows     = h / cellSize;
     *numLines       = rows + cols;
     Line*  lines    = ALLOC_ARRAY( pool, Line, *numLines );
-    Colour grey     = colour( 0.5f, 0.5f, 0.5f, 1.0f );
+    Colour grey     = colour( 0.2f, 0.2f, 0.2f, 1.0f );
 
     f32 x = 0.0f;
     f32 y = 0.0f;

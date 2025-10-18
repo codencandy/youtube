@@ -361,7 +361,7 @@
             Shape rect;
             rect.m_position = call.m_position;
             rect.m_size     = call.m_size;
-            rect.m_color    = toVec4( call.m_color );
+            rect.m_color    = call.m_color;
             rect.m_angle    = 0.0f;
             rect.m_type     = CNC_RECT;
 
@@ -378,7 +378,7 @@
 
             circle.m_position = vec2( x, y );
             circle.m_size     = call.m_radius * 2;
-            circle.m_color    = toVec4( call.m_color );
+            circle.m_color    = call.m_color;
             circle.m_angle    = 0.0f;
             circle.m_type     = CNC_CIRCLE;
 
@@ -395,7 +395,7 @@
 
             line.m_position = vec2( x, y );
             line.m_size     = call.m_size;
-            line.m_color    = toVec4( call.m_color );
+            line.m_color    = call.m_color;
             line.m_angle    = call.m_angle;
             line.m_type     = CNC_LINE;
 
