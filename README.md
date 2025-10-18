@@ -4,8 +4,17 @@ This repository contains the code shown in my graphics programming videos for Ma
 
 ## How to build
 
-In order to build the project just execute 
-```sh build.sh``` in the terminal.
+Since the project contains 3 distinct parts you need to understand which build switches to use to build
+- the platform executable
+- the ImGui part
+- the individual application plugins
+
+The build script ```sh build.sh``` is the same for all 3.
+- ```sh build.sh P``` builds the platform
+- ```sh build.sh G``` builds ImGui
+- ```sh build.sh``` without any switches buildls all the current plugins
+
+The executable that gets build is ```demo```. In order to start that execute ```./demo``` in the terminal.
 
 ## Dependencies (MacOS)
 
