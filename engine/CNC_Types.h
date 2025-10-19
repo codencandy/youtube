@@ -129,6 +129,8 @@ typedef struct Shape
 
 typedef struct Rectangle : Shape
 { 
+    v2         m_center;
+    
 } Rectangle;
 
 typedef struct Circle : Shape

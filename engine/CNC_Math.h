@@ -5,6 +5,16 @@
 
 #define CNC_PI 3.141592653589793
 
+f32 cnc_absf( f32 x )
+{
+    if( x < 0.0f )
+    {
+        return x * -1.0f;
+    }
+
+    return x;
+}
+
 f32 cnc_sqr( f32 x )
 {
     f32 root = x / 3.0f;
@@ -181,6 +191,30 @@ bool cnc_vector_test()
     bool reflect = cnc_v2_equal( cnc_reflect( d, a), a ); 
         
     return (add && sub && scale && dot && norm && reflect);
+}
+
+f32 cnc_fmax( f32 a, f32 b )
+{
+    if( a > b )
+    {
+        return a;
+    }
+    else
+    {
+        return b;
+    }
+}
+
+f32 cnc_fmin( f32 a, f32 b )
+{
+    if( a < b ) 
+    {
+        return a;
+    }
+    else
+    {
+        return b;
+    }
 }
 
 #endif//CNC_MATH_H

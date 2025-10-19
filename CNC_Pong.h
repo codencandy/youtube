@@ -4,31 +4,19 @@
 #define CNC_CANDYENGINE_IMPLEMENTATION
 #include "engine/CNC_CandyEngine.h"
 
-typedef struct Ball
-{
-    Circle m_circle;
-    f32    m_radius;
-    v2     m_position;
-    v2     m_velocity;
-    f32    m_acceleration;
-
-} Ball;
-
-typedef struct Pad
-{
-    Rectangle m_rect;
-    v2        m_normal;
-
-} Pad;
+typedef Circle     Ball;
+typedef Rectangle  Pad;
 
 typedef struct Pong : Application
 {
-    Ball  m_ball;
-    Pad   m_padLeft;
-    Pad   m_padRight;
+    Ball      m_ball;
+    Pad       m_padLeft;
+    Pad       m_padRight;
 
-    u32   m_numGridLines;
-    Line* m_grid;
+    u32       m_numGridLines;
+    Line*     m_grid;
+
+    Shape**   m_colliders;
 
 } Pong;
 
