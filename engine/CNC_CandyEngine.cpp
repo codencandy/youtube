@@ -1,6 +1,4 @@
 #include "CNC_CandyEngine.h"
-#include "CNC_Math.h"
-#include "CNC_Memory.h"
 
 void cnc::DrawRectangle( Application* app, v2 position, v2 size, Colour c )
 {

@@ -18,6 +18,4 @@ namespace cnc
     Contact detect_line_line    ( Shape* a, Shape* b );
 }
 
-#include "CNC_Physix.cpp"
-
 #endif//CNC_PHYSIX_H
