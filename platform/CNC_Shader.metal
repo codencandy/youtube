@@ -47,7 +47,7 @@ struct Particle
     float  m_time;
 };
 
-struct Shape
+struct RenderShape
 {
     float2 m_position;
     float2 m_size;
@@ -91,7 +91,7 @@ fragment float4 MainFragmentShader( VertexOutput          in    [[stage_in]],
 
 vertex VertexOutput ShapeVertexShader( VertexInput           in         [[stage_in]],
                                        constant UniformData& uniform    [[buffer(1)]],
-                                       device Shape*         shapes     [[buffer(2)]],
+                                       device RenderShape*   shapes     [[buffer(2)]],
                                        uint                  instanceId [[instance_id]] )
 {
     VertexOutput out;

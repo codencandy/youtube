@@ -117,20 +117,21 @@ typedef struct Shape
     v2         m_size;
     v4         m_color;
     f32        m_angle;
+    
+    shape_type m_type;
 
     v2         m_velocity;
     v2         m_acceleration;
     f32        m_mass;        // mass > 0. For "static" objects supply mass <= 0 to indicate infinite mass.
     bool       m_static;
 
-    shape_type m_type;
 
 } Shape;
 
 typedef struct Rectangle : Shape
 { 
     v2         m_center;
-    
+
 } Rectangle;
 
 typedef struct Circle : Shape

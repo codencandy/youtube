@@ -10,6 +10,16 @@
 #include "CNC_PlatformServices.h"
 #include "CNC_Libs.h"
 
+typedef struct RenderShape
+{
+    v2         m_position;
+    v2         m_size;
+    v4         m_color;
+    f32        m_angle;
+    
+    shape_type m_type;
+} RenderShape;
+
 @interface MainRenderer : NSObject< MTKViewDelegate >
 {
     @public
@@ -32,7 +42,7 @@
         id< MTLBuffer >       m_shapeVertexBuffer;
         u32                   m_shapeBufferIndex;
         NSMutableArray*       m_shapeBuffers;
-        Shape*                m_shapes;
+        RenderShape*          m_shapes;
         DrawCall*             m_drawCalls;
 
         id< MTLBuffer >       m_particleBuffer;
@@ -322,7 +332,7 @@
         return;
     }
      
-    memcpy( [m_shapeBuffers[m_shapeBufferIndex] contents], m_shapes, sizeof( Shape ) * numShapes );
+    memcpy( [m_shapeBuffers[m_shapeBufferIndex] contents], m_shapes, sizeof( RenderShape ) * numShapes );
     [m_shapeBuffers[m_shapeBufferIndex] didModifyRange: NSMakeRange( 0, numShapes)];    
 }
 
@@ -357,7 +367,7 @@
     {
         case CNC_RECT:
         {
-            Shape rect;
+            RenderShape rect;
             rect.m_position = call.m_position;
             rect.m_size     = call.m_size;
             rect.m_color    = call.m_color;
@@ -370,7 +380,7 @@
 
         case CNC_CIRCLE:   
         {
-            Shape circle;
+            RenderShape circle;
 
             f32 x = call.m_position.x - call.m_radius;
             f32 y = call.m_position.y - call.m_radius;
@@ -387,7 +397,7 @@
 
         case CNC_LINE:     
         {
-            Shape line;
+            RenderShape line;
 
             f32 x = call.m_position.x;
             f32 y = call.m_position.y - 1.5f;
@@ -476,8 +486,8 @@ MainRenderer* CreateMainRenderer()
 
     renderer->m_shapeBufferIndex  = 0;
     renderer->m_shapeBuffers      = [[NSMutableArray alloc] initWithCapacity: 2];
-    id< MTLBuffer > shapeBuffer_0 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( Shape ) options: MTLResourceStorageModeShared];
-    id< MTLBuffer > shapeBuffer_1 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( Shape ) options: MTLResourceStorageModeShared];
+    id< MTLBuffer > shapeBuffer_0 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( RenderShape ) options: MTLResourceStorageModeShared];
+    id< MTLBuffer > shapeBuffer_1 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( RenderShape ) options: MTLResourceStorageModeShared];
     [renderer->m_shapeBuffers insertObject: shapeBuffer_0 atIndex: 0];
     [renderer->m_shapeBuffers insertObject: shapeBuffer_1 atIndex: 1];
 

@@ -63,7 +63,7 @@ void UpdateApplication( Application* application )
             Contact c = cnc::DetectCollision( app->m_colliders[i], app->m_colliders[j] );
             if( c.m_colliding ) 
             {
-                cnc::ResolveCollision( app->m_colliders[i], app->m_colliders[j], c, 0.6f, 0.2f) ;
+                cnc::ResolveCollision( app->m_colliders[i], app->m_colliders[j], c, 0.6f, 0.0f) ;
             }
         }
     }
