@@ -6,22 +6,23 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
 
     InitApplication( pong, pool, transient, services, renderer );
 
-    Colour white    = colour( 1.0f, 1.0f, 1.0f, 1.0f );
-    Colour red      = colour( 1.0f, 0.0f, 0.0f, 1.0f );
-    Colour grey     = colour( 0.3f, 0.3f, 0.3f, 1.0f );
-    v2     center   = vec2( pong->m_screenSize.x / 2.0f, pong->m_screenSize.y / 2.0f );
-    v2     padSize  = vec2( 20.0f, 200.0f );
-    v2     padLeft  = vec2( 50.0f,                        pong->m_screenSize.y / 2.0f - padSize.y / 2.0f );
-    v2     padRight = vec2( pong->m_screenSize.x - 50.0f, pong->m_screenSize.y / 2.0f - padSize.y / 2.0f );
-    v2     wallSize = vec2( pong->m_screenSize.x, 20.0f );
+    Colour white          = colour( 1.0f, 1.0f, 1.0f, 1.0f );
+    Colour red            = colour( 1.0f, 0.0f, 0.0f, 1.0f );
+    Colour grey           = colour( 0.3f, 0.3f, 0.3f, 1.0f );
+    v2     center         = vec2( pong->m_screenSize.x / 2.0f, pong->m_screenSize.y / 2.0f );
+    v2     padSize        = vec2( 20.0f, 200.0f );
+    v2     padLeft        = vec2( 50.0f,                        pong->m_screenSize.y / 2.0f - padSize.y / 2.0f );
+    v2     padRight       = vec2( pong->m_screenSize.x - 50.0f, pong->m_screenSize.y / 2.0f - padSize.y / 2.0f );
+    v2     wallSize       = vec2( pong->m_screenSize.x, 20.0f );
+    f32    ballRadius     = 20.0f;
 
-    pong->m_colliders               = NULL;
-    pong->m_ball                    = cnc::CreateCircle( center, 20.0f, white );
-    pong->m_padLeft                 = cnc::CreateRectangle( padLeft, padSize, red );
-    pong->m_padRight                = cnc::CreateRectangle( padRight, padSize, red );
-    pong->m_wallTop                 = cnc::CreateRectangle( vec2( 0.0f, 0.0f ), wallSize, grey );
-    pong->m_wallBottom              = cnc::CreateRectangle( vec2( 0.0f, pong->m_screenSize.y - 20.0f ), wallSize, grey );
-    pong->m_grid                    = cnc::CreateGrid( pool, pong->m_screenSize, 20.0f, &pong->m_numGridLines );
+    pong->m_colliders     = NULL;
+    pong->m_ball          = cnc::CreateCircle( center, ballRadius, white );
+    pong->m_padLeft       = cnc::CreateRectangle( padLeft, padSize, red );
+    pong->m_padRight      = cnc::CreateRectangle( padRight, padSize, red );
+    pong->m_wallTop       = cnc::CreateRectangle( vec2( 0.0f, 0.0f ), wallSize, grey );
+    pong->m_wallBottom    = cnc::CreateRectangle( vec2( 0.0f, pong->m_screenSize.y - 20.0f ), wallSize, grey );
+    pong->m_grid          = cnc::CreateGrid( pool, pong->m_screenSize, 20.0f, &pong->m_numGridLines );
 
     cnc::InitCollider( &pong->m_ball,       false, center,                            vec2( 200.0f, 10.0f ), 0.0f, 1.0f );
     cnc::InitCollider( &pong->m_padLeft,    true,  padLeft  + (padSize/2.0f),         vec2(0.0f,0.0f),       0.0f, 10.0f );
@@ -34,6 +35,9 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
     arrput( pong->m_colliders, &pong->m_padRight );
     arrput( pong->m_colliders, &pong->m_wallTop );
     arrput( pong->m_colliders, &pong->m_wallBottom );
+
+    pong->m_leftBounds  = 0.0f - ballRadius;
+    pong->m_rightBounds = pong->m_screenSize.x + ballRadius;
 
     return pong;
 }
@@ -57,6 +61,13 @@ void UpdateApplication( Application* application )
                 cnc::ResolveCollision( app->m_colliders[i], app->m_colliders[j], c, 1.0f, 0.0f) ;
             }
         }
+    }
+
+    if( ball->m_center.x < app->m_leftBounds || ball->m_center.x > app->m_rightBounds )
+    {
+        ball->m_position = vec2( app->m_screenSize.x / 2.0f, app->m_screenSize.y / 2.0f );
+        ball->m_velocity = vec2( 200.0f, 10.0f );
+        ball->m_center   = ball->m_position;
     }
 }
 

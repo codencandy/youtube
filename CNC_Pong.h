@@ -16,6 +16,9 @@ typedef struct Pong : Application
     Wall      m_wallTop;
     Wall      m_wallBottom;
 
+    f32       m_leftBounds;
+    f32       m_rightBounds;
+
     u32       m_numGridLines;
     Line*     m_grid;
 
