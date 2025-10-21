@@ -112,10 +112,11 @@ Rectangle cnc::CreateRectangle( v2 position, v2 size, Colour c )
 Circle cnc::CreateCircle( v2 center, f32 radius, Colour c )
 {
     Circle circle;
-    circle.m_center = center;
-    circle.m_radius = radius;
-    circle.m_color  = c;
-    circle.m_type   = CNC_CIRCLE;
+    circle.m_position = center;
+    circle.m_center   = center;
+    circle.m_radius   = radius;
+    circle.m_color    = c;
+    circle.m_type     = CNC_CIRCLE;
 
     return circle;
 }

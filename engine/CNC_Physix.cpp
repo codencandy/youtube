@@ -90,6 +90,11 @@ namespace cnc
         if( !b->m_static ) 
         {
             b->m_position = b->m_position + ( correction * invMassB );
+            if( b->m_type == CNC_CIRCLE )
+            {
+                Circle* circle   = (Circle*)a;
+                circle->m_center = b->m_position;
+            }
         }
     
         // --- 2. Relative velocity ---
@@ -117,6 +122,15 @@ namespace cnc
         v2 frictionImpulse = tangent * jt;
         if( !a->m_static) a->m_velocity = a->m_velocity - (frictionImpulse * invMassA);
         if( !b->m_static) b->m_velocity = b->m_velocity + (frictionImpulse * invMassB);
+    }
+
+    void InitCollider( Shape* s, bool isStatic, v2 center, v2 velocity, f32 acceleration, f32 mass )
+    {
+        s->m_static       = isStatic;
+        s->m_center       = center;
+        s->m_mass         = mass;
+        s->m_velocity     = velocity;
+        s->m_acceleration = acceleration;
     }
     
     Contact detect_circle_circle( Shape* a, Shape* b )

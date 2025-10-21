@@ -486,8 +486,8 @@ MainRenderer* CreateMainRenderer()
 
     renderer->m_shapeBufferIndex  = 0;
     renderer->m_shapeBuffers      = [[NSMutableArray alloc] initWithCapacity: 2];
-    id< MTLBuffer > shapeBuffer_0 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( RenderShape ) options: MTLResourceStorageModeShared];
-    id< MTLBuffer > shapeBuffer_1 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( RenderShape ) options: MTLResourceStorageModeShared];
+    id< MTLBuffer > shapeBuffer_0 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( RenderShape ) options: MTLResourceStorageModeManaged];
+    id< MTLBuffer > shapeBuffer_1 = [renderer->m_gpu newBufferWithLength: 1000 * sizeof( RenderShape ) options: MTLResourceStorageModeManaged];
     [renderer->m_shapeBuffers insertObject: shapeBuffer_0 atIndex: 0];
     [renderer->m_shapeBuffers insertObject: shapeBuffer_1 atIndex: 1];
 

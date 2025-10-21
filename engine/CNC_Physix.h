@@ -9,6 +9,7 @@ namespace cnc
     // 2D collision system
     Contact DetectCollision     ( Shape* a, Shape* b );
     void    ResolveCollision    ( Shape* a, Shape* b, Contact c, f32 restitution, f32 friction);
+    void    InitCollider        ( Shape* s, bool isStatic, v2 center, v2 velocity, f32 acceleration, f32 mass );
 
     Contact detect_circle_circle( Shape* a, Shape* b );
     Contact detect_circle_rect  ( Shape* a, Shape* b );
