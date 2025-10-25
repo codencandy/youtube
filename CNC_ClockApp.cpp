@@ -1,10 +1,10 @@
 #include "CNC_ClockApp.h"
 
-Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, PlatformServices* services, void* renderer )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, cnc::UserInput* input, PlatformServices* services, void* renderer )
 {
     ClockApp* app = ALLOC_STRUCT( pool, ClockApp );
 
-    InitApplication( app, pool, transient, services, renderer );
+    InitApplication( app, pool, transient, input, services, renderer );
 
     app->m_background  = cnc::CreateImage( app, "res/clock_bgr.png" );
     app->m_hourHand    = cnc::CreateImage( app, "res/clock_hours.png" );

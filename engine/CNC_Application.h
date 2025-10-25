@@ -30,7 +30,7 @@ typedef struct Application
     cnc::MemoryPool*  m_transient;
     PlatformServices* m_services;
     cnc::TimeInfo     m_timeInfo;
-    cnc::UserInput    m_input;
+    cnc::UserInput*   m_input;
     void*             m_renderer;
     v2                m_screenSize;
 
@@ -38,11 +38,11 @@ typedef struct Application
 
 extern "C"
 {
-    Application* LoadApplication  ( cnc::MemoryPool* pool,cnc::MemoryPool* transient, PlatformServices* services, void* renderer );
+    Application* LoadApplication  ( cnc::MemoryPool* pool,cnc::MemoryPool* transient, cnc::UserInput* input, PlatformServices* services, void* renderer );
     void         UpdateApplication( Application* app );
     void         RenderApplication( Application* app );
 
-    typedef Application*(*loadapp_fcn)(cnc::MemoryPool*, cnc::MemoryPool*, PlatformServices*, void*);
+    typedef Application*(*loadapp_fcn)(cnc::MemoryPool*, cnc::MemoryPool*, cnc::UserInput*, PlatformServices*, void*);
     typedef void (*updateapp_fcn)(Application*);
     typedef void (*renderapp_fcn)(Application*);
 }
@@ -55,12 +55,18 @@ typedef struct AppLib
 
 } AppLib;
 
-void InitApplication( Application* app, cnc::MemoryPool* pool, cnc::MemoryPool* transient, PlatformServices* services, void* renderer )
+void InitApplication( Application*      app, 
+                      cnc::MemoryPool*  pool, 
+                      cnc::MemoryPool*  transient,
+                      cnc::UserInput*   input, 
+                      PlatformServices* services, 
+                      void*             renderer )
 {
     app->m_pool       = pool;
     app->m_transient  = transient;
     app->m_services   = services;
     app->m_renderer   = renderer;
+    app->m_input      = input;
     app->m_screenSize = vec2( CNC_WINDOW_WIDTH, CNC_WINDOW_HEIGHT );
 }
 

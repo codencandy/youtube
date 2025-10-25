@@ -21,6 +21,11 @@
 #include "CNC_PlatformServices.cpp"
 #include "CNC_UserInterface.cpp"
 
+void ProcessInput( cnc::UserInput* input, NSEvent* event )
+{
+
+}
+
 AppLib loadLib( const char* libName )
 {
     AppLib lib;
@@ -29,7 +34,7 @@ AppLib loadLib( const char* libName )
 
     if( dylib != NULL )
     {
-        lib.f_loadApp   = (loadapp_fcn)dlsym( dylib, "LoadApplication" );
+        lib.f_loadApp   = (loadapp_fcn)  dlsym( dylib, "LoadApplication" );
         lib.f_updateApp = (updateapp_fcn)dlsym( dylib, "UpdateApplication" );
         lib.f_renderApp = (renderapp_fcn)dlsym( dylib, "RenderApplication" );
     }
@@ -77,13 +82,14 @@ int main()
     MainRenderer*     renderer = CreateMainRenderer();
     PlatformServices* services = CreatePlatformServices();
     UserInterface*    ui       = CreateUserinterface();
+    cnc::UserInput*   input    = cnc::CreateUserInput( permanent );
 
     window.contentView = renderer->m_view;
 
-    Application* christmas = christmasLib.f_loadApp( permanent, transient, services, renderer );
-    Application* clock     = clockLib.f_loadApp(     permanent, transient, services, renderer );
-    Application* shape     = shapeLib.f_loadApp(     permanent, transient, services, renderer );
-    Application* pong      = pongLib.f_loadApp(      permanent, transient, services, renderer );
+    Application* christmas = christmasLib.f_loadApp( permanent, transient, input, services, renderer );
+    Application* clock     = clockLib.f_loadApp(     permanent, transient, input, services, renderer );
+    Application* shape     = shapeLib.f_loadApp(     permanent, transient, input, services, renderer );
+    Application* pong      = pongLib.f_loadApp(      permanent, transient, input, services, renderer );
 
     pong->m_timeInfo.m_startTime   = startTime;
     pong->m_timeInfo.m_elspaseTime = 0.0;
@@ -102,6 +108,8 @@ int main()
                                          untilDate: NULL
                                             inMode: NSDefaultRunLoopMode
                                            dequeue: true];
+
+                ProcessInput( input, event );                                            
 
                 [app sendEvent: event];
                 [app updateWindows];
