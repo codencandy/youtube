@@ -1,6 +1,6 @@
 #include "CNC_Christmas.h"
 
-Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, PlatformServices* services, void* renderer )
 {
     Christmas* app   = ALLOC_STRUCT( pool, Christmas );
 
@@ -12,7 +12,7 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
     app->m_numParticles = 3000;
     app->m_particles    = ALLOC_ARRAY( app->m_pool, Particle, app->m_numParticles );
 
-    cnc_srand( 300 );
+    cnc::srand( 300 );
 
     u32 snowFlakes = 2900;
     u32 stars      = 100;
@@ -21,10 +21,10 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
     {
         Particle* p = &app->m_particles[i];
 
-        f32 x     = (f32)(cnc_rand() % CNC_WINDOW_WIDTH );
-        f32 y     = (f32)(cnc_rand() % CNC_WINDOW_HEIGHT ) - 300.0f;
-        f32 speed = (f32)(cnc_rand() % 20)  / 10.0f;
-        f32 size  = (f32)(cnc_rand() % 100) / 10.0f;
+        f32 x     = (f32)(cnc::rand() % CNC_WINDOW_WIDTH );
+        f32 y     = (f32)(cnc::rand() % CNC_WINDOW_HEIGHT ) - 300.0f;
+        f32 speed = (f32)(cnc::rand() % 20)  / 10.0f;
+        f32 size  = (f32)(cnc::rand() % 100) / 10.0f;
 
         p->m_position = vec2( x, y );
         p->m_speed    = speed;
@@ -36,9 +36,9 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformS
     {
         Particle* p = &app->m_particles[snowFlakes + i];
 
-        f32 x     = (f32)(cnc_rand() % CNC_WINDOW_WIDTH );
-        f32 y     = (f32)(cnc_rand() % CNC_WINDOW_HEIGHT - 150);
-        f32 size  = (f32)(cnc_rand() % 150) / 10.0f;
+        f32 x     = (f32)(cnc::rand() % CNC_WINDOW_WIDTH );
+        f32 y     = (f32)(cnc::rand() % CNC_WINDOW_HEIGHT - 150);
+        f32 size  = (f32)(cnc::rand() % 150) / 10.0f;
 
         p->m_position = vec2( x, y );
         p->m_speed    = 0.0f;

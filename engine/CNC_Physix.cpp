@@ -74,7 +74,7 @@ namespace cnc
         // --- 1. Positional correction ---
         const f32 percent = 0.8f;
         const f32 slop = 0.01f;
-        f32 correctionMag = cnc_fmax(c.m_penetration - slop, 0.0f) * percent / invMassSum;
+        f32 correctionMag = cnc::fmax(c.m_penetration - slop, 0.0f) * percent / invMassSum;
         v2  correction    = c.m_normal * correctionMag;
     
         if( !a->m_static )
@@ -99,7 +99,7 @@ namespace cnc
     
         // --- 2. Relative velocity ---
         v2 rv = b->m_velocity - a->m_velocity;
-        f32 velAlongNormal = cnc_dot(rv, c.m_normal);
+        f32 velAlongNormal = cnc::dot(rv, c.m_normal);
         if (velAlongNormal > 0) return; // separating
     
         // --- 3. Compute impulse scalar ---
@@ -112,12 +112,12 @@ namespace cnc
     
         // --- 5. Friction ---
         rv = b->m_velocity - a->m_velocity;
-        v2 tangent = rv - (c.m_normal * cnc_dot(rv, c.m_normal));
-        if( cnc_length(tangent) > 1e-6f) tangent = cnc_normalize(tangent);
+        v2 tangent = rv - (c.m_normal * cnc::dot(rv, c.m_normal));
+        if( cnc::length(tangent) > 1e-6f) tangent = cnc::normalize(tangent);
     
-        f32 jt = -cnc_dot(rv, tangent) / invMassSum;
+        f32 jt = -cnc::dot(rv, tangent) / invMassSum;
         f32 maxFriction = friction * j;
-        if ( cnc_absf(jt) > maxFriction) jt = (jt < 0) ? -maxFriction : maxFriction;
+        if ( cnc::absf(jt) > maxFriction) jt = (jt < 0) ? -maxFriction : maxFriction;
     
         v2 frictionImpulse = tangent * jt;
         if( !a->m_static) a->m_velocity = a->m_velocity - (frictionImpulse * invMassA);
@@ -150,19 +150,19 @@ namespace cnc
         
         // Clamp circle center to rectangle bounds (AABB)
         v2 closest = vec2(
-            cnc_fmax( -(rect->m_size.x / 2.0f), cnc_fmin(diff.x, rect->m_size.x / 2.0f) ),
-            cnc_fmax( -(rect->m_size.y / 2.0f), cnc_fmin(diff.y, rect->m_size.y / 2.0f) )
+            cnc::fmax( -(rect->m_size.x / 2.0f), cnc::fmin(diff.x, rect->m_size.x / 2.0f) ),
+            cnc::fmax( -(rect->m_size.y / 2.0f), cnc::fmin(diff.y, rect->m_size.y / 2.0f) )
         );
         
         v2  closest_world = rect->m_center   + closest;
         v2  dist_vec      = circle->m_center - closest_world;
-        f32 dist2         = cnc_dot(dist_vec, dist_vec);
+        f32 dist2         = cnc::dot(dist_vec, dist_vec);
         f32 radius        = circle->m_radius;
     
         if (dist2 > (radius * radius))
             return c;
     
-        f32 dist        = cnc_sqr( dist2 );
+        f32 dist        = cnc::sqr( dist2 );
         c.m_colliding   = true;
         c.m_normal      = (dist > 1e-6f) ? dist_vec * (-1.0f / dist) : vec2( 0, 1 );
         c.m_penetration = radius - dist;

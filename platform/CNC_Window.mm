@@ -1,5 +1,5 @@
 #include <AppKit/AppKit.h>
-#include "CNC_Constants.h"
+#include "../engine/CNC_Constants.h"
 
 @interface MainWindowDelegate : NSObject< NSWindowDelegate >
 {

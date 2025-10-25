@@ -3,42 +3,46 @@
 
 #include "CNC_Constants.h"
 #include "CNC_Memory.h"
-#include "CNC_PlatformServices.h"
+#include "CNC_UserInput.h"
+#include "../platform/CNC_PlatformServices.h"
 #include "CNC_Libs.h"
-#include "libs/imgui/imgui.h"
 
 #ifndef NULL
 #define NULL 0x00
 #endif
 
-typedef struct TimeInfo
+namespace cnc
 {
-    u32 m_hours;
-    u32 m_minute;
-    f64 m_startTime;
-    f64 m_elspaseTime;
-    f64 m_dt;
+    typedef struct TimeInfo
+    {
+        u32 m_hours;
+        u32 m_minute;
+        f64 m_startTime;
+        f64 m_elspaseTime;
+        f64 m_dt;
+    
+    } TimeInfo;
+}
 
-} TimeInfo;
 typedef struct Application
 {
-    MemoryPool*       m_pool;
-    MemoryPool*       m_transient;
+    cnc::MemoryPool*  m_pool;
+    cnc::MemoryPool*  m_transient;
     PlatformServices* m_services;
+    cnc::TimeInfo     m_timeInfo;
+    cnc::UserInput    m_input;
     void*             m_renderer;
-    TimeInfo          m_timeInfo;
-    ImGuiIO*          m_io;
     v2                m_screenSize;
 
 } Application;
 
 extern "C"
 {
-    Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer );
+    Application* LoadApplication  ( cnc::MemoryPool* pool,cnc::MemoryPool* transient, PlatformServices* services, void* renderer );
     void         UpdateApplication( Application* app );
     void         RenderApplication( Application* app );
 
-    typedef Application*(*loadapp_fcn)(MemoryPool*, MemoryPool*, PlatformServices*, void*);
+    typedef Application*(*loadapp_fcn)(cnc::MemoryPool*, cnc::MemoryPool*, PlatformServices*, void*);
     typedef void (*updateapp_fcn)(Application*);
     typedef void (*renderapp_fcn)(Application*);
 }
@@ -51,7 +55,7 @@ typedef struct AppLib
 
 } AppLib;
 
-void InitApplication( Application* app, MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
+void InitApplication( Application* app, cnc::MemoryPool* pool, cnc::MemoryPool* transient, PlatformServices* services, void* renderer )
 {
     app->m_pool       = pool;
     app->m_transient  = transient;

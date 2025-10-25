@@ -1,6 +1,6 @@
 #include "CNC_Pong.h"
 
-Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, PlatformServices* services, void* renderer )
 {
     Pong* pong = ALLOC_STRUCT( pool, Pong );
 
@@ -47,6 +47,12 @@ void UpdateApplication( Application* application )
     Pong* app        = (Pong*)application;
     u32   shapeCount = arrlen( app->m_colliders );
     Ball* ball       = &app->m_ball;
+
+
+    // pad movement
+
+
+    // ball movement
     ball->m_position = ball->m_position + (ball->m_velocity * app->m_timeInfo.m_dt);
     ball->m_center   = ball->m_position;
 
@@ -63,6 +69,7 @@ void UpdateApplication( Application* application )
         }
     }
 
+    // reset the ball in case of out of bounds
     if( ball->m_center.x < app->m_leftBounds || ball->m_center.x > app->m_rightBounds )
     {
         ball->m_position = vec2( app->m_screenSize.x / 2.0f, app->m_screenSize.y / 2.0f );

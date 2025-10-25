@@ -1,6 +1,6 @@
 #include "CNC_ClockApp.h"
 
-Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, PlatformServices* services, void* renderer )
 {
     ClockApp* app = ALLOC_STRUCT( pool, ClockApp );
 
@@ -39,7 +39,7 @@ void RenderApplication( Application* application )
     f32 hourAngle   = ((180.0f / 6.0f)         * app->m_hours) + minsPerHour;
 
     cnc::DrawImage( app, app->m_background, vec2( 0.0f, 0.0f ) );
-    cnc::DrawImage( app, app->m_hourHand,   center,          hourR, cnc_toRadians( -hourAngle) );
-    cnc::DrawImage( app, app->m_minuteHand, center,        minuteR, cnc_toRadians( -minuteAngle ) );
+    cnc::DrawImage( app, app->m_hourHand,   center,          hourR, cnc::toRadians( -hourAngle) );
+    cnc::DrawImage( app, app->m_minuteHand, center,        minuteR, cnc::toRadians( -minuteAngle ) );
     cnc::DrawImage( app, app->m_knob,       center - knobP );
 }

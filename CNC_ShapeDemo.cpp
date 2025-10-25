@@ -1,6 +1,6 @@
 #include "CNC_ShapeDemo.h"
 
-Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, PlatformServices* services, void* renderer )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, PlatformServices* services, void* renderer )
 {
     ShapeDemo* app = ALLOC_STRUCT( pool, ShapeDemo );
 
