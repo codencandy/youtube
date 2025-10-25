@@ -53,15 +53,30 @@ void UpdateApplication( Application* application )
     Pad*       leftPad    = &app->m_padLeft;
     Pad*       rightPad   = &app->m_padRight;
 
-    // pad movement
+    // right pad movement
     if( KeyDown( input, KEY_DOWN ) )
     {
         rightPad->m_position.y += 1.0f;
+        rightPad->m_center.y   += 1.0f;
     }
 
     if( KeyDown( input, KEY_UP ) )
     {
         rightPad->m_position.y -= 1.0f;
+        rightPad->m_center.y   -= 1.0f;
+    }
+
+    // left pad movement
+    if( KeyDown( input, KEY_S ) )
+    {
+        leftPad->m_position.y += 1.0f;
+        leftPad->m_center.y   += 1.0f;
+    }
+
+    if( KeyDown( input, KEY_W ) )
+    {
+        leftPad->m_position.y -= 1.0f;
+        leftPad->m_center.y   -= 1.0f;
     }
 
     // ball movement

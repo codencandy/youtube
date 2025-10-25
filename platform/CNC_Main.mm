@@ -21,9 +21,49 @@
 #include "CNC_PlatformServices.cpp"
 #include "CNC_UserInterface.cpp"
 
-void ProcessInput( cnc::UserInput* input, NSEvent* event )
-{
+#define KEYCODE_LEFT  0x7B
+#define KEYCODE_RIGHT 0x7C
+#define KEYCODE_DOWN  0x7D
+#define KEYCODE_UP    0x7E
 
+#define KEYCODE_W     0x0D
+#define KEYCODE_A     0x00
+#define KEYCODE_S     0x01
+#define KEYCODE_D     0x02
+
+bool ProcessInput( cnc::UserInput* input, NSEvent* event )
+{
+    if( event.type == NSEventTypeKeyDown )
+    {
+        switch( event.keyCode )
+        {
+            case KEYCODE_LEFT:  SetKeyDown( input, cnc::KEY_LEFT);   return true;  
+            case KEYCODE_RIGHT: SetKeyDown( input, cnc::KEY_RIGHT ); return true; 
+            case KEYCODE_DOWN:  SetKeyDown( input, cnc::KEY_DOWN );  return true;   
+            case KEYCODE_UP:    SetKeyDown( input, cnc::KEY_UP );    return true;  
+            case KEYCODE_W:     SetKeyDown( input, cnc::KEY_W );     return true; 
+            case KEYCODE_A:     SetKeyDown( input, cnc::KEY_A );     return true;
+            case KEYCODE_S:     SetKeyDown( input, cnc::KEY_S );     return true;
+            case KEYCODE_D:     SetKeyDown( input, cnc::KEY_D );     return true;  
+        }
+    }
+
+    if( event.type == NSEventTypeKeyUp )
+    {
+        switch( event.keyCode )
+        {
+            case KEYCODE_LEFT:  SetKeyUp( input, cnc::KEY_LEFT );    return true; 
+            case KEYCODE_RIGHT: SetKeyUp( input, cnc::KEY_RIGHT );   return true;
+            case KEYCODE_DOWN:  SetKeyUp( input, cnc::KEY_DOWN );    return true; 
+            case KEYCODE_UP:    SetKeyUp( input, cnc::KEY_UP );      return true;
+            case KEYCODE_W:     SetKeyUp( input, cnc::KEY_W );       return true; 
+            case KEYCODE_A:     SetKeyUp( input, cnc::KEY_A );       return true;
+            case KEYCODE_S:     SetKeyUp( input, cnc::KEY_S );       return true;
+            case KEYCODE_D:     SetKeyUp( input, cnc::KEY_D );       return true;    
+        }
+    }
+
+    return false;
 }
 
 AppLib loadLib( const char* libName )
@@ -109,10 +149,18 @@ int main()
                                             inMode: NSDefaultRunLoopMode
                                            dequeue: true];
 
-                ProcessInput( input, event );                                            
+                bool handled = false;
 
-                [app sendEvent: event];
-                [app updateWindows];
+                if( !ImGui::IsWindowFocused( ImGuiFocusedFlags_AnyWindow ) )
+                {
+                    handled = ProcessInput( input, event );                                            
+                }
+
+                if( !handled )
+                {
+                    [app sendEvent: event];
+                    [app updateWindows];
+                }
             }
             while( event != NULL );
 
