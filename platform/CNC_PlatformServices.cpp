@@ -2,7 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
-#include "libs/stb_image.h"
+#include "../libs/stb_image.h"
 
 Image* PlatformLoadImage( const char* imagePath )
 {
@@ -32,6 +32,7 @@ PlatformServices* CreatePlatformServices()
     services->f_uploadParticles = &PlatformUploadParticles;
     services->f_submitDrawCall  = &PlatformSubmitDrawCall;
     services->f_renderParticles = &PlatformRenderParticles;
+    services->f_addCtrlValue    = &PlatformAddCtrlValue;
 
     return services;
 }

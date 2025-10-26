@@ -2,11 +2,11 @@
 
 using namespace cnc;
 
-Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput* input, PlatformServices* services, void* renderer )
+Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput* input, PlatformServices* services, void* renderer, void* ui )
 {
     Pong* pong = ALLOC_STRUCT( pool, Pong );
 
-    InitApplication( pong, pool, transient, input, services, renderer );
+    InitApplication( pong, pool, transient, input, services, renderer, ui );
 
     Colour white          = colour( 1.0f, 1.0f, 1.0f, 1.0f );
     Colour red            = colour( 1.0f, 0.0f, 0.0f, 1.0f );
@@ -26,9 +26,9 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput
     pong->m_wallBottom    = CreateRectangle( vec2( 0.0f, pong->m_screenSize.y - 20.0f ), wallSize, grey );
     pong->m_grid          = CreateGrid( pool, pong->m_screenSize, 20.0f, &pong->m_numGridLines );
 
-    InitCollider( &pong->m_ball,       false, center,                            vec2( 200.0f, 10.0f ), 0.0f, 1.0f );
-    InitCollider( &pong->m_padLeft,    true,  padLeft  + (padSize/2.0f),         vec2(0.0f,0.0f),       0.0f, 10.0f );
-    InitCollider( &pong->m_padRight,   true,  padRight + (padSize/2.0f),         vec2(0.0f, 0.0f),      0.0f, 10.0f );
+    InitCollider( &pong->m_ball,       false, center,                            vec2(500.0f, 10.0f ),  0.0f,  0.1f );
+    InitCollider( &pong->m_padLeft,    false, padLeft  + (padSize/2.0f),         vec2(0.0f, 0.0f),      0.0f, 10.0f );
+    InitCollider( &pong->m_padRight,   false, padRight + (padSize/2.0f),         vec2(0.0f, 0.0f),      0.0f, 10.0f );
     InitCollider( &pong->m_wallTop,    true,  vec2(0.0f,0.0f) + (wallSize/2.0f), vec2(0.0f,0.0f),       0.0f, 10.0f );
     InitCollider( &pong->m_wallBottom, true,  vec2( 0.0f, pong->m_screenSize.y - 20.0f ) + ( wallSize / 2.0f ), vec2(0.0f,0.0f), 0.0f, 10.0f );
 
@@ -40,6 +40,10 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput
 
     pong->m_leftBounds  = 0.0f - ballRadius;
     pong->m_rightBounds = pong->m_screenSize.x + ballRadius;
+
+    CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "ball mass",      &pong->m_ball.m_mass );
+    CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "pad left mass",  &pong->m_padLeft.m_mass );
+    CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "pad right mass", &pong->m_padRight.m_mass );
 
     return pong;
 }
@@ -59,26 +63,24 @@ void UpdateApplication( Application* application )
         rightPad->m_position.y += 1.0f;
         rightPad->m_center.y   += 1.0f;
     }
-
-    if( KeyDown( input, KEY_UP ) )
+    else if( KeyDown( input, KEY_UP ) )
     {
         rightPad->m_position.y -= 1.0f;
         rightPad->m_center.y   -= 1.0f;
     }
-
+    
     // left pad movement
     if( KeyDown( input, KEY_S ) )
     {
         leftPad->m_position.y += 1.0f;
         leftPad->m_center.y   += 1.0f;
-    }
-
-    if( KeyDown( input, KEY_W ) )
+    } 
+    else if( KeyDown( input, KEY_W ) )
     {
         leftPad->m_position.y -= 1.0f;
         leftPad->m_center.y   -= 1.0f;
     }
-
+    
     // ball movement
     ball->m_position = ball->m_position + (ball->m_velocity * app->m_timeInfo.m_dt);
     ball->m_center   = ball->m_position;
@@ -100,7 +102,7 @@ void UpdateApplication( Application* application )
     if( ball->m_center.x < app->m_leftBounds || ball->m_center.x > app->m_rightBounds )
     {
         ball->m_position = vec2( app->m_screenSize.x / 2.0f, app->m_screenSize.y / 2.0f );
-        ball->m_velocity = vec2( 200.0f, 10.0f );
+        ball->m_velocity = vec2( 500.0f, 10.0f );
         ball->m_center   = ball->m_position;
     }
 }

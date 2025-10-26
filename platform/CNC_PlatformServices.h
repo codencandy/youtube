@@ -1,13 +1,14 @@
 #ifndef CNC_PLATFORMSERVICES_H
 #define CNC_PLATFORMSERVICES_H
 
-#include "CNC_Types.h"
+#include "../engine/CNC_Types.h"
 
 Image* PlatformLoadImage( const char* imagePath );
 u32    PlatformUploadImage( void* renderer, Image* image );
 void   PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles );
 void   PlatformSubmitDrawCall( void* renderer, DrawCall call );
 void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask );
+void   PlatformAddCtrlValue( void* ui, ControlValue* value );
 
 typedef struct PlatformServices
 {
@@ -16,6 +17,7 @@ typedef struct PlatformServices
     void  (*f_uploadParticles)(void*, Particle*, u32);
     void  (*f_submitDrawCall)(void*, DrawCall);
     void  (*f_renderParticles)(void*, u32, u32 ,u32);
+    void  (*f_addCtrlValue)(void*, ControlValue* value);
 
 } PlatformServices;
 

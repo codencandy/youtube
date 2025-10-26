@@ -1,10 +1,10 @@
 #include "CNC_ShapeDemo.h"
 
-Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, cnc::UserInput* input, PlatformServices* services, void* renderer )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, cnc::UserInput* input, PlatformServices* services, void* renderer, void* ui )
 {
     ShapeDemo* app = ALLOC_STRUCT( pool, ShapeDemo );
 
-    InitApplication( app, pool, transient, input, services, renderer );
+    InitApplication( app, pool, transient, input, services, renderer, ui );
 
     Colour red    = colour( 1.0f, 0.0f, 0.0f, 1.0f );
     Colour purple = colour( 1.0f, 0.0f, 1.0f, 1.0f );

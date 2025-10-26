@@ -171,3 +171,22 @@ Line* cnc::CreateGrid( MemoryPool* pool, v2 screenSize, f32 cellSize, u32* numLi
     return lines;
 }
 
+void cnc::CreateCtrlValue( Application*       app, 
+                           control_value_type valueType, 
+                           control_type       controlType, 
+                           const char*        label, 
+                           void*              value )
+{
+    PlatformServices* services  = app->m_services;
+    ControlValue*     ctrlValue = ALLOC_STRUCT( app->m_pool, ControlValue );
+
+    ctrlValue->m_controlType = controlType;
+    ctrlValue->m_valueType   = valueType;
+    ctrlValue->m_value       = value;
+
+    memset( (void*)ctrlValue->m_label, 0x00, 100 );
+    memcpy( (void*)ctrlValue->m_label, label, 100 );
+
+    services->f_addCtrlValue( app->m_ui, ctrlValue );
+}
+

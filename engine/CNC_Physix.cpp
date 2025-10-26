@@ -120,7 +120,7 @@ namespace cnc
         if ( cnc::absf(jt) > maxFriction) jt = (jt < 0) ? -maxFriction : maxFriction;
     
         v2 frictionImpulse = tangent * jt;
-        if( !a->m_static) a->m_velocity = a->m_velocity - (frictionImpulse * invMassA);
+        if( !a->m_static) a->m_velocity = a->m_velocity + (frictionImpulse * invMassA);
         if( !b->m_static) b->m_velocity = b->m_velocity + (frictionImpulse * invMassB);
     }
 

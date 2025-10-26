@@ -1,10 +1,10 @@
 #include "CNC_Christmas.h"
 
-Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, cnc::UserInput* input, PlatformServices* services, void* renderer )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, cnc::UserInput* input, PlatformServices* services, void* renderer, void* ui )
 {
     Christmas* app   = ALLOC_STRUCT( pool, Christmas );
 
-    InitApplication( app, pool, transient, input, services, renderer );
+    InitApplication( app, pool, transient, input, services, renderer, ui );
 
     app->m_landscape    = cnc::CreateImage( app, "res/landscape.png" );
     app->m_skymask      = cnc::CreateImage( app, "res/skymask.png" );

@@ -26,6 +26,7 @@ namespace cnc
     Circle    CreateCircle   ( v2 center, f32 radius, Colour c );
     Line      CreateLine     ( v2 start, v2 end, Colour c );
     Line*     CreateGrid     ( MemoryPool* pool, v2 screenSize, f32 cellSize, u32* numLines );
+    void      CreateCtrlValue( Application* app, control_value_type valueType, control_type controlType, const char* label, void* value );
 }
 
 #ifdef CNC_CANDYENGINE_IMPLEMENTATION

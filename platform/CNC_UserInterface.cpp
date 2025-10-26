@@ -119,6 +119,7 @@ void ShowUserInterface( UserInterface* ui )
 
     ImGui::Begin( "codencandy demo" );
 
+
     if( ImGui::Button( "clock app", buttonSize ) )
     {
         ui->m_clockApp = !ui->m_clockApp;
@@ -139,5 +140,24 @@ void ShowUserInterface( UserInterface* ui )
         ui->m_pongApp = !ui->m_pongApp;
     }
 
+    u32 numValues = arrlen( ui->m_values );
+    for( u32 i=0; i<numValues; ++i )
+    {
+        ControlValue* value = ui->m_values[i];
+
+        switch( value->m_controlType )
+        {
+            case INPUT_FIELD: ImGui::InputFloat(  value->m_label, (f32*)value->m_value );
+            case SLIDER:      ImGui::SliderFloat( value->m_label, (f32*)value->m_value, 0.0f, 10.0f );;
+        }
+    }
+
     ImGui::End();
+}
+
+void PlatformAddCtrlValue( void*          userInterface, 
+                           ControlValue*  value )
+{
+    UserInterface* ui = (UserInterface*)userInterface;
+    arrput( ui->m_values, value );
 }

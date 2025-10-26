@@ -18,8 +18,8 @@
 #include "CNC_Window.mm"
 #include "CNC_Renderer.mm"
 
-#include "CNC_PlatformServices.cpp"
 #include "CNC_UserInterface.cpp"
+#include "CNC_PlatformServices.cpp"
 
 #define KEYCODE_LEFT  0x7B
 #define KEYCODE_RIGHT 0x7C
@@ -126,10 +126,10 @@ int main()
 
     window.contentView = renderer->m_view;
 
-    Application* christmas = christmasLib.f_loadApp( permanent, transient, input, services, renderer );
-    Application* clock     = clockLib.f_loadApp(     permanent, transient, input, services, renderer );
-    Application* shape     = shapeLib.f_loadApp(     permanent, transient, input, services, renderer );
-    Application* pong      = pongLib.f_loadApp(      permanent, transient, input, services, renderer );
+    Application* christmas = christmasLib.f_loadApp( permanent, transient, input, services, renderer, ui );
+    Application* clock     = clockLib.f_loadApp(     permanent, transient, input, services, renderer, ui );
+    Application* shape     = shapeLib.f_loadApp(     permanent, transient, input, services, renderer, ui );
+    Application* pong      = pongLib.f_loadApp(      permanent, transient, input, services, renderer, ui );
 
     pong->m_timeInfo.m_startTime   = startTime;
     pong->m_timeInfo.m_elspaseTime = 0.0;

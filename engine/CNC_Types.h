@@ -58,7 +58,6 @@ typedef struct UniformData
 
 } UniformData;
 
-
 typedef struct ModelData
 {
     m4        m_modelMatrix;
@@ -154,6 +153,26 @@ typedef struct Contact
     f32        m_penetration; // overlap distance
     
 } Contact;
+
+enum control_value_type
+{
+    FLOAT_VALUE,
+    BOOL_VALUE
+};
+
+enum control_type
+{
+    INPUT_FIELD,
+    SLIDER
+};
+typedef struct ControlValue
+{
+    control_value_type m_valueType;
+    control_type       m_controlType;
+    const char         m_label[100];
+    void*              m_value;
+
+} ControlValue;
 
 
 #endif//CNC_TYPES_H

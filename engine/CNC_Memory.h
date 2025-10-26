@@ -26,6 +26,7 @@ namespace cnc
     
     #include <stddef.h>
     extern "C" void* malloc( size_t size );
+    extern "C" void* memset( void*, int c, size_t size );
     
     MemoryPool* CreateMemoryPool( unsigned int size )
     {
