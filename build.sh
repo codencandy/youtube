@@ -1,7 +1,7 @@
 #! /bin/bash
 
 FRAMEWORKS='-framework AppKit -framework CoreVideo -framework Metal -framework MetalKit -framework GameController'
-IGNORE='-Wno-nullability-completeness'
+IGNORE='-Wno-nullability-completeness -Wno-writable-strings'
 FLAGS='--debug -std=c++20 -Ilibs -Ilibs/imgui -Iplatform -Iplatform/.. -Iengine -Iengine/..'
 TIMEFORMAT=%R
 BUILD_TYPE=$1

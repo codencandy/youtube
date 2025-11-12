@@ -27,6 +27,7 @@ namespace cnc
     Line      CreateLine     ( v2 start, v2 end, Colour c );
     Line*     CreateGrid     ( MemoryPool* pool, v2 screenSize, f32 cellSize, u32* numLines );
     void      CreateCtrlValue( Application* app, control_value_type valueType, control_type controlType, const char* label, void* value );
+    void      ShowDebugValue ( Application* app, control_value_type, control_type controlType, char* label, f32 value );
 }
 
 #ifdef CNC_CANDYENGINE_IMPLEMENTATION

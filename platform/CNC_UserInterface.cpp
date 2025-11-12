@@ -9,6 +9,8 @@ UserInterface* CreateUserinterface()
     ui->m_christmasApp = false;
     ui->m_shapeApp     = false;
     ui->m_pongApp      = true;
+    ui->m_values       = NULL;
+    ui->m_debugValues  = NULL;
 
     return ui;
 }
@@ -118,46 +120,86 @@ void ShowUserInterface( UserInterface* ui )
     ImVec2 buttonSize = ImVec2( 150, 30 );
 
     ImGui::Begin( "codencandy demo" );
+    ImGui::BeginTabBar( "apps" ); 
 
-
-    if( ImGui::Button( "clock app", buttonSize ) )
+    if( ImGui::BeginTabItem("clock") ) 
     {
-        ui->m_clockApp = !ui->m_clockApp;
-    }
-
-    if( ImGui::Button( "christmas app", buttonSize ) )
-    {
-        ui->m_christmasApp = !ui->m_christmasApp;
-    }
-
-    if( ImGui::Button( "shape app", buttonSize ) )
-    {
-        ui->m_shapeApp = !ui->m_shapeApp;
-    }
-
-    if( ImGui::Button( "pong app", buttonSize ) )
-    {
-        ui->m_pongApp = !ui->m_pongApp;
-    }
-
-    u32 numValues = arrlen( ui->m_values );
-    for( u32 i=0; i<numValues; ++i )
-    {
-        ControlValue* value = ui->m_values[i];
-
-        switch( value->m_controlType )
+        if( ImGui::Button( "clock app", buttonSize ) )
         {
-            case INPUT_FIELD: ImGui::InputFloat(  value->m_label, (f32*)value->m_value );
-            case SLIDER:      ImGui::SliderFloat( value->m_label, (f32*)value->m_value, 0.0f, 10.0f );;
+            ui->m_clockApp = !ui->m_clockApp;
         }
+
+        ImGui::EndTabItem();
     }
 
+    if( ImGui::BeginTabItem( "christmas" ) )
+    {
+        if( ImGui::Button( "christmas app", buttonSize ) )
+        {
+            ui->m_christmasApp = !ui->m_christmasApp;
+        }
+
+        ImGui::EndTabItem();
+    }
+
+    if( ImGui::BeginTabItem( "shapes" ) )
+    {
+        if( ImGui::Button( "shape app", buttonSize ) )
+        {
+            ui->m_shapeApp = !ui->m_shapeApp;
+        }
+
+        ImGui::EndTabItem();
+    }
+
+    if( ImGui::BeginTabItem( "pong" ) )
+    {
+        if( ImGui::Button( "pong app", buttonSize ) )
+        {
+            ui->m_pongApp = !ui->m_pongApp;
+        }
+
+        u32 numValues = arrlen( ui->m_values );
+        for( u32 i=0; i<numValues; ++i )
+        {
+            ControlValue* value = ui->m_values[i];
+    
+            switch( value->m_controlType )
+            {
+                case INPUT_FIELD: ImGui::InputFloat(  value->m_label, (f32*)value->m_value ); break;
+                case SLIDER:      ImGui::SliderFloat( value->m_label, (f32*)value->m_value, 0.0f, 20.0f ); break;
+                default: break;
+            }
+        }
+    
+        u32 numDbgValues = arrlen( ui->m_debugValues );
+        for( u32 i=0; i<numDbgValues; ++i )
+        {
+            DebugValue* value = ui->m_debugValues[i];
+            switch( value->m_controlType )
+            {
+                case TEXT_BOX: ImGui::InputFloat( value->m_label, &value->m_value ); break;
+                default: break;
+            }
+        }
+
+        ImGui::EndTabItem();
+    }
+
+    ImGui::EndTabBar();
     ImGui::End();
+
+    arrfree( ui->m_debugValues );
 }
 
-void PlatformAddCtrlValue( void*          userInterface, 
-                           ControlValue*  value )
+void PlatformAddCtrlValue( void* userInterface, ControlValue*  value )
 {
     UserInterface* ui = (UserInterface*)userInterface;
     arrput( ui->m_values, value );
+}
+
+void PlatformShowDebugValue( void* userInterface, DebugValue* value )
+{
+    UserInterface* ui = (UserInterface*)userInterface;
+    arrput( ui->m_debugValues, value );
 }

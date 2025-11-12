@@ -10,11 +10,11 @@ typedef struct UserInterface
     bool m_pongApp;
 
     ControlValue** m_values;
+    DebugValue**   m_debugValues;
 
 } UserInterface;
 
 UserInterface* CreateUserinterface();
 void           ShowUserInterface  ( UserInterface* ui );
-void           AddControlValue    ( UserInterface* ui, ControlValue* value );
 
 #endif//CNC_USERINTERFACE_H

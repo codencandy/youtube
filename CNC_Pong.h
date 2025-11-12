@@ -23,6 +23,8 @@ typedef struct Pong : Application
     Line*     m_grid;
 
     Shape**   m_colliders;
+    f32       m_friction;
+    f32       m_restitution;
 
 } Pong;
 

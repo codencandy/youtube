@@ -163,8 +163,10 @@ enum control_value_type
 enum control_type
 {
     INPUT_FIELD,
-    SLIDER
+    SLIDER,
+    TEXT_BOX
 };
+
 typedef struct ControlValue
 {
     control_value_type m_valueType;
@@ -174,5 +176,13 @@ typedef struct ControlValue
 
 } ControlValue;
 
+typedef struct DebugValue
+{
+    control_value_type m_valueType;
+    control_type       m_controlType;
+    char               m_label[100];
+    f32                m_value;
+
+} DebugValue;
 
 #endif//CNC_TYPES_H

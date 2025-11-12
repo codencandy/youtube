@@ -33,6 +33,7 @@ PlatformServices* CreatePlatformServices()
     services->f_submitDrawCall  = &PlatformSubmitDrawCall;
     services->f_renderParticles = &PlatformRenderParticles;
     services->f_addCtrlValue    = &PlatformAddCtrlValue;
+    services->f_showDebugValue  = &PlatformShowDebugValue;
 
     return services;
 }

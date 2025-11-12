@@ -1,8 +1,6 @@
 #include "CNC_Pong.h"
 
-using namespace cnc;
-
-Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput* input, PlatformServices* services, void* renderer, void* ui )
+Application* LoadApplication( cnc::MemoryPool* pool, cnc::MemoryPool* transient, cnc::UserInput* input, PlatformServices* services, void* renderer, void* ui )
 {
     Pong* pong = ALLOC_STRUCT( pool, Pong );
 
@@ -19,18 +17,20 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput
     f32    ballRadius     = 20.0f;
 
     pong->m_colliders     = NULL;
-    pong->m_ball          = CreateCircle( center, ballRadius, white );
-    pong->m_padLeft       = CreateRectangle( padLeft, padSize, red );
-    pong->m_padRight      = CreateRectangle( padRight, padSize, red );
-    pong->m_wallTop       = CreateRectangle( vec2( 0.0f, 0.0f ), wallSize, grey );
-    pong->m_wallBottom    = CreateRectangle( vec2( 0.0f, pong->m_screenSize.y - 20.0f ), wallSize, grey );
-    pong->m_grid          = CreateGrid( pool, pong->m_screenSize, 20.0f, &pong->m_numGridLines );
+    pong->m_ball          = cnc::CreateCircle( center, ballRadius, white );
+    pong->m_padLeft       = cnc::CreateRectangle( padLeft, padSize, red );
+    pong->m_padRight      = cnc::CreateRectangle( padRight, padSize, red );
+    pong->m_wallTop       = cnc::CreateRectangle( vec2( 0.0f, 0.0f ), wallSize, grey );
+    pong->m_wallBottom    = cnc::CreateRectangle( vec2( 0.0f, pong->m_screenSize.y - 20.0f ), wallSize, grey );
+    pong->m_grid          = cnc::CreateGrid( pool, pong->m_screenSize, 20.0f, &pong->m_numGridLines );
+    pong->m_friction      = 0.0f;
+    pong->m_restitution   = 1.0f;
 
-    InitCollider( &pong->m_ball,       false, center,                            vec2(500.0f, 10.0f ),  0.0f,  0.1f );
-    InitCollider( &pong->m_padLeft,    false, padLeft  + (padSize/2.0f),         vec2(0.0f, 0.0f),      0.0f, 10.0f );
-    InitCollider( &pong->m_padRight,   false, padRight + (padSize/2.0f),         vec2(0.0f, 0.0f),      0.0f, 10.0f );
-    InitCollider( &pong->m_wallTop,    true,  vec2(0.0f,0.0f) + (wallSize/2.0f), vec2(0.0f,0.0f),       0.0f, 10.0f );
-    InitCollider( &pong->m_wallBottom, true,  vec2( 0.0f, pong->m_screenSize.y - 20.0f ) + ( wallSize / 2.0f ), vec2(0.0f,0.0f), 0.0f, 10.0f );
+    cnc::InitCollider( &pong->m_ball,       false, center,                            vec2(500.0f, 10.0f ),  0.0f,  0.1f );
+    cnc::InitCollider( &pong->m_padLeft,    false, padLeft  + (padSize/2.0f),         vec2(0.0f, 0.0f),      0.0f, 10.0f );
+    cnc::InitCollider( &pong->m_padRight,   false, padRight + (padSize/2.0f),         vec2(0.0f, 0.0f),      0.0f, 10.0f );
+    cnc::InitCollider( &pong->m_wallTop,    true,  vec2(0.0f,0.0f) + (wallSize/2.0f), vec2(0.0f,0.0f),       0.0f, 10.0f );
+    cnc::InitCollider( &pong->m_wallBottom, true,  vec2( 0.0f, pong->m_screenSize.y - 20.0f ) + ( wallSize / 2.0f ), vec2(0.0f,0.0f), 0.0f, 10.0f );
 
     arrput( pong->m_colliders, &pong->m_ball );
     arrput( pong->m_colliders, &pong->m_padLeft );
@@ -41,9 +41,11 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput
     pong->m_leftBounds  = 0.0f - ballRadius;
     pong->m_rightBounds = pong->m_screenSize.x + ballRadius;
 
-    CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "ball mass",      &pong->m_ball.m_mass );
-    CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "pad left mass",  &pong->m_padLeft.m_mass );
-    CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "pad right mass", &pong->m_padRight.m_mass );
+    cnc::CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "friction",       &pong->m_friction );
+    cnc::CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "restitution",    &pong->m_restitution );
+    cnc::CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "ball mass",      &pong->m_ball.m_mass );
+    cnc::CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "pad left mass",  &pong->m_padLeft.m_mass );
+    cnc::CreateCtrlValue( pong, FLOAT_VALUE, SLIDER, "pad right mass", &pong->m_padRight.m_mass );
 
     return pong;
 }
@@ -51,31 +53,31 @@ Application* LoadApplication( MemoryPool* pool, MemoryPool* transient, UserInput
 void UpdateApplication( Application* application )
 {
     Pong*      app        = (Pong*)application;
-    UserInput* input      = application->m_input;
+    cnc::UserInput* input = application->m_input;
     u32        shapeCount = arrlen( app->m_colliders );
     Ball*      ball       = &app->m_ball;
     Pad*       leftPad    = &app->m_padLeft;
     Pad*       rightPad   = &app->m_padRight;
 
     // right pad movement
-    if( KeyDown( input, KEY_DOWN ) )
+    if( KeyDown( input, cnc::KEY_DOWN ) )
     {
         rightPad->m_position.y += 1.0f;
         rightPad->m_center.y   += 1.0f;
     }
-    else if( KeyDown( input, KEY_UP ) )
+    else if( KeyDown( input, cnc::KEY_UP ) )
     {
         rightPad->m_position.y -= 1.0f;
         rightPad->m_center.y   -= 1.0f;
     }
     
     // left pad movement
-    if( KeyDown( input, KEY_S ) )
+    if( KeyDown( input, cnc::KEY_S ) )
     {
         leftPad->m_position.y += 1.0f;
         leftPad->m_center.y   += 1.0f;
     } 
-    else if( KeyDown( input, KEY_W ) )
+    else if( KeyDown( input, cnc::KEY_W ) )
     {
         leftPad->m_position.y -= 1.0f;
         leftPad->m_center.y   -= 1.0f;
@@ -93,7 +95,7 @@ void UpdateApplication( Application* application )
             Contact c = cnc::DetectCollision( app->m_colliders[i], app->m_colliders[j] );
             if( c.m_colliding ) 
             {
-                cnc::ResolveCollision( app->m_colliders[i], app->m_colliders[j], c, 1.0f, 0.0f) ;
+                cnc::ResolveCollision( app->m_colliders[i], app->m_colliders[j], c, app->m_restitution, app->m_friction );
             }
         }
     }
@@ -111,10 +113,12 @@ void RenderApplication( Application* app )
 {
     Pong* pong = (Pong*)app;
     
-    DrawGrid     ( pong, pong->m_grid, pong->m_numGridLines );
-    DrawRectangle( pong, pong->m_wallTop );
-    DrawRectangle( pong, pong->m_wallBottom );
-    DrawCircle   ( pong, pong->m_ball );
-    DrawRectangle( pong, pong->m_padLeft );
-    DrawRectangle( pong, pong->m_padRight );
+    cnc::DrawGrid     ( pong, pong->m_grid, pong->m_numGridLines );
+    cnc::DrawRectangle( pong, pong->m_wallTop );
+    cnc::DrawRectangle( pong, pong->m_wallBottom );
+    cnc::DrawCircle   ( pong, pong->m_ball );
+    cnc::DrawRectangle( pong, pong->m_padLeft );
+    cnc::DrawRectangle( pong, pong->m_padRight );
+
+    cnc::ShowDebugValue( pong, FLOAT_VALUE, TEXT_BOX, "speed", cnc::length( pong->m_ball.m_velocity ) );
 }

@@ -190,3 +190,24 @@ void cnc::CreateCtrlValue( Application*       app,
     services->f_addCtrlValue( app->m_ui, ctrlValue );
 }
 
+void cnc::ShowDebugValue( Application*       app, 
+                          control_value_type valueType, 
+                          control_type       controlType, 
+                          char*              label, 
+                          f32                value )
+{
+    PlatformServices* services  = app->m_services;
+    DebugValue*       dbgValue  = ALLOC_STRUCT( app->m_transient, DebugValue );
+
+    dbgValue->m_controlType = controlType;
+    dbgValue->m_valueType   = valueType;
+    dbgValue->m_value       = value;
+
+    memset( (void*)dbgValue->m_label, 0x00, 100 );
+    memcpy( (void*)dbgValue->m_label, label, 100 );
+
+    services->f_showDebugValue( app->m_ui, dbgValue );
+}
+
+
+

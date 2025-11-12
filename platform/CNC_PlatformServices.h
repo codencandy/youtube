@@ -9,6 +9,7 @@ void   PlatformUploadParticles( void* renderer, Particle* particles, u32 numPart
 void   PlatformSubmitDrawCall( void* renderer, DrawCall call );
 void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask );
 void   PlatformAddCtrlValue( void* ui, ControlValue* value );
+void   PlatformShowDebugValue( void* ui, DebugValue* value );
 
 typedef struct PlatformServices
 {
@@ -18,6 +19,7 @@ typedef struct PlatformServices
     void  (*f_submitDrawCall)(void*, DrawCall);
     void  (*f_renderParticles)(void*, u32, u32 ,u32);
     void  (*f_addCtrlValue)(void*, ControlValue* value);
+    void  (*f_showDebugValue)(void*, DebugValue* value );
 
 } PlatformServices;
 

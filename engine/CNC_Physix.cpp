@@ -62,7 +62,7 @@ namespace cnc
         return c;
     }
     
-    void ResolveCollision( Shape* a, Shape* b, Contact c, f32 restitution, f32 friction)
+    void ResolveCollision( Shape* a, Shape* b, Contact c, f32 restitution, f32 friction )
     {
         if( !c.m_colliding ) return;
     
@@ -72,8 +72,8 @@ namespace cnc
         if (invMassSum == 0.0f) return;
     
         // --- 1. Positional correction ---
-        const f32 percent = 0.8f;
-        const f32 slop = 0.01f;
+        const f32 percent = 1.0f; //0.8f;
+        const f32 slop = 0.0001f; //0.01f;
         f32 correctionMag = cnc::fmax(c.m_penetration - slop, 0.0f) * percent / invMassSum;
         v2  correction    = c.m_normal * correctionMag;
     
