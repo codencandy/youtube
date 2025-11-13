@@ -9,7 +9,7 @@ BUILD_TYPE=$1
 imgui ()
 {
     echo "build imgui"
-    clang++ -c platform/CNC_ImGui.mm ${FLAGS} ${IGNORE} -o bin/CNC_ImGui.o
+    clang++ -c platform/macos/CNC_ImGui.mm ${FLAGS} ${IGNORE} -o bin/CNC_ImGui.o
 }
 
 pong ()
@@ -39,7 +39,7 @@ clock ()
 platform ()
 {
     echo "build platform"
-    clang++ platform/CNC_Main.mm -o demo bin/CNC_ImGui.o ${FRAMEWORKS} ${IGNORE}  ${FLAGS}
+    clang++ platform/macos/CNC_Main.mm -o demo bin/CNC_ImGui.o ${FRAMEWORKS} ${IGNORE}  ${FLAGS}
 }
 
 main ()

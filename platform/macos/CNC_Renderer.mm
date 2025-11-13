@@ -1,8 +1,8 @@
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 
-#include "../libs/imgui/backends/imgui_impl_osx.h"
-#include "../libs/imgui/backends/imgui_impl_metal.h"
+#include "../../libs/imgui/backends/imgui_impl_osx.h"
+#include "../../libs/imgui/backends/imgui_impl_metal.h"
 
 #include "CNC_Constants.h"
 #include "CNC_Math.h"
@@ -176,7 +176,7 @@ typedef struct RenderShape
 - (void)createShader
 {
     NSError*  error        = NULL;
-    NSString* shaderSource = [NSString stringWithContentsOfFile: @"platform/CNC_Shader.metal" 
+    NSString* shaderSource = [NSString stringWithContentsOfFile: @"platform/macos/CNC_Shader.metal" 
                                                        encoding: NSUTF8StringEncoding
                                                           error: &error];
     [self checkError: error];
