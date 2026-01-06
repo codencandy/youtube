@@ -135,7 +135,19 @@ namespace cnc
     
     Contact detect_circle_circle( Shape* a, Shape* b )
     {
-        Contact c;
+        Contact c = {0};
+
+        Circle* c1      = (Circle*)a;
+        v2      dist_v2 = a->m_center - b->m_center;
+        f32     dist    = cnc::length( dist_v2 );
+
+        if( dist <= c1->m_radius )
+        {
+            c.m_colliding   = true;
+            c.m_normal      = cnc::normalize( dist_v2 );
+            c.m_penetration = c1->m_radius - dist;
+        }
+
         return c;
     }
     
