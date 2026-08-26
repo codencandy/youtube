@@ -14,6 +14,12 @@ typedef simd::float4   v4;
 typedef simd::float3x3 m3;
 typedef simd::float4x4 m4;
 
+enum ENDIANESS
+{
+    BIGENDIAN    = 0,
+    LITTLEENDIAN = 1
+};
+
 v2 vec2( f32 x, f32 y )
 {
     v2 result;
@@ -74,6 +80,20 @@ typedef struct Image
     ModelData m_modelData;
 
 } Image;
+
+typedef struct File
+{
+    void*     m_data;
+    u32       m_sizeInBytes;
+    ENDIANESS m_endianess;
+
+} File;
+
+typedef struct Font
+{
+    File m_fontFile;
+
+} Font;
 
 typedef struct Particle
 {

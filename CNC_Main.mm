@@ -30,6 +30,7 @@ int main()
 
     AppLib christmasLib = loadLib( "christmas.dylib" );
     AppLib clockLib     = loadLib( "clock.dylib" );
+    AppLib textdemoLib  = loadLib( "textdemo.dylib" );
 
     NSApplication* app = [NSApplication sharedApplication];
 
@@ -45,6 +46,7 @@ int main()
 
     Application* christmas = christmasLib.f_loadApp( services, renderer );
     Application* clock     = clockLib.f_loadApp( services, renderer );
+    Application* textdemo  = textdemoLib.f_loadApp( services, renderer );
     
     while( running )
     {
@@ -72,6 +74,9 @@ int main()
 
             clockLib.f_updateApp( clock );
             clockLib.f_renderApp( clock );
+
+            textdemoLib.f_updateApp( textdemo );
+            textdemoLib.f_renderApp( textdemo );
 
             // render a new frame using the GPU
             Render( renderer );
