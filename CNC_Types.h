@@ -3,16 +3,19 @@
 
 #include <simd/simd.h>
 
-typedef float         f32;
-typedef double        f64;
-typedef unsigned int  u32;
-typedef signed int    s32;
+typedef float          f32;
+typedef double         f64;
+typedef unsigned int   u32;
+typedef unsigned short u16;
+typedef unsigned char   u8;
+typedef signed int     s32;
 
 typedef simd::float2   v2;
 typedef simd::float3   v3;
 typedef simd::float4   v4;
 typedef simd::float3x3 m3;
 typedef simd::float4x4 m4;
+typedef       v4       color;
 
 enum ENDIANESS
 {
@@ -57,7 +60,10 @@ typedef struct ModelData
 enum draw_type
 {
     CNC_IMAGE    = 0,
-    CNC_PARTICLE = 1
+    CNC_PARTICLE = 1,
+    CNC_RECT     = 2,
+    CNC_CIRCLE   = 3,
+    CNC_LINE     = 4
 };
 
 typedef struct DrawCall
@@ -88,12 +94,6 @@ typedef struct File
     ENDIANESS m_endianess;
 
 } File;
-
-typedef struct Font
-{
-    File m_fontFile;
-
-} Font;
 
 typedef struct Particle
 {

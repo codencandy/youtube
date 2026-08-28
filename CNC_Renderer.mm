@@ -17,6 +17,9 @@
         
         id< MTLRenderPipelineState > m_renderStateImage;
         id< MTLRenderPipelineState > m_renderStateParticle;
+        id< MTLRenderPipelineState > m_renderStateRect;
+        id< MTLRenderPipelineState > m_renderStateCircle;
+        id< MTLRenderPipelineState > m_renderStateLine;
 
         u32                   m_nextTextureId;
         NSMutableArray*       m_textures;
@@ -28,9 +31,10 @@
 
         id< MTLBuffer >       m_particleBuffer;
         VertexInput           m_particleVertices[6];
+        VertexInput           m_quadVertices[6];
 }
 
-- (bool)checkError:(NSError*)error;
+- (bool)checkError:(NSError*)error message:(NSString*)msg;
 - (void)createShader;
 - (id< MTLBuffer >)createGeometry:(u32)width height:(u32)height;
 - (void)createUniform;
@@ -96,6 +100,21 @@
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
                     break;
                 }
+
+                case CNC_RECT:
+                {
+                    break;
+                }
+
+                case CNC_CIRCLE:
+                {
+                    break;
+                }
+
+                case CNC_LINE:
+                {
+                    break;
+                }
             }
             
         }
@@ -109,7 +128,7 @@
     m_numDrawCalls = 0;
 }
 
-- (bool)checkError:(NSError*)error
+- (bool)checkError:(NSError*)error message:(NSString*)msg
 {
     if( error != NULL )
     {
@@ -129,14 +148,14 @@
     NSString* shaderSource = [NSString stringWithContentsOfFile: @"CNC_Shader.metal" 
                                                        encoding: NSUTF8StringEncoding
                                                           error: &error];
-    [self checkError: error];
+    [self checkError: error message: @"shader source"];
 
     MTLCompileOptions* options = [MTLCompileOptions new];
     m_library = [m_gpu newLibraryWithSource: shaderSource
                                     options: options
                                       error: &error];
 
-    [self checkError: error];                                      
+    [self checkError: error message: @"shader compile"];                                      
 }
 
 - (id< MTLBuffer >)createGeometry:(u32)width height:(u32)height
@@ -219,14 +238,32 @@
 
     NSError* error = NULL;
     m_renderStateImage = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
-    [self checkError: error];
+    [self checkError: error message: @"image state"];
 
     renderDesc.vertexFunction   = [m_library newFunctionWithName: @"ParticleVertexShader"];
     renderDesc.fragmentFunction = [m_library newFunctionWithName: @"ParticleFragmentShader"];
 
     error = NULL;
     m_renderStateParticle = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
-    [self checkError: error];
+    [self checkError: error message: @"particle state"];
+
+    error = NULL;
+    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"RectVertexShader"];
+    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"RectFragmentShader"];
+    m_renderStateRect = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    [self checkError: error message: @"rect state"];
+
+    error = NULL;
+    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"CircleVertexShader"];
+    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"CircleFragmentShader"];
+    m_renderStateCircle = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    [self checkError: error message: @"cirlce state"];
+
+    error = NULL;
+    renderDesc.vertexFunction   = [m_library newFunctionWithName: @"LineVertexShader"];
+    renderDesc.fragmentFunction = [m_library newFunctionWithName: @"LineFragmentShader"];
+    m_renderStateLine = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    [self checkError: error message: @"line state"];
 }
 
 - (u32)uploadImage:(Image*)image
@@ -251,6 +288,25 @@
     m_nextTextureId++;
 
     return textureId;
+}
+
+- (void)initUnitQuad
+{
+    f32 width  = 1.0f;
+    f32 height = 1.0f;
+    
+    v3 A = {   0.0f, height, 0.0f };
+    v3 B = {  width, height, 0.0f };
+    v3 C = {  width,   0.0f, 0.0f };
+    v3 D = {   0.0f,   0.0f, 0.0f };
+
+    m_quadVertices[0].m_position = A; m_quadVertices[0].m_uv = vec2( 0.0f, 1.0f );
+    m_quadVertices[1].m_position = B; m_quadVertices[1].m_uv = vec2( 1.0f, 1.0f );
+    m_quadVertices[2].m_position = C; m_quadVertices[2].m_uv = vec2( 1.0f, 0.0f );
+
+    m_quadVertices[3].m_position = C; m_quadVertices[3].m_uv = vec2( 1.0f, 0.0f );
+    m_quadVertices[4].m_position = D; m_quadVertices[4].m_uv = vec2( 0.0f, 0.0f );
+    m_quadVertices[5].m_position = A; m_quadVertices[5].m_uv = vec2( 0.0f, 1.0f ); 
 }
 
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles
@@ -340,6 +396,21 @@ void PlatformUpdateImage( void* renderer, Image* image )
     [r updateImage: image];
 }
 
+void PlatformRenderRect( void* renderer, v2 pos, f32 width, f32 height, color c )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+}
+
+void PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+}
+
+void PlatformRenderLine( void* renderer, v2 start, v2 end, f32 width, color c )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+}
+
 MainRenderer* CreateMainRenderer()
 {
     MainRenderer* renderer = [MainRenderer new];
@@ -363,6 +434,7 @@ MainRenderer* CreateMainRenderer()
     [renderer createShader];
     [renderer createUniform];
     [renderer createPipeline];
+    [renderer initUnitQuad];
     
     return renderer;
 }

@@ -155,3 +155,45 @@ fragment float4 ParticleFragmentShader( VertexOutput in [[stage_in]] )
 
     return color;
 }
+
+vertex VertexOutput RectVertexShader( VertexInput           in         [[stage_in]],
+                                      constant UniformData& uniform    [[buffer(1)]],
+                                      uint                  instanceId [[instance_id]] )
+{
+    VertexOutput out;
+    return out;
+}
+
+fragment float4 RectFragmentShader( VertexOutput in [[stage_in]] )
+{
+    float4 color = in.m_color;
+    return color;
+}
+
+vertex VertexOutput CircleVertexShader( VertexInput           in         [[stage_in]],
+                                      constant UniformData& uniform    [[buffer(1)]],
+                                      uint                  instanceId [[instance_id]] )
+{
+    VertexOutput out;
+    return out;
+}
+
+fragment float4 CircleFragmentShader( VertexOutput in [[stage_in]] )
+{
+    float4 color = in.m_color;
+    return color;
+}
+
+vertex VertexOutput LineVertexShader( VertexInput           in         [[stage_in]],
+                                      constant UniformData& uniform    [[buffer(1)]],
+                                      uint                  instanceId [[instance_id]] )
+{
+    VertexOutput out;
+    return out;
+}
+
+fragment float4 LineFragmentShader( VertexOutput in [[stage_in]] )
+{
+    float4 color = in.m_color;
+    return color;
+}

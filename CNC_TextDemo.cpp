@@ -7,7 +7,12 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     textdemo->m_services = services;
     textdemo->m_renderer = renderer;
 
-    File* testFile = textdemo->m_services->f_loadFile( "CNC_TextDemo.h" );
+    File* ttfFile = services->f_loadFile( "./res/montserrat-regular.ttf" );
+    ttfFile->m_endianess = BIGENDIAN;
+
+    Font* ttfFont = services->f_loadFont( ttfFile );
+
+    textdemo->m_ttfFont = ttfFont;
     
     return textdemo;
 }
