@@ -23,6 +23,18 @@ enum ENDIANESS
     LITTLEENDIAN = 1
 };
 
+color rgba( f32 r, f32 g, f32 b, f32 a )
+{
+    color c;
+
+    c.x = r;
+    c.y = g;
+    c.z = b;
+    c.w = a;
+
+    return c;
+}
+
 v2 vec2( f32 x, f32 y )
 {
     v2 result;

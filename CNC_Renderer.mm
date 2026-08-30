@@ -41,10 +41,13 @@
 - (void)createPipeline;
 
 - (u32)uploadImage:(Image*)image;
-- (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
-- (void)renderImage:(u32)textureId instances:(u32)numInstances;
-- (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
 - (void)updateImage:(Image*)image;
+- (void)renderImage:(u32)textureId instances:(u32)numInstances;
+- (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
+- (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
+- (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c;
+- (void)renderCircle:(v2)center radius:(f32)radius color:(color)c;
+- (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c;
 
 @end
 
@@ -103,16 +106,19 @@
 
                 case CNC_RECT:
                 {
+                    [commandEncoder setRenderPipelineState: m_renderStateRect];
                     break;
                 }
 
                 case CNC_CIRCLE:
                 {
+                    [commandEncoder setRenderPipelineState: m_renderStateCircle];
                     break;
                 }
 
                 case CNC_LINE:
                 {
+                    [commandEncoder setRenderPipelineState: m_renderStateLine];
                     break;
                 }
             }
@@ -352,6 +358,24 @@
     m_numDrawCalls++;
 }
 
+- (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c
+{
+    m_drawCalls[m_numDrawCalls].m_type = CNC_RECT;
+    m_numDrawCalls++;
+}
+
+- (void)renderCircle:(v2)center radius:(f32)radius color:(color)c
+{
+    m_drawCalls[m_numDrawCalls].m_type = CNC_CIRCLE;
+    m_numDrawCalls++;
+}
+
+- (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c
+{
+    m_drawCalls[m_numDrawCalls].m_type = CNC_LINE;
+    m_numDrawCalls++;
+}
+
 - (void)updateImage:(Image*)image
 {
     id< MTLBuffer > modelBuffer = m_modelBuffers[image->m_textureId];
@@ -399,16 +423,19 @@ void PlatformUpdateImage( void* renderer, Image* image )
 void PlatformRenderRect( void* renderer, v2 pos, f32 width, f32 height, color c )
 {
     MainRenderer* r = (MainRenderer*)renderer;
+    [r renderRect:pos width:width height:height color:c];
 }
 
 void PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c )
 {
     MainRenderer* r = (MainRenderer*)renderer;
+    [r renderCircle:center radius:radius color:c];
 }
 
 void PlatformRenderLine( void* renderer, v2 start, v2 end, f32 width, color c )
 {
     MainRenderer* r = (MainRenderer*)renderer;
+    [r renderLine:start end:end width:width color:c];
 }
 
 MainRenderer* CreateMainRenderer()
