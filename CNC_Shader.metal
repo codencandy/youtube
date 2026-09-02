@@ -37,6 +37,13 @@ struct Particle
     float  m_time;
 };
 
+struct PrimitiveData
+{
+    float2 m_pos; 
+    float2 m_size;
+    float4 m_color;
+};
+
 constexpr sampler textureSampler( mag_filter::linear, min_filter::linear );
 
 vertex VertexOutput MainVertexShader( VertexInput           in         [[stage_in]],
@@ -156,11 +163,30 @@ fragment float4 ParticleFragmentShader( VertexOutput in [[stage_in]] )
     return color;
 }
 
-vertex VertexOutput RectVertexShader( VertexInput           in         [[stage_in]],
-                                      constant UniformData& uniform    [[buffer(1)]],
-                                      uint                  instanceId [[instance_id]] )
+vertex VertexOutput RectVertexShader( VertexInput             in         [[stage_in]],
+                                      constant UniformData&   uniform    [[buffer(1)]],
+                                      constant PrimitiveData& data       [[buffer(2)]],
+                                      uint                    instanceId [[instance_id]] )
 {
     VertexOutput out;
+
+    float4 position = float4( in.m_position, 1.0 );
+    float  x        = data.m_pos.x;
+    float  y        = data.m_pos.y;
+    float  w        = data.m_size.x;
+    float  h        = data.m_size.y;
+
+    float4x4 modelMatrix = float4x4(
+           w,  0.0, 0.0, 0.0,
+         0.0,    h, 0.0, 0.0,
+         0.0,  0.0, 1.0, 0.0,
+           x,    y, 0.0, 1.0
+    );
+
+    out.m_position  = uniform.m_projection2D * modelMatrix * position;
+    out.m_color     = data.m_color;
+    out.m_uv        = in.m_uv;
+
     return out;
 }
 
@@ -170,11 +196,17 @@ fragment float4 RectFragmentShader( VertexOutput in [[stage_in]] )
     return color;
 }
 
-vertex VertexOutput CircleVertexShader( VertexInput           in         [[stage_in]],
-                                      constant UniformData& uniform    [[buffer(1)]],
-                                      uint                  instanceId [[instance_id]] )
+vertex VertexOutput CircleVertexShader( VertexInput             in         [[stage_in]],
+                                        constant PrimitiveData& data       [[buffer(1)]],
+                                        uint                    instanceId [[instance_id]] )
 {
     VertexOutput out;
+
+    float4 position = float4( in.m_position, 1.0 );
+
+    out.m_color = data.m_color;
+    out.m_uv    = in.m_uv;
+
     return out;
 }
 
@@ -184,11 +216,17 @@ fragment float4 CircleFragmentShader( VertexOutput in [[stage_in]] )
     return color;
 }
 
-vertex VertexOutput LineVertexShader( VertexInput           in         [[stage_in]],
-                                      constant UniformData& uniform    [[buffer(1)]],
-                                      uint                  instanceId [[instance_id]] )
+vertex VertexOutput LineVertexShader( VertexInput             in         [[stage_in]],
+                                      constant PrimitiveData& data       [[buffer(1)]],
+                                      uint                    instanceId [[instance_id]] )
 {
     VertexOutput out;
+
+    float4 position = float4( in.m_position, 1.0 );
+
+    out.m_color = data.m_color;
+    out.m_uv    = in.m_uv;
+
     return out;
 }
 

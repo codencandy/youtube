@@ -69,6 +69,14 @@ typedef struct ModelData
 
 } ModelData;
 
+typedef struct PrimitiveData
+{
+    v2    m_pos; 
+    v2    m_size;
+    color m_color;
+
+} PrimitiveData;
+
 enum draw_type
 {
     CNC_IMAGE    = 0,
@@ -85,6 +93,9 @@ typedef struct DrawCall
     u32       m_snowMask;
     u32       m_skyMask;
     u32       m_numInstances;
+    v2        m_position;
+    v2        m_size;
+    color     m_color;
     
 } DrawCall;
 

@@ -31,6 +31,8 @@
 
         id< MTLBuffer >       m_particleBuffer;
         VertexInput           m_particleVertices[6];
+
+        id< MTLBuffer >       m_primitiveBuffer;
         VertexInput           m_quadVertices[6];
 }
 
@@ -67,8 +69,6 @@
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
 
-        [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData ) atIndex: 1];
-
         for( u32 i=0; i<m_numDrawCalls; ++i )
         {
             DrawCall call = m_drawCalls[i];
@@ -77,6 +77,7 @@
             {
                 case CNC_IMAGE:
                 {
+                    [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData ) atIndex: 1];
                     [commandEncoder setRenderPipelineState: m_renderStateImage];
                     id< MTLBuffer >  vertexBuffer = m_vertexBuffers[call.m_textureId];
                     id< MTLTexture > texture      = m_textures[call.m_textureId];
@@ -91,6 +92,7 @@
 
                 case CNC_PARTICLE:
                 {
+                    [commandEncoder setVertexBytes: &m_uniform length: sizeof( UniformData ) atIndex: 1];
                     [commandEncoder setRenderPipelineState: m_renderStateParticle];
 
                     id< MTLTexture > snowMask = m_textures[call.m_snowMask];
@@ -107,18 +109,33 @@
                 case CNC_RECT:
                 {
                     [commandEncoder setRenderPipelineState: m_renderStateRect];
+
+                    PrimitiveData primitive;
+                    primitive.m_pos   = call.m_position;
+                    primitive.m_size  = call.m_size;
+                    primitive.m_color = call.m_color;
+
+                    [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
+                    [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
+                    [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+                    
                     break;
                 }
 
                 case CNC_CIRCLE:
                 {
                     [commandEncoder setRenderPipelineState: m_renderStateCircle];
+
+                    [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
                     break;
                 }
 
                 case CNC_LINE:
                 {
                     [commandEncoder setRenderPipelineState: m_renderStateLine];
+
+                    [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
                     break;
                 }
             }
@@ -361,6 +378,12 @@
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c
 {
     m_drawCalls[m_numDrawCalls].m_type = CNC_RECT;
+
+    m_drawCalls[m_numDrawCalls].m_position     = pos;
+    m_drawCalls[m_numDrawCalls].m_size         = vec2( width, height );
+    m_drawCalls[m_numDrawCalls].m_color        = c;
+    m_drawCalls[m_numDrawCalls].m_numInstances = 1;
+    
     m_numDrawCalls++;
 }
 
