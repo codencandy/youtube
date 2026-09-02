@@ -127,7 +127,16 @@
                 {
                     [commandEncoder setRenderPipelineState: m_renderStateCircle];
 
+                    PrimitiveData primitive;
+                    primitive.m_pos   = call.m_position;
+                    primitive.m_size  = call.m_size;
+                    primitive.m_color = call.m_color;
+
                     [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
+                    [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
+                    [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+                    
                     break;
                 }
 
@@ -279,13 +288,13 @@
     error = NULL;
     renderDesc.vertexFunction   = [m_library newFunctionWithName: @"CircleVertexShader"];
     renderDesc.fragmentFunction = [m_library newFunctionWithName: @"CircleFragmentShader"];
-    m_renderStateCircle = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
-    [self checkError: error message: @"cirlce state"];
+    m_renderStateCircle         = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    [self checkError: error message: @"circle state"];
 
     error = NULL;
     renderDesc.vertexFunction   = [m_library newFunctionWithName: @"LineVertexShader"];
     renderDesc.fragmentFunction = [m_library newFunctionWithName: @"LineFragmentShader"];
-    m_renderStateLine = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    m_renderStateLine           = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
     [self checkError: error message: @"line state"];
 }
 
@@ -390,6 +399,12 @@
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c
 {
     m_drawCalls[m_numDrawCalls].m_type = CNC_CIRCLE;
+
+    m_drawCalls[m_numDrawCalls].m_position     = center;
+    m_drawCalls[m_numDrawCalls].m_size         = vec2( radius, 0.0f );
+    m_drawCalls[m_numDrawCalls].m_color        = c;
+    m_drawCalls[m_numDrawCalls].m_numInstances = 1;
+
     m_numDrawCalls++;
 }
 

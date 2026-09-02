@@ -197,22 +197,41 @@ fragment float4 RectFragmentShader( VertexOutput in [[stage_in]] )
 }
 
 vertex VertexOutput CircleVertexShader( VertexInput             in         [[stage_in]],
-                                        constant PrimitiveData& data       [[buffer(1)]],
+                                        constant UniformData&   uniform    [[buffer(1)]],
+                                        constant PrimitiveData& data       [[buffer(2)]],
                                         uint                    instanceId [[instance_id]] )
 {
     VertexOutput out;
 
     float4 position = float4( in.m_position, 1.0 );
+    float  x        = data.m_pos.x;
+    float  y        = data.m_pos.y;
+    float  radius   = data.m_size.x; 
 
-    out.m_color = data.m_color;
-    out.m_uv    = in.m_uv;
+    float4x4 modelMatrix = float4x4(
+         radius*2.0,  0.0,        0.0, 0.0,
+         0.0,         radius*2.0, 0.0, 0.0,
+         0.0,         0.0,        1.0, 0.0,
+         x-radius,    y-radius,   0.0, 1.0
+    );
+
+    out.m_position  = uniform.m_projection2D * modelMatrix * position;
+    out.m_color     = data.m_color;
+    out.m_uv        = in.m_uv;
 
     return out;
 }
 
 fragment float4 CircleFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color = in.m_color;
+    float4 color  = in.m_color;
+    float2 center = float2( 0.5 );
+    float  d      = distance( center, in.m_uv );
+    float  edge   = 0.05;
+    float  alpha  = smoothstep( 0.4, 0.4 - edge, d );
+
+    color.a *= alpha;
+
     return color;
 }
 
