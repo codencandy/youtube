@@ -26,4 +26,19 @@ f32 toRadians( f32 degrees )
     return radians;
 }
 
+f32 vectorLength( v2 v )
+{
+    return sqrt(v.x * v.x + v.y * v.y);
+}
+
+f32 distance( v2 a, v2 b )
+{
+    return vectorLength( vec2( b.x - a.x, b.y - a.y ) );
+} 
+f32 lineAngle( v2 p1, v2 p2 )
+{
+    f32 result = atan2f(p2.y - p1.y, p2.x - p1.x);
+    return result;
+}
+
 #endif//CNC_MATH_H

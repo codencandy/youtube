@@ -41,6 +41,7 @@ struct PrimitiveData
 {
     float2 m_pos; 
     float2 m_size;
+    float2 m_data;
     float4 m_color;
 };
 
@@ -236,15 +237,45 @@ fragment float4 CircleFragmentShader( VertexOutput in [[stage_in]] )
 }
 
 vertex VertexOutput LineVertexShader( VertexInput             in         [[stage_in]],
-                                      constant PrimitiveData& data       [[buffer(1)]],
+                                      constant UniformData&   uniform    [[buffer(1)]],
+                                      constant PrimitiveData& data       [[buffer(2)]],  
                                       uint                    instanceId [[instance_id]] )
 {
     VertexOutput out;
 
     float4 position = float4( in.m_position, 1.0 );
 
-    out.m_color = data.m_color;
-    out.m_uv    = in.m_uv;
+    float  angle     = -data.m_data.x;
+    float  x         = data.m_pos.x;
+    float  y         = data.m_pos.y;
+    float  w         = data.m_size.x;
+    float  h         = data.m_size.y;
+
+    float4x4 modelMatrix = float4x4(
+         1.0,  0.0, 0.0, 0.0,
+         0.0,  1.0, 0.0, 0.0,
+         0.0,  0.0, 1.0, 0.0,
+           x,    y, 0.0, 1.0
+    );
+
+    float4x4 scaleMatrix = float4x4(
+           w,  0.0, 0.0, 0.0,
+         0.0,    h, 0.0, 0.0,
+         0.0,  0.0, 1.0, 0.0,
+         0.0,  0.0, 0.0, 1.0
+    );
+
+    float2x2 rotationMatrix = {
+        { cos( angle ), -sin( angle )},
+        { sin( angle ),  cos( angle )}
+    };
+
+    position     = scaleMatrix * position;
+    position.xy  = rotationMatrix * position.xy;
+
+    out.m_position  = uniform.m_projection2D * modelMatrix * position;
+    out.m_color     = data.m_color;
+    out.m_uv        = in.m_uv;
 
     return out;
 }

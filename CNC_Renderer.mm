@@ -3,6 +3,7 @@
 
 #include "CNC_Constants.h"
 #include "CNC_Types.h"
+#include "CNC_Math.h"
 #include "CNC_PlatformServices.h"
 
 @interface MainRenderer : NSObject< MTKViewDelegate >
@@ -27,7 +28,7 @@
         NSMutableArray*       m_modelBuffers;
 
         u32                   m_numDrawCalls;
-        DrawCall              m_drawCalls[10];
+        DrawCall              m_drawCalls[1000];
 
         id< MTLBuffer >       m_particleBuffer;
         VertexInput           m_particleVertices[6];
@@ -144,7 +145,17 @@
                 {
                     [commandEncoder setRenderPipelineState: m_renderStateLine];
 
+                    PrimitiveData primitive;
+                    primitive.m_pos    = call.m_position;
+                    primitive.m_size   = call.m_size;
+                    primitive.m_data.x = call.m_angle;
+                    primitive.m_color  = call.m_color;
+
                     [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
+                    [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
+                    [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+                    
                     break;
                 }
             }
@@ -411,6 +422,16 @@
 - (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c
 {
     m_drawCalls[m_numDrawCalls].m_type = CNC_LINE;
+
+    f32 angle = lineAngle( start, end );
+    f32 dist  = distance( start, end );
+
+    m_drawCalls[m_numDrawCalls].m_position     = start;
+    m_drawCalls[m_numDrawCalls].m_size         = vec2( dist, width );
+    m_drawCalls[m_numDrawCalls].m_angle        = angle;
+    m_drawCalls[m_numDrawCalls].m_color        = c;
+    m_drawCalls[m_numDrawCalls].m_numInstances = 1;
+
     m_numDrawCalls++;
 }
 

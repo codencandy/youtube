@@ -73,6 +73,7 @@ typedef struct PrimitiveData
 {
     v2    m_pos; 
     v2    m_size;
+    v2    m_data;
     color m_color;
 
 } PrimitiveData;
@@ -95,6 +96,7 @@ typedef struct DrawCall
     u32       m_numInstances;
     v2        m_position;
     v2        m_size;
+    f32       m_angle;
     color     m_color;
     
 } DrawCall;

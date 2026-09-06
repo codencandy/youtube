@@ -29,5 +29,6 @@ void RenderApplication( Application* app )
 
     services->f_renderRect(   renderer, vec2( 10.0f, 10.0f ), 200.0f, 30.0f, rgba(1.0f, 0.0f, 0.0f, 1.0f) );
     services->f_renderCircle( renderer, vec2( 100.0f, 100.0f ), 30.0f, rgba( 0.0f, 1.0f, 0.0f, 1.0f ) );
-    services->f_renderLine(   renderer, vec2( 10.0f, 200.0f), vec2(210.0f, 200.0f), 5.0f, rgba( 0.0f, 0.0f, 1.0f, 1.0f) );
+    services->f_renderLine(   renderer, vec2( 10.0f, 200.0f), vec2(210.0f, 300.0f), 5.0f, rgba( 0.0f, 0.0f, 1.0f, 1.0f) );
+    services->f_renderLine(   renderer, vec2( 10.0f, 300.0f), vec2(210.0f, 200.0f), 5.0f, rgba( 0.0f, 1.0f, 1.0f, 1.0f) );
 }
