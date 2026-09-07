@@ -67,7 +67,7 @@ int main()
             while( event != NULL );
 
             // wait for display refresh
-            [window->m_displaySignal wait];
+            //[window->m_displaySignal wait];
 
             christmasLib.f_updateApp( christmas );
             christmasLib.f_renderApp( christmas );
