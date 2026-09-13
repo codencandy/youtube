@@ -46,17 +46,41 @@ typedef struct GlyphTable
 
 } GlyphTable;
 
+typedef struct CmapFormat4
+{
+    u16 m_format;
+    u16 m_length;
+    u16 m_language;
+
+    u16 m_segCountX2;
+    u16 m_searchRange;
+    u16 m_entrySelector;
+    u16 m_rangeShift;
+
+    u16* m_endCount;      // u16 * segCount
+    u16  m_reservedPad;
+    u16* m_startCount;    // u16 * segCount
+    u16* m_idDelta;       // u16 * segCount
+    u16* m_idRangeOffset; // u16 * segCount
+
+    u16* m_glyphIdArray;
+    
+} CmapFormat4;
+
 typedef struct CmapRecord
 {
+    u16 m_platformID;
+    u16 m_encodingID;
+    u32 m_offset;
 
 } CmapRecord;
 
 typedef struct CmapTable
 {
-    u32          m_cmapOffset;
-    u16          m_version;
-    u16          m_numRecords;
-    CmapRecord   m_cmapRecords;
+    u32           m_cmapOffset;
+    u16           m_version;
+    u16           m_numRecords;
+    CmapRecord*   m_cmapRecords;
 
 } CmapTable;
 

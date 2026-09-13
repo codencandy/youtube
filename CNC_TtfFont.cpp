@@ -106,6 +106,48 @@ void ReadCmapTable( TtfFont* font )
     u32 cmapOffset = GetTableOffset( font, CMAP_TAG );
     printf( "read cmap at offset: %d\n", cmapOffset );
 
-    font->m_cmapTable.m_cmapOffset = cmapOffset;
-    
+    font->m_cmapTable.m_cmapOffset  = cmapOffset;
+    font->m_cmapTable.m_version     = BigToLittleU16( font->m_fontFile->m_data, cmapOffset );
+    font->m_cmapTable.m_numRecords  = BigToLittleU16( font->m_fontFile->m_data, cmapOffset + 2 );
+    font->m_cmapTable.m_cmapRecords = (CmapRecord*)malloc( sizeof( CmapRecord ) * font->m_cmapTable.m_numRecords );
+
+    void* encodingRecords = (u8*)font->m_fontFile->m_data + (cmapOffset + 4);
+    u32   numRecords     = font->m_cmapTable.m_numRecords;
+    u32   offset         = 0;
+
+    printf( "\nplatform/endcoding pairs\n--------------------------\n" );
+    for( u32 i=0; i<numRecords; ++i )
+    {
+        CmapRecord* record = &font->m_cmapTable.m_cmapRecords[i];
+        
+        record->m_platformID = BigToLittleU16( encodingRecords, offset );
+        record->m_encodingID = BigToLittleU16( encodingRecords, offset + 2 );
+        record->m_offset     = BigToLittleU32( encodingRecords, offset + 4 );
+
+        // platform 0, encoding 3 -> Unicode BMP
+        // platform 3, encoding 1 -> Windows Unicode BMP
+        if( record->m_platformID == 0 && record->m_encodingID == 3 )
+        {
+            printf( "%d: Unicode BMP\n", i );
+        }
+        if( record->m_platformID == 0 && record->m_encodingID == 4 )
+        {
+            printf( "%d: Unicode full repertoire\n", i );
+        }
+        if( record->m_platformID == 0 && record->m_encodingID == 5 )
+        {
+            printf( "%d: Unicode variation squenece, format 14\n", i );
+        }
+        if( record->m_platformID == 3 && record->m_encodingID == 1 )
+        {
+            printf( "%d: Windows Unicode BMP, often format 4\n", i );
+        }
+        if( record->m_platformID == 3 && record->m_encodingID == 10 )
+        {
+            printf( "%d: Windows Unicode full repertoire, often format 12\n", i );
+        }
+
+        encodingRecords = (u8*)encodingRecords + sizeof( CmapRecord );
+    }
+
 }
