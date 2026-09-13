@@ -118,6 +118,8 @@ typedef struct File
     u32       m_sizeInBytes;
     ENDIANESS m_endianess;
 
+    char      m_filename[100];
+
 } File;
 
 typedef struct Particle

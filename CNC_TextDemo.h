@@ -8,7 +8,7 @@
 typedef struct TextDemo : Application
 {
     File* m_fontFile;
-    Font* m_ttfFont;
+    TtfFont* m_ttfFont;
     
 } TextDemo;
 

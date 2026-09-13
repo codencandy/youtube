@@ -6,7 +6,7 @@
 
 Image* PlatformLoadImage( const char* imagePath );
 File*  PlatformLoadFile( const char* filePath );
-Font*  PlatformLoadFont( File* ttfFontFile );
+TtfFont*  PlatformLoadFont( File* ttfFontFile );
 
 void   PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles );
 void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask );
@@ -23,7 +23,7 @@ typedef struct PlatformServices
 {
     Image*(*f_loadImage)(const char*);
     File* (*f_loadFile)(const char*);
-    Font* (*f_loadFont)(File*);
+    TtfFont* (*f_loadFont)(File*);
     u32   (*f_uploadImage)(void*, Image*);
     void  (*f_uploadParticles)(void*, Particle*, u32);
     void  (*f_renderImage)(void*, u32, u32 );

@@ -5,6 +5,8 @@
 #include "libs/stb_image.h"
 #include "CNC_Tools.h"
 
+#include "CNC_TtfFont.cpp"
+
 Image* PlatformLoadImage( const char* imagePath )
 {
     Image* image  = (Image*)malloc( sizeof( Image ) );
@@ -16,8 +18,11 @@ Image* PlatformLoadImage( const char* imagePath )
 File* PlatformLoadFile( const char* filePath )
 {
     File* file = (File*)malloc( sizeof( File ) );
-    FILE* f    = fopen( filePath, "rb" );
 
+    u32 length = StringLength( filePath );
+    memcpy( file->m_filename, filePath, length );
+
+    FILE* f = fopen( filePath, "rb" );
     if( f != NULL )
     {
         fseek( f, 0, SEEK_END );
@@ -34,58 +39,26 @@ File* PlatformLoadFile( const char* filePath )
     return file;
 }
 
-Font* PlatformLoadFont( File* ttfFontFile )
+TtfFont* PlatformLoadFont( File* ttfFontFile )
 {
-    Font* font = (Font*)malloc( sizeof( Font ) );
+    TtfFont* font = (TtfFont*)malloc( sizeof( TtfFont ) );
 
-    // read the offset table
-    // the offset tabel is 12 bytes so no zero bytes 
-    // are appending for padding to 4 byte boundaries
-    TtfOffsetTable offsetTable;
-    memcpy( &offsetTable, ttfFontFile->m_data, sizeof( TtfOffsetTable ) );
+    font->m_fontFile = ttfFontFile;
 
-    char otto[5] = "OTTO";
-    if( memcmp( &otto, &offsetTable, 4 ) == 0 )
+    if( IsTrueType( font ) )
     {
-        printf( "OpenType Font\n" );
+        printf( "file: %s\t TrueType(yes/no): yes\n", ttfFontFile->m_filename );
     }
     else
     {
-        offsetTable.m_sfntVersion   = BigToLittle( offsetTable.m_sfntVersion );
-        printf( "TrueType Font\n" );
+        printf( "file: %s\t TrueType(yes/no): no\n", ttfFontFile->m_filename );
+        return NULL;
     }
 
-    offsetTable.m_numTables     = BigToLittle( offsetTable.m_numTables );
-    offsetTable.m_searchRange   = BigToLittle( offsetTable.m_searchRange );
-    offsetTable.m_entrySelector = BigToLittle( offsetTable.m_entrySelector );
-    offsetTable.m_rangeShift    = BigToLittle( offsetTable.m_rangeShift );
+    ReadTableOffsets( font );
+    ReadTables( font );
+    ReadCmapTable( font );
 
-    // read the table entries
-    font->m_numTables = offsetTable.m_numTables;
-    font->m_tableEntries = (TableEntry*)malloc( sizeof( TableEntry ) * font->m_numTables );
-
-    TableEntry* tablememory = (TableEntry*)((u8*)ttfFontFile->m_data + sizeof( TtfOffsetTable ));
-    for( u32 i=0; i<font->m_numTables; ++i )
-    {
-        TableEntry* entry = &font->m_tableEntries[i];
-        memcpy( entry, tablememory, sizeof( TableEntry ) );
-
-        //strings are not big endian encoded 
-        //entry->m_tag      = BigToLittle( entry->m_tag );
-        entry->m_checksum = BigToLittle( entry->m_checksum );
-        entry->m_offset   = BigToLittle( entry->m_offset );
-        entry->m_length   = BigToLittle( entry->m_length );
-
-        char tag[5];
-        memset( &tag, 0x0, 5 );
-        memcpy( &tag, &entry->m_tag, 4 );
-
-        printf( "tag: %s\n", (char*)&tag );
-        printf( "offset: %d\n", entry->m_offset );
-        printf( "length: %d\n\n", entry->m_length );
-
-        tablememory++;
-    }
     return font;
 }
 

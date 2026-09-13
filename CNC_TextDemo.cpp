@@ -10,7 +10,7 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     File* ttfFile = services->f_loadFile( "./res/montserrat-regular.ttf" );
     ttfFile->m_endianess = BIGENDIAN;
 
-    Font* ttfFont = services->f_loadFont( ttfFile );
+    TtfFont* ttfFont = services->f_loadFont( ttfFile );
 
     textdemo->m_ttfFont = ttfFont;
     

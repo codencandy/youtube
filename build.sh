@@ -1,7 +1,7 @@
 #! /bin/bash
 
 FRAMEWORKS='-framework AppKit -framework CoreVideo -framework Metal -framework MetalKit'
-IGNORE='-Wno-nullability-completeness'
+IGNORE='-Wno-nullability-completeness -Wno-int-to-pointer-cast'
 FLAGS='--debug'
 TIMEFORMAT=%R
 
