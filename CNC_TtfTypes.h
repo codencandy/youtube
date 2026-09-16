@@ -69,9 +69,9 @@ typedef struct CmapFormat4
 
 typedef struct CmapRecord
 {
-    u16 m_platformID;
-    u16 m_encodingID;
-    u32 m_offset;
+    u16  m_platformID;
+    u16  m_encodingID;
+    u32  m_offset;
 
 } CmapRecord;
 

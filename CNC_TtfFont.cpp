@@ -150,4 +150,13 @@ void ReadCmapTable( TtfFont* font )
         encodingRecords = (u8*)encodingRecords + sizeof( CmapRecord );
     }
 
+    // read the format for all the found encodings
+    void* cmapTable = (u8*)font->m_fontFile->m_data + (cmapOffset);
+    for( u32 i=0; i<numRecords; ++i )
+    {
+        CmapRecord* record = &font->m_cmapTable.m_cmapRecords[i];
+        u16         format = BigToLittleU16( cmapTable, record->m_offset );
+        printf( "cmap format: %d\n", format );
+    }
+
 }
