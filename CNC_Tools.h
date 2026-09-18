@@ -53,7 +53,7 @@ u16 BigToLittleU16( void* stream, u32 offset )
 {
     u8* data = (u8*)stream + offset;
     
-    u16 bigEndian = *((u32*)data);
+    u16 bigEndian = *((u16*)data);
     u16 little = 0x0;
 
     little = ((bigEndian & 0xff00) >> 8 ) |

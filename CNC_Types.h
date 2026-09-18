@@ -3,19 +3,22 @@
 
 #include <simd/simd.h>
 
-typedef float          f32;
-typedef double         f64;
-typedef unsigned int   u32;
-typedef unsigned short u16;
-typedef unsigned char   u8;
-typedef signed int     s32;
+typedef float              f32;
+typedef double             f64;
+typedef unsigned int       u32;
+typedef unsigned short     u16;
+typedef unsigned char       u8;
+typedef signed short       s16;
+typedef signed int         s32;
+typedef unsigned long long u64;
+typedef signed long long   s64;
 
-typedef simd::float2   v2;
-typedef simd::float3   v3;
-typedef simd::float4   v4;
-typedef simd::float3x3 m3;
-typedef simd::float4x4 m4;
-typedef       v4       color;
+typedef simd::float2       v2;
+typedef simd::float3       v3;
+typedef simd::float4       v4;
+typedef simd::float3x3     m3;
+typedef simd::float4x4     m4;
+typedef v4                 color;
 
 enum ENDIANESS
 {

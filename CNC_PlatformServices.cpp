@@ -44,6 +44,7 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
     TtfFont* font = (TtfFont*)malloc( sizeof( TtfFont ) );
 
     font->m_fontFile = ttfFontFile;
+    ReadTableOffsets( font );
 
     if( IsTrueType( font ) )
     {
@@ -55,9 +56,11 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
         return NULL;
     }
 
-    ReadTableOffsets( font );
-    ReadTables( font );
+    ReadTables   ( font );
     ReadCmapTable( font );
+    ReadMaxpTable( font );
+    ReadHeadTable( font );
+    ReadLocaTable( font );
 
     return font;
 }

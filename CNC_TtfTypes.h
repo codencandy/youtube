@@ -49,6 +49,35 @@ typedef struct GlyphTable
 
 } GlyphTable;
 
+typedef struct LocaTable
+{
+    u32* m_glyphTableOffsets;
+    
+} LocaTable;
+
+typedef struct HeadTable
+{
+    u16 m_majorVersion;       // 1
+    u16 m_minorVersion;       // 0
+    s32 m_fontRevision;       // signed 16.16 fixed-point
+    u32 m_checksumAdjustment; 
+    u32 m_magicNumber;        // 0x5F0F3CF5
+    u16 m_flags;              
+    u16 m_unitsPerEm;         
+    s64 m_created;            
+    s64 m_modified;           
+    s16 m_xMin;               
+    s16 m_yMin;               
+    s16 m_xMax;               
+    s16 m_yMax;               
+    u16 m_macStyle;           
+    u16 m_lowestRecPPEM;      
+    s16 m_fontDirectionHint;  // deprecated, normally 2
+    s16 m_indexToLocFormat;   // 0 = short, 1 = long
+    s16 m_glyphDataFormat;    // 0
+
+} HeadTable;
+
 typedef struct CmapFormat4
 {
     u16 m_format;
@@ -92,6 +121,21 @@ typedef struct CmapTable
 
 typedef struct MaxpTable
 {
+    u32 m_version;                // offset  0: 0x00010000
+    u16 m_numGlyphs;              // offset  4
+    u16 m_maxPoints;              // offset  6
+    u16 m_maxContours;            // offset  8
+    u16 m_maxCompositePoints;     // offset 10
+    u16 m_maxCompositeContours;   // offset 12
+    u16 m_maxZones;               // offset 14
+    u16 m_maxTwilightPoints;      // offset 16
+    u16 m_maxStorage;             // offset 18
+    u16 m_maxFunctionDefs;        // offset 20
+    u16 m_maxInstructionDefs;     // offset 22
+    u16 m_maxStackElements;       // offset 24
+    u16 m_maxSizeOfInstructions;  // offset 26
+    u16 m_maxComponentElements;   // offset 28
+    u16 m_maxComponentDepth;      // offset 30
 
 } MaxpTable;
 
@@ -106,6 +150,10 @@ typedef struct TtfFont
     GlyphTable   m_glyphTable;
     CmapTable    m_cmapTable;
     MaxpTable    m_maxpTable;
+    HeadTable    m_headTable;
+    LocaTable    m_locaTable;
+
+    f32          m_fontScale;
 
 } TtfFont;
 
