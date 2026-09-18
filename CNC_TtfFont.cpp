@@ -116,6 +116,7 @@ void ReadCmapTable( TtfFont* font )
     u32   offset         = 0;
 
     printf( "\nplatform/endcoding pairs\n--------------------------\n" );
+    u16 streamRecordSize = 8;
     for( u32 i=0; i<numRecords; ++i )
     {
         CmapRecord* record = &font->m_cmapTable.m_cmapRecords[i];
@@ -123,40 +124,110 @@ void ReadCmapTable( TtfFont* font )
         record->m_platformID = BigToLittleU16( encodingRecords, offset );
         record->m_encodingID = BigToLittleU16( encodingRecords, offset + 2 );
         record->m_offset     = BigToLittleU32( encodingRecords, offset + 4 );
+        memset( record->m_encodingName, 0x0, 100 );
 
         // platform 0, encoding 3 -> Unicode BMP
         // platform 3, encoding 1 -> Windows Unicode BMP
         if( record->m_platformID == 0 && record->m_encodingID == 3 )
         {
             printf( "%d: Unicode BMP\n", i );
+            memcpy( record->m_encodingName, "Unicode BMP", StringLength( "Unicode BMP" ) );
         }
         if( record->m_platformID == 0 && record->m_encodingID == 4 )
         {
             printf( "%d: Unicode full repertoire\n", i );
+            memcpy( record->m_encodingName, "Unicode full repertoire", StringLength( "Unicode full repertoire" ) );
         }
         if( record->m_platformID == 0 && record->m_encodingID == 5 )
         {
-            printf( "%d: Unicode variation squenece, format 14\n", i );
+            printf( "%d: Unicode variation sequence\n", i );
+            memcpy( record->m_encodingName, "Unicode variation sequence", StringLength( "Unicode variation sequence" ) );
         }
         if( record->m_platformID == 3 && record->m_encodingID == 1 )
         {
-            printf( "%d: Windows Unicode BMP, often format 4\n", i );
+            printf( "%d: Windows Unicode BMP\n", i );
+            memcpy( record->m_encodingName, "Windows Unicode BMP", StringLength( "Windows Unicode BMP" ) );
         }
         if( record->m_platformID == 3 && record->m_encodingID == 10 )
         {
-            printf( "%d: Windows Unicode full repertoire, often format 12\n", i );
+            printf( "%d: Windows Unicode full repertoire\n", i );
+            memcpy( record->m_encodingName, "Windows Unicode full repertoire", StringLength( "Windows Unicode full repertoire" ) );
         }
 
-        encodingRecords = (u8*)encodingRecords + sizeof( CmapRecord );
+        encodingRecords = (u8*)encodingRecords + streamRecordSize;
     }
+
+    printf( "\n" );
 
     // read the format for all the found encodings
     void* cmapTable = (u8*)font->m_fontFile->m_data + (cmapOffset);
     for( u32 i=0; i<numRecords; ++i )
     {
-        CmapRecord* record = &font->m_cmapTable.m_cmapRecords[i];
-        u16         format = BigToLittleU16( cmapTable, record->m_offset );
-        printf( "cmap format: %d\n", format );
+        CmapRecord* record       = &font->m_cmapTable.m_cmapRecords[i];
+        u16         recordOffset = record->m_offset;
+        u16         format       = BigToLittleU16( cmapTable, recordOffset );
+        printf( "encoding:\t%s\n", record->m_encodingName );
+        printf( "cmap format:\t%d\n", format );
+
+        if( format == CMAP_FORMAT_4 )
+        {
+            CmapFormat4* format4 = &font->m_cmapTable.m_format4;
+            format4->m_format         = CMAP_FORMAT_4;
+            format4->m_length         = BigToLittleU16( cmapTable, recordOffset + 2 );
+            format4->m_language       = BigToLittleU16( cmapTable, recordOffset + 4 );
+
+            format4->m_segCountX2     = BigToLittleU16( cmapTable, recordOffset + 6 );
+            format4->m_searchRange    = BigToLittleU16( cmapTable, recordOffset + 8 );
+            format4->m_entrySelector  = BigToLittleU16( cmapTable, recordOffset + 10 );
+            format4->m_rangeShift     = BigToLittleU16( cmapTable, recordOffset + 12 );
+            recordOffset              = recordOffset + 14;
+
+            u16 segCount = format4->m_segCountX2 / 2;
+
+            format4->m_endCount       = (u16*)malloc( sizeof( u16 ) * segCount );  
+            format4->m_startCount     = (u16*)malloc( sizeof( u16 ) * segCount );
+            format4->m_idDelta        = (u16*)malloc( sizeof( u16 ) * segCount );
+            format4->m_idRangeOffset  = (u16*)malloc( sizeof( u16 ) * segCount );
+            for( u32 i=0; i<segCount; ++i )
+            {
+                format4->m_endCount[i] = BigToLittleU16( cmapTable, recordOffset );
+                recordOffset += 2;
+            }
+            format4->m_reservedPad = BigToLittleU16( cmapTable, recordOffset );
+            for( u32 i=0; i<segCount; ++i )
+            {
+                format4->m_startCount[i] = BigToLittleU16( cmapTable, recordOffset );
+                recordOffset += 2;
+            }
+            for( u32 i=0; i<segCount; ++i )
+            {
+                format4->m_idDelta[i] = BigToLittleU16( cmapTable, recordOffset );
+                recordOffset += 2;
+            }
+            for( u32 i=0; i<segCount; ++i )
+            {
+                format4->m_idRangeOffset[i] = BigToLittleU16( cmapTable, recordOffset );
+                recordOffset += 2;
+            }
+
+            u32 numGlyphIds = (format4->m_length - recordOffset) / sizeof( u16 );
+            format4->m_glyphIdArray = (u16*)malloc( sizeof( u16 ) * numGlyphIds );
+            for( u32 i=0; i<numGlyphIds; ++i )
+            {
+                format4->m_glyphIdArray[i] = BigToLittleU16( cmapTable, recordOffset );
+                recordOffset += 2;
+            }
+
+            printf( "length: \t%d\n", format4->m_length );
+            printf( "language:\t%d (should be 0)\n", format4->m_language );
+            printf( "seg count:\t%d\n", segCount );
+            printf( "num glyphids:\t%d\n", numGlyphIds );
+        }
+
+        if( format == CMAP_FORMAT_12 )
+        {
+            // no-op
+        }
     }
 
 }

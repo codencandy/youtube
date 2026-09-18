@@ -3,24 +3,27 @@
 
 #include "CNC_Types.h"
 
-#define GDEF_TAG "GDEF"
-#define GPOS_TAG "GPOS"
-#define GSUB_TAG "GSUB"
-#define OS2_TAG  "OS/2"
-#define STAT_TAG "STAT"
-#define CMAP_TAG "cmap"
-#define CVT_TAG  "cvt"
-#define FPGM_TAG "fpgm"
-#define GASP_TAG "gasp"
-#define GLYF_TAG "glyf"
-#define HEAD_TAG "head"
-#define HHEA_TAG "hhea"
-#define HMTX_TAG "hmtx"
-#define LOCA_TAG "loca"
-#define MAXP_TAG "maxp"
-#define NAME_TAG "name"
-#define POST_TAG "post"
-#define PREP_TAG "prep"
+#define GDEF_TAG       "GDEF"
+#define GPOS_TAG       "GPOS"
+#define GSUB_TAG       "GSUB"
+#define OS2_TAG        "OS/2"
+#define STAT_TAG       "STAT"
+#define CMAP_TAG       "cmap"
+#define CVT_TAG        "cvt"
+#define FPGM_TAG       "fpgm"
+#define GASP_TAG       "gasp"
+#define GLYF_TAG       "glyf"
+#define HEAD_TAG       "head"
+#define HHEA_TAG       "hhea"
+#define HMTX_TAG       "hmtx"
+#define LOCA_TAG       "loca"
+#define MAXP_TAG       "maxp"
+#define NAME_TAG       "name"
+#define POST_TAG       "post"
+#define PREP_TAG       "prep"
+
+#define CMAP_FORMAT_4   4
+#define CMAP_FORMAT_12 12
 
 typedef struct TableOffsets
 {
@@ -72,6 +75,7 @@ typedef struct CmapRecord
     u16  m_platformID;
     u16  m_encodingID;
     u32  m_offset;
+    char m_encodingName[100];
 
 } CmapRecord;
 
@@ -81,6 +85,8 @@ typedef struct CmapTable
     u16           m_version;
     u16           m_numRecords;
     CmapRecord*   m_cmapRecords;
+
+    CmapFormat4   m_format4;
 
 } CmapTable;
 
