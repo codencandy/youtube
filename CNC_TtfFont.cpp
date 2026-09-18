@@ -112,15 +112,22 @@ void ReadLocaTable( TtfFont* font )
     void* locaData = (u8*)font->m_fontFile->m_data + locaOffset;
 
     LocaTable* loca = &font->m_locaTable;
-    loca->m_glyphTableOffsets = (u32*)malloc( sizeof( u32 ) * font->m_maxpTable.m_numGlyphs + 1 );
+    loca->m_glyphTableOffsets = (u32*)malloc( sizeof( u32 ) * (font->m_maxpTable.m_numGlyphs + 1) );
 
     u32 numGlyphs = font->m_maxpTable.m_numGlyphs + 1;
     for( u32 i=0; i<numGlyphs; ++i )
     {
-        loca->m_glyphTableOffsets[i] = (u32)BigToLittleU16( (u8*)locaData, locaOffset + i * 2 ) * 2;
+        if( font->m_headTable.m_indexToLocFormat == 0 )
+        {
+            loca->m_glyphTableOffsets[i] = (u32)BigToLittleU16( (u8*)locaData, i * 2 ) * 2;
+        }
+        if( font->m_headTable.m_indexToLocFormat == 1 )
+        {
+            loca->m_glyphTableOffsets[i] = BigToLittleU32( (u8*)locaData, i * 4 );
+        }
     }
 
-    printf( "last entry:\t%d\n", loca->m_glyphTableOffsets[numGlyphs + 1] );
+    printf( "last entry:\t%d\n", loca->m_glyphTableOffsets[numGlyphs-1] );
     printf( "\n" );
 }
 
