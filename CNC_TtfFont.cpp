@@ -8,10 +8,12 @@ bool IsTrueType( TtfFont* font );
 void ReadTableOffsets( TtfFont* font );
 void ReadTables( TtfFont* font );
 u32  GetTableOffset( TtfFont* font, const char* tag );
-void ReadCmapTable( TtfFont* font );
-void ReadHeadTable( TtfFont* font );
-void ReadMaxpTable( TtfFont* font );
-void ReadLocaTable( TtfFont* font );
+
+void ReadCmapTable ( TtfFont* font );
+void ReadHeadTable ( TtfFont* font );
+void ReadMaxpTable ( TtfFont* font );
+void ReadLocaTable ( TtfFont* font );
+void ReadGlyphTable( TtfFont* font );
 
 /******************************
  * Implementation
@@ -48,6 +50,16 @@ void ReadTableOffsets( TtfFont* font )
     // read the table entries
     font->m_numTables = offsetTable.m_numTables;
     font->m_tableEntries = (TableEntry*)malloc( sizeof( TableEntry ) * font->m_numTables );
+}
+
+bool GetPointFlag( u8 flag, point_flag bit )
+{
+    if( (flag & bit) == 1 ) 
+    {
+        return true;
+    }
+    
+    return false;
 }
 
 void ReadTables( TtfFont* font )
@@ -102,6 +114,100 @@ u32 GetTableOffset( TtfFont* font, const char* tag )
     }
 
     return 0;
+}
+
+void ReadGlyphTable( TtfFont* font )
+{
+    u32 glyphOffset = GetTableOffset( font, GLYF_TAG );
+    printf( "read glpyh:\t%d (offset)\n", glyphOffset );
+
+    void* glyphData = (u8*)font->m_fontFile->m_data + glyphOffset;
+
+    u32         numGlyphs = font->m_maxpTable.m_numGlyphs;
+    GlyphTable* glyphs    = &font->m_glyphTable;
+    glyphs->m_numGlyphs   = numGlyphs;
+    glyphs->m_glphys      = (Glyph*)malloc( numGlyphs * sizeof( Glyph ) );
+
+    for( u32 glyphId=0; glyphId<numGlyphs; ++glyphId )
+    {
+        Glyph* g        = &glyphs->m_glphys[glyphId];
+        u32 startOffset = font->m_locaTable.m_glyphTableOffsets[glyphId];
+        u32 endOffset   = font->m_locaTable.m_glyphTableOffsets[glyphId+1];
+
+        if( startOffset == endOffset )
+        {
+            memset( g, 0x0, sizeof( Glyph) );
+            g->m_header.m_emptyGlyph = true;
+            printf( "glphy ID:\t%d - empty\n", glyphId );
+            continue;
+        }
+        else
+        {
+            g->m_header.m_emptyGlyph = false;
+        }
+
+        g->m_header.m_numberOfContours = (s16)BigToLittleU16( glyphData, startOffset );
+        g->m_header.m_xMin             = (s16)BigToLittleU16( glyphData, startOffset + 2);
+        g->m_header.m_yMin             = (s16)BigToLittleU16( glyphData, startOffset + 4);
+        g->m_header.m_xMax             = (s16)BigToLittleU16( glyphData, startOffset + 6);
+        g->m_header.m_yMax             = (s16)BigToLittleU16( glyphData, startOffset + 8);
+
+        s16 numContours = g->m_header.m_numberOfContours;
+        u32 headerSize  = 10;
+
+        if( numContours > 0)
+        {
+            u32 numEndpoints      = numContours;
+            g->m_endPtsOfContours = (u16*)malloc( sizeof( u16) * numEndpoints );
+            for( u32 i=0; i<numEndpoints; ++i )
+            {
+                g->m_endPtsOfContours[i] = BigToLittleU16( glyphData, startOffset + headerSize + i*2 );
+            }
+            g->m_instructionLength = BigToLittleU16( glyphData, startOffset + headerSize + numEndpoints * 2 );
+
+            
+            g->m_numPoints  = g->m_endPtsOfContours[numEndpoints-1] + 1;
+            u32 pointOffset = startOffset + headerSize + (numEndpoints * 2) + 2 + g->m_instructionLength;
+            printf( "num points:\t%d\n", g->m_numPoints );
+
+            g->m_flags = (u8*)malloc( sizeof( u8 )   * g->m_numPoints );
+            g->m_x     = (s16*)malloc( sizeof( s16 ) * g->m_numPoints );
+            g->m_y     = (s16*)malloc( sizeof( s16 ) * g->m_numPoints );
+
+            for( u32 i=0; i<g->m_numPoints; ++i )
+            {
+                u8 flag = *((u8*)glyphData + pointOffset);
+                if( GetPointFlag( flag, REPEAT_FLAG ) )
+                {
+                    u8 repeatCount = *((u8*)glyphData + pointOffset + 1);
+                    for( u32 j=0; j<repeatCount + 1; ++j )
+                    {
+                        g->m_flags[i+j] = flag;
+                    }
+                    i += repeatCount;
+                    pointOffset += 2;
+                }
+                else
+                {
+                    g->m_flags[i] = flag;
+                    pointOffset += 1;
+                }
+            }
+
+        }
+        else if( numContours < 0 )
+        {
+            // composite glyph
+        }
+        else if( numContours == 0 )
+        {
+            // no outlines -> space character or similar
+            printf( "glyph ID:\t%d space character\n", glyphId );
+        }
+
+    }
+
+    printf( "\n" );
 }
 
 void ReadLocaTable( TtfFont* font )

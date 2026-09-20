@@ -56,11 +56,12 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
         return NULL;
     }
 
-    ReadTables   ( font );
-    ReadCmapTable( font );
-    ReadMaxpTable( font );
-    ReadHeadTable( font );
-    ReadLocaTable( font );
+    ReadTables    ( font );
+    ReadCmapTable ( font );
+    ReadMaxpTable ( font );
+    ReadHeadTable ( font );
+    ReadLocaTable ( font );
+    ReadGlyphTable( font );
 
     return font;
 }

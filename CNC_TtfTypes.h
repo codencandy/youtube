@@ -23,7 +23,19 @@
 #define PREP_TAG       "prep"
 
 #define CMAP_FORMAT_4   4
-#define CMAP_FORMAT_12 12
+#define CMAP_FORMAT_12  12
+
+enum point_flag
+{
+    ON_CURVE          = 0x01,
+    X_DELTA_1BYTE     = 0x02,
+    Y_DELTA_1BYTE     = 0x04,
+    REPEAT_FLAG       = 0x08,
+    X_SAME_OR_POS     = 0x10,
+    Y_SAME_OR_POS     = 0x20,
+    MAY_OVERLAP       = 0x40,
+    ERROR_POINT_FLAG  = 0x80
+};
 
 typedef struct TableOffsets
 {
@@ -44,8 +56,37 @@ typedef struct TableEntry
 
 } TableEntry;
 
+typedef struct GlyphHeader
+{
+    s16  m_numberOfContours;
+    s16  m_xMin;
+    s16  m_yMin;
+    s16  m_xMax;
+    s16  m_yMax;
+
+    bool m_emptyGlyph;
+
+} GlyphHeader;
+
+typedef struct Glyph
+{
+    GlyphHeader m_header;
+
+    u16*        m_endPtsOfContours;
+    u16         m_instructionLength;
+    u8*         m_instructions;
+
+    u32         m_numPoints;
+    u8*         m_flags;
+    s16*        m_x;
+    s16*        m_y;
+
+} Glyph;
+
 typedef struct GlyphTable
 {
+    u32    m_numGlyphs;
+    Glyph* m_glphys;
 
 } GlyphTable;
 
