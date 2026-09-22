@@ -54,12 +54,67 @@ void ReadTableOffsets( TtfFont* font )
 
 bool GetPointFlag( u8 flag, point_flag bit )
 {
-    if( (flag & bit) == 1 ) 
+    if( (flag & bit) == bit ) 
     {
         return true;
     }
     
     return false;
+}
+
+void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x )
+{
+    s16 p = 0;
+    for( u32 i=0; i<numPoints; ++i )
+    {
+        u8 flag = g->m_flags[i];
+        
+        bool shortBit = false;
+        bool sameBit  = false;
+
+        if( x )
+        {
+            shortBit = GetPointFlag( flag, X_SHORT_1BYTE );
+            sameBit  = GetPointFlag( flag, X_SAME_OR_POS );
+        }
+        else
+        {
+            shortBit = GetPointFlag( flag, Y_SHORT_1BYTE );
+            sameBit  = GetPointFlag( flag, Y_SAME_OR_POS );
+        }
+
+        if( shortBit && sameBit )
+        {
+            // read one byte - positive
+            u8 value = (u8)*((u8*)data);
+            p += value;
+            dest[i] = (s16)p;
+            data = (u8*)data + 1;
+        }
+        if( shortBit && !sameBit )
+        {
+            // read one byte - negative
+            s16 value = (u8)*(u8*)data;
+            p += -value;
+            dest[i] = p;
+            data = (u8*)data + 1;
+        }
+        if( !shortBit && sameBit )
+        {
+            // value is zero - read no bytes
+            dest[i] = p;
+        }
+        if( !shortBit && !sameBit )
+        {
+            // read signed big-endian - s16
+            s16 value = (s16)BigToLittleU16( data, 0 );
+            p += value;
+            dest[i] = p;
+            data = (u8*)data + 2;
+        }
+    }
+
+    return data;
 }
 
 void ReadTables( TtfFont* font )
@@ -170,10 +225,12 @@ void ReadGlyphTable( TtfFont* font )
             u32 pointOffset = startOffset + headerSize + (numEndpoints * 2) + 2 + g->m_instructionLength;
             printf( "num points:\t%d\n", g->m_numPoints );
 
-            g->m_flags = (u8*)malloc( sizeof( u8 )   * g->m_numPoints );
-            g->m_x     = (s16*)malloc( sizeof( s16 ) * g->m_numPoints );
-            g->m_y     = (s16*)malloc( sizeof( s16 ) * g->m_numPoints );
+            g->m_flags   = (u8*)malloc(   sizeof( u8 )   * g->m_numPoints );
+            g->m_onCurve = (bool*)malloc( sizeof( bool ) * g->m_numPoints );
+            g->m_x       = (s16*)malloc(  sizeof( s16 )  * g->m_numPoints );
+            g->m_y       = (s16*)malloc(  sizeof( s16 )  * g->m_numPoints );
 
+            // decode all the flags
             for( u32 i=0; i<g->m_numPoints; ++i )
             {
                 u8 flag = *((u8*)glyphData + pointOffset);
@@ -182,7 +239,8 @@ void ReadGlyphTable( TtfFont* font )
                     u8 repeatCount = *((u8*)glyphData + pointOffset + 1);
                     for( u32 j=0; j<repeatCount + 1; ++j )
                     {
-                        g->m_flags[i+j] = flag;
+                        g->m_flags[i+j]   = flag;
+                        g->m_onCurve[i+j] = GetPointFlag( flag, ON_CURVE );
                     }
                     i += repeatCount;
                     pointOffset += 2;
@@ -191,9 +249,16 @@ void ReadGlyphTable( TtfFont* font )
                 {
                     g->m_flags[i] = flag;
                     pointOffset += 1;
+                    g->m_onCurve[i] = GetPointFlag( flag, ON_CURVE );
                 }
+
             }
 
+            void* xData = (u8*)glyphData + pointOffset;
+            
+            // decode all coordinates
+            void* data = DecodePoints( g, xData, g->m_x, g->m_numPoints, true );
+            data       = DecodePoints( g, data,  g->m_y, g->m_numPoints, false );
         }
         else if( numContours < 0 )
         {

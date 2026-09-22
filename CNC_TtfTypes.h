@@ -28,8 +28,8 @@
 enum point_flag
 {
     ON_CURVE          = 0x01,
-    X_DELTA_1BYTE     = 0x02,
-    Y_DELTA_1BYTE     = 0x04,
+    X_SHORT_1BYTE     = 0x02,
+    Y_SHORT_1BYTE     = 0x04,
     REPEAT_FLAG       = 0x08,
     X_SAME_OR_POS     = 0x10,
     Y_SAME_OR_POS     = 0x20,
@@ -78,6 +78,7 @@ typedef struct Glyph
 
     u32         m_numPoints;
     u8*         m_flags;
+    bool*       m_onCurve;
     s16*        m_x;
     s16*        m_y;
 
