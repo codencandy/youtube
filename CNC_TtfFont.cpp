@@ -4,10 +4,13 @@
 #include <string.h>
 #include <stdio.h>
 
-bool IsTrueType( TtfFont* font );
-void ReadTableOffsets( TtfFont* font );
-void ReadTables( TtfFont* font );
-u32  GetTableOffset( TtfFont* font, const char* tag );
+bool  IsTrueType( TtfFont* font );
+void  ReadTableOffsets( TtfFont* font );
+bool  GetPointFlag( u8 flag, point_flag bit );
+void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x );
+void  ReadTables( TtfFont* font );
+u32   GetTableOffset( TtfFont* font, const char* tag );
+void  PrintGlyphData( Glyph* g );
 
 void ReadCmapTable ( TtfFont* font );
 void ReadHeadTable ( TtfFont* font );
@@ -117,6 +120,21 @@ void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x )
     return data;
 }
 
+void PrintGlyphData( Glyph* g )
+{
+    printf( "glyph data\n---------------\n" );
+    printf( "num points:\t%d\n", g->m_numPoints );
+    
+    for( u32 i=0; i<g->m_numPoints; ++i )
+    {
+        printf( "point:\t%d | %d ", g->m_x[i], g->m_y[i] );
+        if( g->m_onCurve ) 
+            printf( "(on curve)\n" );
+        else
+            printf( "(not on curve)\n" );
+    }
+}
+
 void ReadTables( TtfFont* font )
 {
     TableEntry* tablememory = (TableEntry*)((u8*)font->m_fontFile->m_data + sizeof( TableOffsets ));
@@ -223,7 +241,6 @@ void ReadGlyphTable( TtfFont* font )
             
             g->m_numPoints  = g->m_endPtsOfContours[numEndpoints-1] + 1;
             u32 pointOffset = startOffset + headerSize + (numEndpoints * 2) + 2 + g->m_instructionLength;
-            printf( "num points:\t%d\n", g->m_numPoints );
 
             g->m_flags   = (u8*)malloc(   sizeof( u8 )   * g->m_numPoints );
             g->m_onCurve = (bool*)malloc( sizeof( bool ) * g->m_numPoints );

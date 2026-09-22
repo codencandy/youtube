@@ -63,6 +63,8 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
     ReadLocaTable ( font );
     ReadGlyphTable( font );
 
+    PrintGlyphData( &font->m_glyphTable.m_glphys[0] );
+
     return font;
 }
 
