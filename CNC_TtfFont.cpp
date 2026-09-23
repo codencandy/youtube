@@ -123,11 +123,21 @@ void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x )
 void PrintGlyphData( Glyph* g )
 {
     printf( "glyph data\n---------------\n" );
-    printf( "num points:\t%d\n", g->m_numPoints );
+    printf( "num contours:\t%d\n", g->m_header.m_numberOfContours );
+    printf( "num points:\t%d\n",   g->m_numPoints );
+
+    s16 index1 = 0;
+    s16 index2 = 0;
+    for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
+    {
+        index2 = g->m_endPtsOfContours[i];
+        printf( "contour %d:\t[%d .. %d]\n", i, index1, index2 );
+        index1 = index2;
+    }
     
     for( u32 i=0; i<g->m_numPoints; ++i )
     {
-        printf( "point:\t%d | %d ", g->m_x[i], g->m_y[i] );
+        printf( "point %d:\t%d | %d \t ", i, g->m_x[i], g->m_y[i] );
         if( g->m_onCurve ) 
             printf( "(on curve)\n" );
         else
