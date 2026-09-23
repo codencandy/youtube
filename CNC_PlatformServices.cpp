@@ -64,6 +64,10 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
     ReadGlyphTable( font );
 
     PrintGlyphData( &font->m_glyphTable.m_glphys[0] );
+    Codepoint test = Utf8ToCodepoint( "Ä" );
+    printf( "codepoint for %s\n", "Ä" );
+    printf( "codepoint:\t%x\n",   test.m_codepoint );
+    printf( "num bytes:\t%d\n",   test.m_numUtf8Bytes );
 
     return font;
 }

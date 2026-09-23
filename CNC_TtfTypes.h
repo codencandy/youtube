@@ -37,6 +37,13 @@ enum point_flag
     ERROR_POINT_FLAG  = 0x80
 };
 
+typedef struct Codepoint
+{
+    u8  m_numUtf8Bytes;
+    u16 m_codepoint;
+    
+} Codepoint;
+
 typedef struct TableOffsets
 {
     u32 m_sfntVersion;

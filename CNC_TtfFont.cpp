@@ -4,13 +4,14 @@
 #include <string.h>
 #include <stdio.h>
 
-bool  IsTrueType( TtfFont* font );
-void  ReadTableOffsets( TtfFont* font );
-bool  GetPointFlag( u8 flag, point_flag bit );
-void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x );
-void  ReadTables( TtfFont* font );
-u32   GetTableOffset( TtfFont* font, const char* tag );
-void  PrintGlyphData( Glyph* g );
+bool       IsTrueType( TtfFont* font );
+void       ReadTableOffsets( TtfFont* font );
+bool       GetPointFlag( u8 flag, point_flag bit );
+void*      DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x );
+void       ReadTables( TtfFont* font );
+u32        GetTableOffset( TtfFont* font, const char* tag );
+void       PrintGlyphData( Glyph* g );
+Codepoint  Utf8ToCodepoint( const char* utf8 );
 
 void ReadCmapTable ( TtfFont* font );
 void ReadHeadTable ( TtfFont* font );
@@ -132,17 +133,50 @@ void PrintGlyphData( Glyph* g )
     {
         index2 = g->m_endPtsOfContours[i];
         printf( "contour %d:\t[%d .. %d]\n", i, index1, index2 );
-        index1 = index2;
+        index1 = index2 + 1;
     }
     
     for( u32 i=0; i<g->m_numPoints; ++i )
     {
         printf( "point %d:\t%d | %d \t ", i, g->m_x[i], g->m_y[i] );
-        if( g->m_onCurve ) 
+        if( g->m_onCurve[i] ) 
             printf( "(on curve)\n" );
         else
             printf( "(not on curve)\n" );
     }
+}
+
+Codepoint  Utf8ToCodepoint( const char* utf8 )
+{
+    Codepoint c = {0};
+
+    u8 byte0      = (u8)utf8[0];
+    u8 byte1      = 0;
+    u8 bitMask    = 0xE0; // 1110 0000
+    u8 utf82bytes = 0xC0; // 1100 0000
+
+    if( (byte0 & bitMask) == utf82bytes ) // 0xxxx xxxx -> 1 byte utf8
+    {
+        byte1 = (u8)utf8[1];
+
+        u8 byte0payload = byte0 & 0x1F; // 000X XXXX;
+        u8 byte1payload = byte1 & 0x3F; // 00XX XXXX;
+
+        c.m_codepoint    = (u32)(byte0payload << 6) | (u32)(byte1payload);
+        c.m_numUtf8Bytes = 2;
+    }
+    else if( (byte0 & 0x80) == 0 )
+    {
+        c.m_codepoint    = (u32)byte0;
+        c.m_numUtf8Bytes = 1;
+    }
+    else
+    {
+        c.m_codepoint    = 0x00;
+        c.m_numUtf8Bytes = 0;
+    }
+
+    return c;
 }
 
 void ReadTables( TtfFont* font )
@@ -290,13 +324,13 @@ void ReadGlyphTable( TtfFont* font )
         else if( numContours < 0 )
         {
             // composite glyph
+            printf( "glyph ID:\t%d composite glyph\n", glyphId );
         }
         else if( numContours == 0 )
         {
             // no outlines -> space character or similar
             printf( "glyph ID:\t%d space character\n", glyphId );
         }
-
     }
 
     printf( "\n" );
