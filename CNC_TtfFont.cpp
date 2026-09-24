@@ -248,12 +248,13 @@ void ReadGlyphTable( TtfFont* font )
     for( u32 glyphId=0; glyphId<numGlyphs; ++glyphId )
     {
         Glyph* g        = &glyphs->m_glphys[glyphId];
+        memset( g, 0x0, sizeof( Glyph) );
+
         u32 startOffset = font->m_locaTable.m_glyphTableOffsets[glyphId];
         u32 endOffset   = font->m_locaTable.m_glyphTableOffsets[glyphId+1];
 
         if( startOffset == endOffset )
         {
-            memset( g, 0x0, sizeof( Glyph) );
             g->m_header.m_emptyGlyph = true;
             printf( "glphy ID:\t%d - empty\n", glyphId );
             continue;
