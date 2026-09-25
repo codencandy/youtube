@@ -12,6 +12,7 @@ void       ReadTables( TtfFont* font );
 u32        GetTableOffset( TtfFont* font, const char* tag );
 void       PrintGlyphData( Glyph* g );
 Codepoint  Utf8ToCodepoint( const char* utf8 );
+u16        CodepointToGlyphId( TtfFont* font, u16 codepoint );
 
 void ReadCmapTable ( TtfFont* font );
 void ReadHeadTable ( TtfFont* font );
@@ -146,7 +147,7 @@ void PrintGlyphData( Glyph* g )
     }
 }
 
-Codepoint  Utf8ToCodepoint( const char* utf8 )
+Codepoint Utf8ToCodepoint( const char* utf8 )
 {
     Codepoint c = {0};
 
@@ -172,11 +173,58 @@ Codepoint  Utf8ToCodepoint( const char* utf8 )
     }
     else
     {
-        c.m_codepoint    = 0x00;
+        c.m_codepoint    = 0x00; // glyph id for .undef
         c.m_numUtf8Bytes = 0;
     }
 
     return c;
+}
+
+u16 CodepointToGlyphId( TtfFont* font, u16 codepoint )
+{
+    u16 glyphId = 0;
+
+    CmapTable*   cmapTable = &font->m_cmapTable;
+    CmapFormat4* cmap      = &font->m_cmapTable.m_format4;
+
+    u16 segCount = cmap->m_segCountX2 / 2;
+
+    for( u32 i=0; i<segCount; ++i )
+    {
+        if( codepoint > cmap->m_endCount[i] )
+            continue;
+
+        if( codepoint < cmap->m_startCount[i] )
+            return 0;
+
+        if( cmap->m_idRangeOffset[i] == 0 )
+        {
+            return (u16)(codepoint + cmap->m_idDelta[i]);
+        }
+
+        s32 glyphIndex =
+            (cmap->m_idRangeOffset[i] / 2) +
+            (codepoint - cmap->m_startCount[i]) -
+            (segCount - i);
+
+        if( glyphIndex < 0 || (u32)glyphIndex >= cmap->m_numGlyphIds )
+        {
+            return 0;
+        }
+
+        u16 glyphId = cmap->m_glyphIdArray[glyphIndex];
+
+        if( glyphId != 0 )
+        {
+            glyphId = (u16)(glyphId + cmap->m_idDelta[i]);
+        }
+
+        if( glyphId >= font->m_maxpTable.m_numGlyphs )
+            return 0;
+
+        return glyphId;
+    }
+    return 0;
 }
 
 void ReadTables( TtfFont* font )
@@ -325,7 +373,7 @@ void ReadGlyphTable( TtfFont* font )
         else if( numContours < 0 )
         {
             // composite glyph
-            printf( "glyph ID:\t%d composite glyph\n", glyphId );
+            // not supported now
         }
         else if( numContours == 0 )
         {
@@ -549,6 +597,7 @@ void ReadCmapTable( TtfFont* font )
 
             u32 format4header = 16 + 8 * segCount;
             u32 numGlyphIds   = (format4->m_length - format4header) / sizeof( u16 );
+            format4->m_numGlyphIds  = numGlyphIds;
             format4->m_glyphIdArray = (u16*)malloc( sizeof( u16 ) * numGlyphIds );
             for( u32 i=0; i<numGlyphIds; ++i )
             {

@@ -48,11 +48,11 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
 
     if( IsTrueType( font ) )
     {
-        printf( "file: %s\t TrueType(yes/no): yes\n", ttfFontFile->m_filename );
+        printf( "file: %s\nTrueType(yes/no):\tyes\n", ttfFontFile->m_filename );
     }
     else
     {
-        printf( "file: %s\t TrueType(yes/no): no\n", ttfFontFile->m_filename );
+        printf( "file: %s\nTrueType(yes/no):\tno\n", ttfFontFile->m_filename );
         return NULL;
     }
 
@@ -65,9 +65,11 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
 
     PrintGlyphData( &font->m_glyphTable.m_glphys[0] );
     Codepoint test = Utf8ToCodepoint( "Ä" );
-    printf( "codepoint for %s\n", "Ä" );
+    u16 glyphId    = CodepointToGlyphId( font, test.m_codepoint );
+    printf( "utf8 input:\t%s\n", "Ä" );
     printf( "codepoint:\t%x\n",   test.m_codepoint );
     printf( "num bytes:\t%d\n",   test.m_numUtf8Bytes );
+    printf( "glyph id:\t%d\n",    glyphId );
 
     return font;
 }

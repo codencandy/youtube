@@ -144,6 +144,7 @@ typedef struct CmapFormat4
     u16* m_idDelta;       // u16 * segCount
     u16* m_idRangeOffset; // u16 * segCount
 
+    u16  m_numGlyphIds;
     u16* m_glyphIdArray;
     
 } CmapFormat4;

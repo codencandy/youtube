@@ -36,6 +36,8 @@ void RenderApplication( Application* app )
     f32    yOffset   = 50.0f;
     Glyph* g         = NULL;
 
+    const char* demoText = "Pack my box with five dozen liquor jugs.";
+
     for( u32 j=0; j<10; ++j )
     {
         g = &font->m_glyphTable.m_glphys[j];
