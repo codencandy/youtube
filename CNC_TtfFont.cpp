@@ -13,6 +13,8 @@ u32        GetTableOffset( TtfFont* font, const char* tag );
 void       PrintGlyphData( Glyph* g );
 Codepoint  Utf8ToCodepoint( const char* utf8 );
 u16        CodepointToGlyphId( TtfFont* font, u16 codepoint );
+void       BuildGlyphIdMap( TtfFont* font );
+u16        GetGlyphId( TtfFont* font, u16 codepoint );
 
 void ReadCmapTable ( TtfFont* font );
 void ReadHeadTable ( TtfFont* font );
@@ -224,6 +226,26 @@ u16 CodepointToGlyphId( TtfFont* font, u16 codepoint )
 
         return glyphId;
     }
+    return 0;
+}
+
+void BuildGlyphIdMap( TtfFont* font )
+{
+    memset( &font->m_glyphIdMap, 0x00, GLYPHID_MAP_SIZE * 2 );
+
+    for( u16 codepoint=0; codepoint < (u16)GLYPHID_MAP_SIZE; ++codepoint)
+    {
+        font->m_glyphIdMap[codepoint] = CodepointToGlyphId( font, codepoint );
+    }
+}
+
+u16 GetGlyphId( TtfFont* font, u16 codepoint )
+{
+    if( codepoint < GLYPHID_MAP_SIZE )
+    {
+        return font->m_glyphIdMap[codepoint];
+    }
+
     return 0;
 }
 

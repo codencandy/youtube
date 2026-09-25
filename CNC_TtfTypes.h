@@ -25,6 +25,8 @@
 #define CMAP_FORMAT_4   4
 #define CMAP_FORMAT_12  12
 
+#define GLYPHID_MAP_SIZE 0x07FF
+
 enum point_flag
 {
     ON_CURVE          = 0x01,
@@ -204,6 +206,8 @@ typedef struct TtfFont
     LocaTable    m_locaTable;
 
     f32          m_fontScale;
+
+    u16          m_glyphIdMap[GLYPHID_MAP_SIZE];
 
 } TtfFont;
 

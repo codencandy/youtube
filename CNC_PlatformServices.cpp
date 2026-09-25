@@ -56,16 +56,17 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
         return NULL;
     }
 
-    ReadTables    ( font );
-    ReadCmapTable ( font );
-    ReadMaxpTable ( font );
-    ReadHeadTable ( font );
-    ReadLocaTable ( font );
-    ReadGlyphTable( font );
+    ReadTables     ( font );
+    ReadCmapTable  ( font );
+    ReadMaxpTable  ( font );
+    ReadHeadTable  ( font );
+    ReadLocaTable  ( font );
+    ReadGlyphTable ( font );
+    BuildGlyphIdMap( font );
 
     PrintGlyphData( &font->m_glyphTable.m_glphys[0] );
     Codepoint test = Utf8ToCodepoint( "Ä" );
-    u16 glyphId    = CodepointToGlyphId( font, test.m_codepoint );
+    u16 glyphId    = GetGlyphId( font, test.m_codepoint );
     printf( "utf8 input:\t%s\n", "Ä" );
     printf( "codepoint:\t%x\n",   test.m_codepoint );
     printf( "num bytes:\t%d\n",   test.m_numUtf8Bytes );
