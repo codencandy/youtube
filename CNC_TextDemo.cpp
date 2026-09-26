@@ -31,7 +31,7 @@ void RenderApplication( Application* app )
     TextDemo* textDemo = (TextDemo*)app;
     TtfFont*  font     = textDemo->m_ttfFont;
 
-    const char* demoText = "A B C D E F";
+    const char* demoText = "A B C D E F G H I J K L M O P Q R S T U V W X Y Z";
     
-    services->f_renderText( renderer, services, font, demoText, vec2( 50.0f, 170.0f ), 150.0f );
+    services->f_renderText( renderer, services, font, demoText, vec2( 50.0f, 100.0f ), 90.0f );
 }

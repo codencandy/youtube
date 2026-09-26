@@ -96,18 +96,21 @@ void PlatformRenderText( void*       renderer,
         u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
         Glyph*    g         = GetGlyph( font, glyphId );
 
-        if( xOffset > CNC_WINDOW_WIDTH )
+        if( (xOffset + (size * fontScale))> CNC_WINDOW_WIDTH ||
+            (xOffset + (g->m_header.m_xMax * fontScale ) > CNC_WINDOW_WIDTH ))
         {
             xOffset   = position.x;
             baseline += size;
         }
         
-        if( g != NULL && !g->m_header.m_emptyGlyph )
+        if( g != NULL && !g->m_header.m_emptyGlyph && g->m_header.m_numberOfContours > 0 )
         {
             s16 index1 = 0;
             s16 index2 = 0;
             v2  p1;
             v2  p2;
+            v2  endPoint;
+
             for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
             {
                 s16 startIndex = index1;
@@ -117,25 +120,37 @@ void PlatformRenderText( void*       renderer,
                     p1 = vec2( g->m_x[index1] * fontScale + xOffset,
                                baseline - g->m_y[index1] * fontScale );
                     p2 = vec2( g->m_x[index1+1] * fontScale + xOffset,
-                               baseline - g->m_y[index1+1] * fontScale );             
-                    services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
-                    //services->f_renderCircle( renderer, p2, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
-                    services->f_renderLine( renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
+                               baseline - g->m_y[index1+1] * fontScale ); 
+                               
+                    if( g->m_onCurve[index1] )
+                        services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
+                    else
+                        services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,0.0f, .0f,1.0f ) );
+
+                    services->f_renderLine(   renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
                     index1++;
                 }
 
+                endPoint = vec2( g->m_x[endIndex] * fontScale + xOffset,
+                                 baseline - g->m_y[endIndex] * fontScale );
+
+                if( g->m_onCurve[index1] )
+                    services->f_renderCircle( renderer, endPoint, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
+                else
+                    services->f_renderCircle( renderer, endPoint, 5.0f, rgba( 1.0f,0.0f, .0f,1.0f ) );
+
                 p1 = p2;
                 p2 = vec2( g->m_x[startIndex] * fontScale + xOffset,
-                                 baseline - g->m_y[startIndex] * fontScale );
+                           baseline - g->m_y[startIndex] * fontScale );
                 services->f_renderLine( renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
                 index1 = endIndex + 1;
             }
 
-            xOffset += g->m_header.m_xMax * fontScale;
+            xOffset += size;
         }
         else
         {
-            xOffset += 100.0f;
+            xOffset += size;
         }
     
         textPointer += codepoint.m_numUtf8Bytes;

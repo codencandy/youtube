@@ -73,13 +73,14 @@ bool GetPointFlag( u8 flag, point_flag bit )
 void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x )
 {
     s16 p = 0;
+
     for( u32 i=0; i<numPoints; ++i )
     {
         u8 flag = g->m_flags[i];
         
         bool shortBit = false;
         bool sameBit  = false;
-
+        
         if( x )
         {
             shortBit = GetPointFlag( flag, X_SHORT_1BYTE );
@@ -376,34 +377,62 @@ void ReadGlyphTable( TtfFont* font )
             g->m_y       = (s16*)malloc(  sizeof( s16 )  * g->m_numPoints );
 
             // decode all the flags
+            u32 newNumPoints  = g->m_numPoints;
+            bool prevOnCurve  = false;
+            bool firstOnCurve = true;
+            bool onCurve      = false;
+
             for( u32 i=0; i<g->m_numPoints; ++i )
             {
                 u8 flag = *((u8*)glyphData + pointOffset);
                 if( GetPointFlag( flag, REPEAT_FLAG ) )
                 {
                     u8 repeatCount = *((u8*)glyphData + pointOffset + 1);
+                    onCurve        = GetPointFlag( flag, ON_CURVE );
+
                     for( u32 j=0; j<repeatCount + 1; ++j )
                     {
                         g->m_flags[i+j]   = flag;
-                        g->m_onCurve[i+j] = GetPointFlag( flag, ON_CURVE );
+                        g->m_onCurve[i+j] = onCurve;
+                        
+                        if( onCurve && prevOnCurve )   { newNumPoints++; }
+                        if( !onCurve && !prevOnCurve ) { newNumPoints++; }
+
+                        prevOnCurve = onCurve;
                     }
+
                     i += repeatCount;
                     pointOffset += 2;
+
+                    if( onCurve && prevOnCurve )   { newNumPoints++; }
+                    if( !onCurve && !prevOnCurve ) { newNumPoints++; }
+
+                    prevOnCurve = onCurve;
                 }
                 else
                 {
-                    g->m_flags[i] = flag;
-                    pointOffset += 1;
-                    g->m_onCurve[i] = GetPointFlag( flag, ON_CURVE );
-                }
+                    onCurve         = GetPointFlag( flag, ON_CURVE );
+                    g->m_flags[i]   = flag;
+                    pointOffset    += 1;
+                    g->m_onCurve[i] = onCurve;
+                    
+                    if( onCurve && prevOnCurve )   { newNumPoints++; }
+                    if( !onCurve && !prevOnCurve ) { newNumPoints++; }
 
+                    prevOnCurve = onCurve;
+                }
             }
+
+            if( onCurve && firstOnCurve )   { newNumPoints++; }
+            if( !onCurve && !firstOnCurve ) { newNumPoints++; }
 
             void* xData = (u8*)glyphData + pointOffset;
             
             // decode all coordinates
             void* data = DecodePoints( g, xData, g->m_x, g->m_numPoints, true );
             data       = DecodePoints( g, data,  g->m_y, g->m_numPoints, false );
+
+            g->m_realNumPoints = newNumPoints;
         }
         else if( numContours < 0 )
         {

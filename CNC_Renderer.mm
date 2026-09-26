@@ -28,7 +28,7 @@
         NSMutableArray*       m_modelBuffers;
 
         u32                   m_numDrawCalls;
-        DrawCall              m_drawCalls[1000];
+        DrawCall              m_drawCalls[10000];
 
         id< MTLBuffer >       m_particleBuffer;
         VertexInput           m_particleVertices[6];

@@ -91,6 +91,8 @@ typedef struct Glyph
     s16*        m_x;
     s16*        m_y;
 
+    u32         m_realNumPoints;
+
 } Glyph;
 
 typedef struct GlyphTable
