@@ -86,7 +86,7 @@ void PlatformRenderText( void*       renderer,
     PlatformServices* services = (PlatformServices*)s;
     f32    fontScale = (f32)(size / font->m_headTable.m_unitsPerEm);
     f32    xOffset   = position.x;
-    f32    yOffset   = position.y;
+    f32    baseline  = position.y;
 
     u32 textLength = StringLength( text );
     char* textPointer = (char*)text;
@@ -98,17 +98,21 @@ void PlatformRenderText( void*       renderer,
 
         if( xOffset > CNC_WINDOW_WIDTH )
         {
-            xOffset = position.x;
-            yOffset += size;
+            xOffset   = position.x;
+            baseline += size;
         }
         
-        if( g != NULL )
+        if( g != NULL && !g->m_header.m_emptyGlyph )
         {
             for( u32 i=0; i<g->m_numPoints; ++i )
             {
-                services->f_renderCircle( renderer, vec2( g->m_x[i] * fontScale + xOffset, g->m_y[i] * fontScale + yOffset ), 3.0f, rgba( 1.0f, 1.0f, 1.0f, 1.0f ) );
+                services->f_renderCircle( renderer, vec2( g->m_x[i] * fontScale + xOffset, baseline - g->m_y[i] * fontScale ), 3.0f, rgba( 1.0f, 1.0f, 1.0f, 1.0f ) );
             }
             xOffset += g->m_header.m_xMax * fontScale;
+        }
+        else
+        {
+            xOffset += 100.0f;
         }
     
         textPointer += codepoint.m_numUtf8Bytes;
