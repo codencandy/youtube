@@ -14,10 +14,11 @@ void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, 
 u32    PlatformUploadImage( void* renderer, Image* image );
 void   PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances = 1 );
 void   PlatformUpdateImage( void* renderer, Image* image );
+void   PlatformRenderText ( void* renderer, TtfFont* font, const char* text, v2 position, f32 size );
 
 void   PlatformRenderRect(   void* renderer, v2 pos, f32 width, f32 height, color c );
 void   PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c );
-void   PlatformRenderLine(   void* renderer, v2 start, v2 end, f32 width, color c );
+void   PlatformRenderLine(   void* renderer, void* services, v2 start, v2 end, f32 width, color c );
 
 typedef struct PlatformServices
 {
@@ -32,6 +33,7 @@ typedef struct PlatformServices
     void  (*f_renderRect)(void*, v2, f32, f32, color);
     void  (*f_renderCircle)(void*, v2, f32, color );
     void  (*f_renderLine)(void*, v2, v2, f32, color);
+    void  (*f_renderText)(void*, void*, TtfFont*, const char*, v2, f32 );
 
 } PlatformServices;
 

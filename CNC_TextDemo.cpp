@@ -30,21 +30,8 @@ void RenderApplication( Application* app )
 
     TextDemo* textDemo = (TextDemo*)app;
     TtfFont*  font     = textDemo->m_ttfFont;
-    
-    f32    fontScale = (f32)(100.0f / font->m_headTable.m_unitsPerEm);
-    f32    xOffset   = 50.0f;
-    f32    yOffset   = 50.0f;
-    Glyph* g         = NULL;
 
     const char* demoText = "Pack my box with five dozen liquor jugs.";
-
-    for( u32 j=0; j<10; ++j )
-    {
-        g = &font->m_glyphTable.m_glphys[j];
-        for( u32 i=0; i<g->m_numPoints; ++i )
-        {
-            services->f_renderCircle( renderer, vec2( g->m_x[i] * fontScale + xOffset, g->m_y[i] * fontScale + yOffset ), 5.0f, rgba( 1.0f, 1.0f, 1.0f, 1.0f ) );
-        }
-        xOffset += 100.0f;
-    }
+    
+    services->f_renderText( renderer, services, font, demoText, vec2( 10.0f, 100.0f ), 150.0f );
 }

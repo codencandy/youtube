@@ -4,7 +4,8 @@
 #define STBI_ONLY_PNG
 #include "libs/stb_image.h"
 #include "CNC_Tools.h"
-
+#include "CNC_Types.h"
+#include "CNC_Constants.h"
 #include "CNC_TtfFont.cpp"
 
 Image* PlatformLoadImage( const char* imagePath )
@@ -75,6 +76,46 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
     return font;
 }
 
+void PlatformRenderText( void*       renderer, 
+                         void*       s,
+                         TtfFont*    font, 
+                         const char* text, 
+                         v2          position, 
+                         f32         size )
+{
+    PlatformServices* services = (PlatformServices*)s;
+    f32    fontScale = (f32)(size / font->m_headTable.m_unitsPerEm);
+    f32    xOffset   = position.x;
+    f32    yOffset   = position.y;
+
+    u32 textLength = StringLength( text );
+    char* textPointer = (char*)text;
+    for( u32 i=0; i<textLength; )
+    {
+        Codepoint codepoint = Utf8ToCodepoint( textPointer );
+        u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
+        Glyph*    g         = GetGlyph( font, glyphId );
+
+        if( xOffset > CNC_WINDOW_WIDTH )
+        {
+            xOffset = position.x;
+            yOffset += size;
+        }
+        
+        if( g != NULL )
+        {
+            for( u32 i=0; i<g->m_numPoints; ++i )
+            {
+                services->f_renderCircle( renderer, vec2( g->m_x[i] * fontScale + xOffset, g->m_y[i] * fontScale + yOffset ), 3.0f, rgba( 1.0f, 1.0f, 1.0f, 1.0f ) );
+            }
+            xOffset += g->m_header.m_xMax * fontScale;
+        }
+    
+        textPointer += codepoint.m_numUtf8Bytes;
+        i           += codepoint.m_numUtf8Bytes;
+    }
+}
+
 /* implemented in the Renderer 
 
     u32  PlatformUploadImage( void* renderer, Image* image );
@@ -100,6 +141,7 @@ PlatformServices* CreatePlatformServices()
     services->f_renderRect      = &PlatformRenderRect;
     services->f_renderCircle    = &PlatformRenderCircle;
     services->f_renderLine      = &PlatformRenderLine;
+    services->f_renderText      = &PlatformRenderText;
 
     return services;
 }
