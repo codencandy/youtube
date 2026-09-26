@@ -108,15 +108,16 @@ void PlatformRenderText( void*       renderer,
             s16 index2 = 0;
             for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
             {
-                index2 = g->m_endPtsOfContours[i];
-                for( u32 j=index1; j<=index2; ++j )
+                s16 endIndex = g->m_endPtsOfContours[i];
+                for( u32 j=index1; j<=endIndex; ++j )
                 {
                     v2 p1 = vec2( g->m_x[index1] * fontScale + xOffset,
                                  baseline - g->m_y[index1] * fontScale );
-                    v2 p2 = vec2( g->m_x[index2] * fontScale + xOffset,
-                                 baseline - g->m_y[index2] * fontScale );             
+                    v2 p2 = vec2( g->m_x[index1+1] * fontScale + xOffset,
+                                 baseline - g->m_y[index1+1] * fontScale );             
                     services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
                     services->f_renderCircle( renderer, p2, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
+                    services->f_renderLine( renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
                     index1++;
                 }
                 //printf( "contour %d:\t[%d .. %d]\n", i, index1, index2 );
