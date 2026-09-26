@@ -106,22 +106,31 @@ void PlatformRenderText( void*       renderer,
         {
             s16 index1 = 0;
             s16 index2 = 0;
+            v2  p1;
+            v2  p2;
             for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
             {
-                s16 endIndex = g->m_endPtsOfContours[i];
-                for( u32 j=index1; j<=endIndex; ++j )
+                s16 startIndex = index1;
+                s16 endIndex   = g->m_endPtsOfContours[i];
+                for( u32 j=index1; j<endIndex; ++j )
                 {
-                    v2 p1 = vec2( g->m_x[index1] * fontScale + xOffset,
-                                 baseline - g->m_y[index1] * fontScale );
-                    v2 p2 = vec2( g->m_x[index1+1] * fontScale + xOffset,
-                                 baseline - g->m_y[index1+1] * fontScale );             
+                    p1 = vec2( g->m_x[index1] * fontScale + xOffset,
+                               baseline - g->m_y[index1] * fontScale );
+                    p2 = vec2( g->m_x[index1+1] * fontScale + xOffset,
+                               baseline - g->m_y[index1+1] * fontScale );             
                     services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
-                    services->f_renderCircle( renderer, p2, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
+                    //services->f_renderCircle( renderer, p2, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
                     services->f_renderLine( renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
                     index1++;
                 }
-                //printf( "contour %d:\t[%d .. %d]\n", i, index1, index2 );
+
+                p1 = p2;
+                p2 = vec2( g->m_x[startIndex] * fontScale + xOffset,
+                                 baseline - g->m_y[startIndex] * fontScale );
+                services->f_renderLine( renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
+                index1 = endIndex + 1;
             }
+
             xOffset += g->m_header.m_xMax * fontScale;
         }
         else
