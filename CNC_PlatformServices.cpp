@@ -104,9 +104,22 @@ void PlatformRenderText( void*       renderer,
         
         if( g != NULL && !g->m_header.m_emptyGlyph )
         {
-            for( u32 i=0; i<g->m_numPoints; ++i )
+            s16 index1 = 0;
+            s16 index2 = 0;
+            for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
             {
-                services->f_renderCircle( renderer, vec2( g->m_x[i] * fontScale + xOffset, baseline - g->m_y[i] * fontScale ), 3.0f, rgba( 1.0f, 1.0f, 1.0f, 1.0f ) );
+                index2 = g->m_endPtsOfContours[i];
+                for( u32 j=index1; j<=index2; ++j )
+                {
+                    v2 p1 = vec2( g->m_x[index1] * fontScale + xOffset,
+                                 baseline - g->m_y[index1] * fontScale );
+                    v2 p2 = vec2( g->m_x[index2] * fontScale + xOffset,
+                                 baseline - g->m_y[index2] * fontScale );             
+                    services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
+                    services->f_renderCircle( renderer, p2, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
+                    index1++;
+                }
+                //printf( "contour %d:\t[%d .. %d]\n", i, index1, index2 );
             }
             xOffset += g->m_header.m_xMax * fontScale;
         }
