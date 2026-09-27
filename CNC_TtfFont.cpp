@@ -8,6 +8,7 @@ bool       IsTrueType( TtfFont* font );
 void       ReadTableOffsets( TtfFont* font );
 bool       GetPointFlag( u8 flag, point_flag bit );
 void*      DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x );
+void       InsertImpliedPoints( TtfFont* font );
 void       ReadTables( TtfFont* font );
 u32        GetTableOffset( TtfFont* font, const char* tag );
 void       PrintGlyphData( Glyph* g );
@@ -124,6 +125,29 @@ void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x )
     }
 
     return data;
+}
+
+void InsertImpliedPoints( TtfFont* font )
+{
+    for( u32 i=0; i<font->m_glyphTable.m_numGlyphs; ++i )
+    {
+        Glyph*g = &font->m_glyphTable.m_glphys[i];
+        
+        if( g->m_header.m_emptyGlyph || g->m_header.m_numberOfContours < 0 )
+        {
+            continue;
+        }
+
+        g->m_points = (v2int*)malloc( sizeof( v2int ) * g->m_realNumPoints );
+        for( u32 c=0; c<g->m_header.m_numberOfContours; ++c )
+        {
+
+        }
+    }
+
+    printf( "inserting implied points\n------------------\n" );
+    printf( "all contours contain only valid bezier path with 3 points\n" );
+    printf( "\n" ) ;
 }
 
 void PrintGlyphData( Glyph* g )

@@ -92,6 +92,7 @@ typedef struct Glyph
     s16*        m_y;
 
     u32         m_realNumPoints;
+    v2int*      m_points;
 
 } Glyph;
 

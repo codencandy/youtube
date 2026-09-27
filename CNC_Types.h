@@ -20,6 +20,12 @@ typedef simd::float3x3     m3;
 typedef simd::float4x4     m4;
 typedef v4                 color;
 
+struct v2int
+{
+    s16 x;
+    s16 y;
+};
+
 enum ENDIANESS
 {
     BIGENDIAN    = 0,

@@ -57,13 +57,14 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
         return NULL;
     }
 
-    ReadTables     ( font );
-    ReadCmapTable  ( font );
-    ReadMaxpTable  ( font );
-    ReadHeadTable  ( font );
-    ReadLocaTable  ( font );
-    ReadGlyphTable ( font );
-    BuildGlyphIdMap( font );
+    ReadTables         ( font );
+    ReadCmapTable      ( font );
+    ReadMaxpTable      ( font );
+    ReadHeadTable      ( font );
+    ReadLocaTable      ( font );
+    ReadGlyphTable     ( font );
+    BuildGlyphIdMap    ( font );
+    InsertImpliedPoints( font );
 
     PrintGlyphData( &font->m_glyphTable.m_glphys[0] );
     Codepoint test = Utf8ToCodepoint( "Ä" );
