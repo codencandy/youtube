@@ -41,4 +41,14 @@ f32 lineAngle( v2 p1, v2 p2 )
     return result;
 }
 
+v2int halfwayPoint( v2int p1, v2int p2 )
+{
+    v2int halfway;
+
+    halfway = vec2( (s16)(((s32)p1.x + p2.x) / 2),
+                    (s16)(((s32)p1.y + p2.y) / 2) );
+                    
+    return halfway;
+}
+
 #endif//CNC_MATH_H

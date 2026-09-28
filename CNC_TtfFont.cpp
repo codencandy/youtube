@@ -1,6 +1,7 @@
 #include "CNC_Types.h"
 #include "CNC_TtfTypes.h"
 #include "CNC_Tools.h"
+#include "CNC_Math.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -138,10 +139,44 @@ void InsertImpliedPoints( TtfFont* font )
             continue;
         }
 
+        u32 pointIndex = 0;
         g->m_points = (v2int*)malloc( sizeof( v2int ) * g->m_realNumPoints );
+        
+        s16   index1   = 0;
+        s16   index2   = 0;
+        s16   endIndex = 0;
         for( u32 c=0; c<g->m_header.m_numberOfContours; ++c )
         {
+            endIndex = g->m_endPtsOfContours[c];
 
+            for( u32 j=index1; j<endIndex; )
+            {
+                bool p1OnCurve = g->m_onCurve[j];
+                bool p2OnCurve = g->m_onCurve[j+1];
+
+                if( (p1OnCurve && p2OnCurve) || (!p1OnCurve && !p2OnCurve) )
+                {
+                    v2int p1 = vec2( g->m_x[j],   g->m_y[j] );
+                    v2int p3 = vec2( g->m_x[j+1], g->m_y[j+1] );
+                    v2int p2 = halfwayPoint( p1, p3 );
+
+                    g->m_points[pointIndex++] = p1;
+                    g->m_points[pointIndex++] = p2;
+                    g->m_points[pointIndex++] = p3;
+                }
+                else
+                {
+                    v2int p1 = vec2( g->m_x[j],   g->m_y[j] );
+                    v2int p2 = vec2( g->m_x[j+1], g->m_y[j+1] );
+
+                    g->m_points[pointIndex++] = p1;
+                    g->m_points[pointIndex++] = p2;
+                }
+
+                j += 2;
+            }
+
+            index1 = endIndex + 1;
         }
     }
 
