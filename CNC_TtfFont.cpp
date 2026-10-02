@@ -139,44 +139,50 @@ void InsertImpliedPoints( TtfFont* font )
             continue;
         }
 
-        u32 pointIndex = 0;
         g->m_points = (v2int*)malloc( sizeof( v2int ) * g->m_realNumPoints );
-        
-        s16   index1   = 0;
-        s16   index2   = 0;
-        s16   endIndex = 0;
-        for( u32 c=0; c<g->m_header.m_numberOfContours; ++c )
+
+        u32 pointIndex  = 0;
+        s16 numContours = g->m_header.m_numberOfContours;
+        u32 index       = 0;
+        for( u32 c=0; c<numContours; ++c )
         {
-            endIndex = g->m_endPtsOfContours[c];
+            u16 end          = g->m_endPtsOfContours[c];
+            u32 startIndex   = 0;
+            bool onCurve     = false;
+            bool nextOnCurve = false;
 
-            for( u32 j=index1; j<endIndex; )
+            startIndex = index;
+            v2int p1;
+            v2int p2;
+            for( ; index<=end; ++index )
             {
-                bool p1OnCurve = g->m_onCurve[j];
-                bool p2OnCurve = g->m_onCurve[j+1];
+                p1 = vec2( g->m_x[index], g->m_y[index] );
 
-                if( (p1OnCurve && p2OnCurve) || (!p1OnCurve && !p2OnCurve) )
+                if( index == end )
                 {
-                    v2int p1 = vec2( g->m_x[j],   g->m_y[j] );
-                    v2int p3 = vec2( g->m_x[j+1], g->m_y[j+1] );
-                    v2int p2 = halfwayPoint( p1, p3 );
-
-                    g->m_points[pointIndex++] = p1;
-                    g->m_points[pointIndex++] = p2;
-                    g->m_points[pointIndex++] = p3;
+                    onCurve     = g->m_onCurve[index];
+                    nextOnCurve = g->m_onCurve[startIndex];
+                    p2 = vec2( g->m_x[startIndex], g->m_y[startIndex] );
                 }
                 else
                 {
-                    v2int p1 = vec2( g->m_x[j],   g->m_y[j] );
-                    v2int p2 = vec2( g->m_x[j+1], g->m_y[j+1] );
-
-                    g->m_points[pointIndex++] = p1;
-                    g->m_points[pointIndex++] = p2;
+                    onCurve     = g->m_onCurve[index];
+                    nextOnCurve = g->m_onCurve[index + 1];
+                    p2 = vec2( g->m_x[index+1], g->m_y[index+1] );
                 }
 
-                j += 2;
-            }
+                g->m_points[pointIndex++] = p1;
 
-            index1 = endIndex + 1;
+                if( onCurve == nextOnCurve )
+                {
+                    g->m_points[pointIndex++] = halfwayPoint( p1, p2 );
+                }
+
+                if( index == end )
+                {
+                    g->m_endPtsOfContours[c] = pointIndex - 1;
+                }
+            }
         }
     }
 
@@ -437,13 +443,11 @@ void ReadGlyphTable( TtfFont* font )
 
             // decode all the flags
             u32 newNumPoints  = g->m_numPoints;
-            bool prevOnCurve  = false;
-            bool firstOnCurve = true;
             bool onCurve      = false;
-
             for( u32 i=0; i<g->m_numPoints; ++i )
             {
                 u8 flag = *((u8*)glyphData + pointOffset);
+            
                 if( GetPointFlag( flag, REPEAT_FLAG ) )
                 {
                     u8 repeatCount = *((u8*)glyphData + pointOffset + 1);
@@ -453,20 +457,10 @@ void ReadGlyphTable( TtfFont* font )
                     {
                         g->m_flags[i+j]   = flag;
                         g->m_onCurve[i+j] = onCurve;
-                        
-                        if( onCurve && prevOnCurve )   { newNumPoints++; }
-                        if( !onCurve && !prevOnCurve ) { newNumPoints++; }
-
-                        prevOnCurve = onCurve;
                     }
 
                     i += repeatCount;
                     pointOffset += 2;
-
-                    if( onCurve && prevOnCurve )   { newNumPoints++; }
-                    if( !onCurve && !prevOnCurve ) { newNumPoints++; }
-
-                    prevOnCurve = onCurve;
                 }
                 else
                 {
@@ -474,24 +468,46 @@ void ReadGlyphTable( TtfFont* font )
                     g->m_flags[i]   = flag;
                     pointOffset    += 1;
                     g->m_onCurve[i] = onCurve;
-                    
-                    if( onCurve && prevOnCurve )   { newNumPoints++; }
-                    if( !onCurve && !prevOnCurve ) { newNumPoints++; }
-
-                    prevOnCurve = onCurve;
                 }
             }
 
-            if( onCurve && firstOnCurve )   { newNumPoints++; }
-            if( !onCurve && !firstOnCurve ) { newNumPoints++; }
+            // calculate the "real" number of points including the implied points
+            u32 index = 0;
+            for( u32 c=0; c<numContours; ++c )
+            {
+                u16 end          = g->m_endPtsOfContours[c];
+                u32 startIndex   = 0;
+                bool onCurve     = false;
+                bool nextOnCurve = false;
+
+                startIndex = index;
+                for( ; index<=end; ++index )
+                {
+                    if( index == end )
+                    {
+                        onCurve     = g->m_onCurve[index];
+                        nextOnCurve = g->m_onCurve[startIndex];
+                    }
+                    else
+                    {
+                        onCurve = g->m_onCurve[index];
+                        nextOnCurve = g->m_onCurve[index + 1];
+                    }
+                    
+                    if( onCurve == nextOnCurve )
+                    {
+                        newNumPoints++;
+                    }
+                }
+            }
+
+            g->m_realNumPoints = newNumPoints;
 
             void* xData = (u8*)glyphData + pointOffset;
             
             // decode all coordinates
             void* data = DecodePoints( g, xData, g->m_x, g->m_numPoints, true );
             data       = DecodePoints( g, data,  g->m_y, g->m_numPoints, false );
-
-            g->m_realNumPoints = newNumPoints;
         }
         else if( numContours < 0 )
         {

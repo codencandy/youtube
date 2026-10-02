@@ -97,53 +97,55 @@ void PlatformRenderText( void*       renderer,
         u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
         Glyph*    g         = GetGlyph( font, glyphId );
 
-        if( (xOffset + (size * fontScale))> CNC_WINDOW_WIDTH ||
+        if( g == NULL )
+        {
+            continue;
+        }
+
+        if( (xOffset + (size * fontScale))               > CNC_WINDOW_WIDTH ||
             (xOffset + (g->m_header.m_xMax * fontScale ) > CNC_WINDOW_WIDTH ))
         {
-            xOffset   = position.x;
-            baseline += size;
+            xOffset      = position.x;
+            baseline    += size * 1.1;
+            continue;
         }
         
-        if( g != NULL && !g->m_header.m_emptyGlyph && g->m_header.m_numberOfContours > 0 )
+        if( !g->m_header.m_emptyGlyph && g->m_header.m_numberOfContours > 0 )
         {
             s16 index1 = 0;
-            s16 index2 = 0;
             v2  p1;
             v2  p2;
-            v2  endPoint;
+            v2  p3;
 
+            s16 startIndex = 0;
             for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
             {
-                s16 startIndex = index1;
                 s16 endIndex   = g->m_endPtsOfContours[i];
-                for( u32 j=index1; j<endIndex; ++j )
+                s16 startIndex = index1;
+                for( ; index1+2<=endIndex; index1 += 2 )
                 {
-                    p1 = vec2( g->m_x[index1] * fontScale + xOffset,
-                               baseline - g->m_y[index1] * fontScale );
-                    p2 = vec2( g->m_x[index1+1] * fontScale + xOffset,
-                               baseline - g->m_y[index1+1] * fontScale ); 
-                               
-                    if( g->m_onCurve[index1] )
-                        services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
-                    else
-                        services->f_renderCircle( renderer, p1, 5.0f, rgba( 1.0f,0.0f, .0f,1.0f ) );
+                    p1 = vec2( g->m_points[index1].x * fontScale + xOffset,
+                               baseline - g->m_points[index1].y * fontScale);
+                    p2 = vec2( g->m_points[index1+1].x * fontScale + xOffset,
+                               baseline - g->m_points[index1+1].y * fontScale ); 
+                    p3 = vec2( g->m_points[index1+2].x * fontScale + xOffset,
+                               baseline - g->m_points[index1+2].y * fontScale ); 
 
-                    services->f_renderLine(   renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
-                    index1++;
+                    services->f_renderLine( renderer, p1, p3, 2.0f, rgba( 1.0f, 1.0f, 1.0f, 5.0f ) );
+                    services->f_renderCircle( renderer, p2, 2.0f, rgba( 1.0f, 0.0f, 0.0f,1.0f ) );
                 }
 
-                endPoint = vec2( g->m_x[endIndex] * fontScale + xOffset,
-                                 baseline - g->m_y[endIndex] * fontScale );
+                p1 = vec2( g->m_points[index1].x * fontScale + xOffset,
+                               baseline - g->m_points[index1].y * fontScale);
+                p2 = vec2( g->m_points[index1+1].x * fontScale + xOffset,
+                            baseline - g->m_points[index1+1].y * fontScale ); 
+                p3 = vec2( g->m_points[startIndex].x * fontScale + xOffset,
+                            baseline - g->m_points[startIndex].y * fontScale );
 
-                if( g->m_onCurve[index1] )
-                    services->f_renderCircle( renderer, endPoint, 5.0f, rgba( 1.0f,1.0f,1.0f,1.0f ) );
-                else
-                    services->f_renderCircle( renderer, endPoint, 5.0f, rgba( 1.0f,0.0f, .0f,1.0f ) );
-
-                p1 = p2;
-                p2 = vec2( g->m_x[startIndex] * fontScale + xOffset,
-                           baseline - g->m_y[startIndex] * fontScale );
-                services->f_renderLine( renderer, p1, p2, 3.0f, rgba( 1.0f, 1.0f, 1.0f, 0.5f ) );
+                services->f_renderLine( renderer, p1, p3, 2.0f, rgba( 1.0f, 1.0f, 1.0f, 5.0f ) );
+                services->f_renderCircle( renderer, p2, 2.0f, rgba( 1.0f, 0.0f, 0.0f,1.0f ) );
+                
+                // go to start of next contour
                 index1 = endIndex + 1;
             }
 
