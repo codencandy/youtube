@@ -5,6 +5,7 @@
 #include "libs/stb_image.h"
 #include "CNC_Tools.h"
 #include "CNC_Types.h"
+#include "CNC_Math.h"
 #include "CNC_Constants.h"
 #include "CNC_TtfFont.cpp"
 
@@ -131,8 +132,17 @@ void PlatformRenderText( void*       renderer,
                     p3 = vec2( g->m_points[index1+2].x * fontScale + xOffset,
                                baseline - g->m_points[index1+2].y * fontScale ); 
 
-                    services->f_renderLine( renderer, p1, p3, 2.0f, rgba( 1.0f, 1.0f, 1.0f, 5.0f ) );
                     services->f_renderCircle( renderer, p2, 2.0f, rgba( 1.0f, 0.0f, 0.0f,1.0f ) );
+
+                    f32 d = distance( p1, p3 );
+                    f32 t = 0.0f;
+                    f32 numBeziers = d / 2.0f;
+                    for( u32 b=0; b<numBeziers; ++b )
+                    {
+                        v2 p = bezier( p1, p2, p3, t );
+                        services->f_renderCircle( renderer, p, 2.0f, rgba( 1.0f, 1.0f, 1.0f,1.0f ) );
+                        t += 1.0/numBeziers;
+                    }
                 }
 
                 p1 = vec2( g->m_points[index1].x * fontScale + xOffset,
@@ -142,8 +152,15 @@ void PlatformRenderText( void*       renderer,
                 p3 = vec2( g->m_points[startIndex].x * fontScale + xOffset,
                             baseline - g->m_points[startIndex].y * fontScale );
 
-                services->f_renderLine( renderer, p1, p3, 2.0f, rgba( 1.0f, 1.0f, 1.0f, 5.0f ) );
-                services->f_renderCircle( renderer, p2, 2.0f, rgba( 1.0f, 0.0f, 0.0f,1.0f ) );
+                f32 d = distance( p1, p3 );
+                f32 t = 0.0f;
+                f32 numBeziers = d / 2.0f;
+                for( u32 b=0; b<numBeziers; ++b )
+                {
+                    v2 p = bezier( p1, p2, p3, t );
+                    services->f_renderCircle( renderer, p, 2.0f, rgba( 1.0f, 1.0f, 1.0f,1.0f ) );
+                    t += 1.0f/numBeziers;
+                }
                 
                 // go to start of next contour
                 index1 = endIndex + 1;

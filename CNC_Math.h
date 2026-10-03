@@ -47,8 +47,23 @@ v2int halfwayPoint( v2int p1, v2int p2 )
 
     halfway = vec2( (s16)(((s32)p1.x + p2.x) / 2),
                     (s16)(((s32)p1.y + p2.y) / 2) );
-                    
+
     return halfway;
+}
+
+f32 pow2( f32 x )
+{
+    return x*x;
+}
+
+v2 bezier( v2 p1, v2 p2, v2 p3, f32 t )
+{
+    v2 result;
+
+    result.x = (pow2(1.0f - t)) * p1.x + (2.0f*(1.0f - t)*t*p2.x) + t*t*p3.x;
+    result.y = (pow2(1.0f - t)) * p1.y + (2.0f*(1.0f - t)*t*p2.y) + t*t*p3.y;
+
+    return result;
 }
 
 #endif//CNC_MATH_H
