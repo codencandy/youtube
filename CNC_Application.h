@@ -2,11 +2,13 @@
 #define CNC_APPLICATION_H
 
 #include "CNC_PlatformServices.h"
+#include "CNC_Timer.h"
 
 typedef struct Application
 {
     PlatformServices* m_services;
     void*             m_renderer;
+    Timer             m_timer;
 
 } Application;
 

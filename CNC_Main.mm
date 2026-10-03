@@ -66,15 +66,6 @@ int main()
             }
             while( event != NULL );
 
-            // wait for display refresh
-            //[window->m_displaySignal wait];
-
-            //christmasLib.f_updateApp( christmas );
-            //christmasLib.f_renderApp( christmas );
-//
-            //clockLib.f_updateApp( clock );
-            //clockLib.f_renderApp( clock );
-
             textdemoLib.f_updateApp( textdemo );
             textdemoLib.f_renderApp( textdemo );
 

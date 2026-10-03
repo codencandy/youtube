@@ -7,6 +7,7 @@
 #include "CNC_Types.h"
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
+#include "CNC_Application.h"
 #include "CNC_TtfFont.cpp"
 
 Image* PlatformLoadImage( const char* imagePath )
@@ -79,16 +80,19 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
 }
 
 void PlatformRenderText( void*       renderer, 
-                         void*       s,
+                         void*       app,
                          TtfFont*    font, 
                          const char* text, 
                          v2          position, 
                          f32         size )
 {
-    PlatformServices* services = (PlatformServices*)s;
-    f32    fontScale = (f32)(size / font->m_headTable.m_unitsPerEm);
-    f32    xOffset   = position.x;
-    f32    baseline  = position.y;
+    Application*      application = (Application*)app;
+    PlatformServices* services    = application->m_services;
+    Timer*            t           = &application->m_timer;
+    f32               fontScale   = (f32)(size / font->m_headTable.m_unitsPerEm);
+    f32               xOffset     = position.x;
+    f32               baseline    = position.y;
+    f32               tmax        = fabs( sinf( t->m_seconds / 2.0f) );
 
     u32 textLength = StringLength( text );
     char* textPointer = (char*)text;
@@ -137,7 +141,7 @@ void PlatformRenderText( void*       renderer,
                     f32 d = distance( p1, p3 );
                     f32 t = 0.0f;
                     f32 numBeziers = d / 2.0f;
-                    for( u32 b=0; b<numBeziers; ++b )
+                    for( u32 b=0; b<numBeziers && t <= tmax; ++b )
                     {
                         v2 p = bezier( p1, p2, p3, t );
                         services->f_renderCircle( renderer, p, 2.0f, rgba( 1.0f, 1.0f, 1.0f,1.0f ) );
@@ -155,7 +159,7 @@ void PlatformRenderText( void*       renderer,
                 f32 d = distance( p1, p3 );
                 f32 t = 0.0f;
                 f32 numBeziers = d / 2.0f;
-                for( u32 b=0; b<numBeziers; ++b )
+                for( u32 b=0; b<numBeziers && t <= tmax; ++b )
                 {
                     v2 p = bezier( p1, p2, p3, t );
                     services->f_renderCircle( renderer, p, 2.0f, rgba( 1.0f, 1.0f, 1.0f,1.0f ) );
