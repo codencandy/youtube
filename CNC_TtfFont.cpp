@@ -4,12 +4,14 @@
 #include "CNC_Math.h"
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 bool       IsTrueType( TtfFont* font );
 void       ReadTableOffsets( TtfFont* font );
 bool       GetPointFlag( u8 flag, point_flag bit );
 void*      DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x );
 void       InsertImpliedPoints( TtfFont* font );
+bool       ResolveCompoundGlyphs( TtfFont* font );
 void       ReadTables( TtfFont* font );
 u32        GetTableOffset( TtfFont* font, const char* tag );
 void       PrintGlyphData( Glyph* g );
@@ -70,6 +72,166 @@ bool GetPointFlag( u8 flag, point_flag bit )
     }
     
     return false;
+}
+
+bool GetCompoundFlag( u16 flag, compound_flag bit )
+{
+    if( (flag & bit) == bit )
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static f32 F2Dot14ToF32( s16 value )
+{
+    return (f32)value / 16384.0f;
+}
+
+static bool AppendCompoundComponent( Glyph* destination,
+                                     Glyph* component,
+                                     CompoundComponent* description )
+{
+    u32 oldNumPoints   = destination->m_numPoints;
+    u32 oldNumContours = (u32)destination->m_header.m_numberOfContours;
+    u32 newNumPoints   = oldNumPoints + component->m_numPoints;
+    u32 newNumContours = oldNumContours + (u32)component->m_header.m_numberOfContours;
+
+    s16* newX = (s16*)realloc( destination->m_x, sizeof( s16 ) * newNumPoints );
+    if( newX == NULL && newNumPoints > 0 ) return false;
+    destination->m_x = newX;
+
+    s16* newY = (s16*)realloc( destination->m_y, sizeof( s16 ) * newNumPoints );
+    if( newY == NULL && newNumPoints > 0 ) return false;
+    destination->m_y = newY;
+
+    bool* newOnCurve = (bool*)realloc( destination->m_onCurve,
+                                       sizeof( bool ) * newNumPoints );
+    if( newOnCurve == NULL && newNumPoints > 0 ) return false;
+    destination->m_onCurve = newOnCurve;
+
+    u8* newFlags = (u8*)realloc( destination->m_flags, sizeof( u8 ) * newNumPoints );
+    if( newFlags == NULL && newNumPoints > 0 ) return false;
+    destination->m_flags = newFlags;
+
+    u16* newEndpoints = (u16*)realloc( destination->m_endPtsOfContours,
+                                       sizeof( u16 ) * newNumContours );
+    if( newEndpoints == NULL && newNumContours > 0 ) return false;
+    destination->m_endPtsOfContours = newEndpoints;
+
+    f32 dx = 0.0f;
+    f32 dy = 0.0f;
+    if( GetCompoundFlag( description->m_flags, ARGS_ARE_XY_VALUES ) )
+    {
+        dx = (f32)description->m_arg1;
+        dy = (f32)description->m_arg2;
+
+        if( GetCompoundFlag( description->m_flags, SCALED_COMPONENT_OFFSET ) &&
+           !GetCompoundFlag( description->m_flags, UNSCALED_COMPONENT_OFFSET ) )
+        {
+            f32 transformedDx = description->m_xx * dx + description->m_xy * dy;
+            f32 transformedDy = description->m_yx * dx + description->m_yy * dy;
+            dx = transformedDx;
+            dy = transformedDy;
+        }
+    }
+    else
+    {
+        u32 parentPoint    = (u32)description->m_arg1;
+        u32 componentPoint = (u32)description->m_arg2;
+        if( parentPoint >= oldNumPoints || componentPoint >= component->m_numPoints )
+            return false;
+
+        f32 componentX = description->m_xx * component->m_x[componentPoint] +
+                         description->m_xy * component->m_y[componentPoint];
+        f32 componentY = description->m_yx * component->m_x[componentPoint] +
+                         description->m_yy * component->m_y[componentPoint];
+        dx = destination->m_x[parentPoint] - componentX;
+        dy = destination->m_y[parentPoint] - componentY;
+    }
+
+    if( GetCompoundFlag( description->m_flags, ROUND_XY_TO_GRID ) )
+    {
+        dx = roundf( dx );
+        dy = roundf( dy );
+    }
+
+    for( u32 i=0; i<component->m_numPoints; ++i )
+    {
+        f32 x = description->m_xx * component->m_x[i] +
+                description->m_xy * component->m_y[i] + dx;
+        f32 y = description->m_yx * component->m_x[i] +
+                description->m_yy * component->m_y[i] + dy;
+
+        destination->m_x[oldNumPoints + i]       = (s16)roundf( x );
+        destination->m_y[oldNumPoints + i]       = (s16)roundf( y );
+        destination->m_onCurve[oldNumPoints + i] = component->m_onCurve[i];
+        destination->m_flags[oldNumPoints + i]   = component->m_onCurve[i] ? ON_CURVE : 0;
+    }
+
+    for( u32 i=0; i<(u32)component->m_header.m_numberOfContours; ++i )
+    {
+        destination->m_endPtsOfContours[oldNumContours + i] =
+            (u16)(oldNumPoints + component->m_endPtsOfContours[i]);
+    }
+
+    destination->m_numPoints = newNumPoints;
+    destination->m_header.m_numberOfContours = (s16)newNumContours;
+    return true;
+}
+
+static bool ResolveCompoundGlyph( TtfFont* font, u32 glyphId, u8* state, u32 depth )
+{
+    if( glyphId >= font->m_glyphTable.m_numGlyphs ) return false;
+    if( state[glyphId] == 2 ) return true;
+    if( state[glyphId] == 1 ) return false;
+    if( depth > font->m_maxpTable.m_maxComponentDepth + 1 ) return false;
+
+    Glyph* glyph = &font->m_glyphTable.m_glphys[glyphId];
+    if( glyph->m_header.m_numberOfContours >= 0 )
+    {
+        state[glyphId] = 2;
+        return true;
+    }
+
+    state[glyphId] = 1;
+    glyph->m_header.m_numberOfContours = 0;
+
+    for( u32 i=0; i<glyph->m_numComponents; ++i )
+    {
+        CompoundComponent* description = &glyph->m_components[i];
+        if( !ResolveCompoundGlyph( font, description->m_glyphId, state, depth + 1 ) )
+            return false;
+
+        Glyph* component = &font->m_glyphTable.m_glphys[description->m_glyphId];
+        if( !AppendCompoundComponent( glyph, component, description ) )
+            return false;
+    }
+
+    state[glyphId] = 2;
+    return true;
+}
+
+bool ResolveCompoundGlyphs( TtfFont* font )
+{
+    u32 numGlyphs = font->m_glyphTable.m_numGlyphs;
+    u8* state = (u8*)calloc( numGlyphs, sizeof( u8 ) );
+    if( state == NULL ) return false;
+
+    bool result = true;
+    for( u32 glyphId=0; glyphId<numGlyphs; ++glyphId )
+    {
+        if( !ResolveCompoundGlyph( font, glyphId, state, 0 ) )
+        {
+            printf( "failed to resolve compound glyph ID: %d\n", glyphId );
+            result = false;
+            break;
+        }
+    }
+
+    free( state );
+    return result;
 }
 
 void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x )
@@ -134,15 +296,30 @@ void InsertImpliedPoints( TtfFont* font )
     {
         Glyph*g = &font->m_glyphTable.m_glphys[i];
         
-        if( g->m_header.m_emptyGlyph || g->m_header.m_numberOfContours < 0 )
+        if( g->m_header.m_emptyGlyph || g->m_header.m_numberOfContours <= 0 )
         {
             continue;
         }
 
-        g->m_points = (v2int*)malloc( sizeof( v2int ) * g->m_realNumPoints );
+        s16 numContours = g->m_header.m_numberOfContours;
+        u32 realNumPoints = g->m_numPoints;
+        u32 rawIndex = 0;
+        for( u32 c=0; c<(u32)numContours; ++c )
+        {
+            u32 start = rawIndex;
+            u32 end = g->m_endPtsOfContours[c];
+            for( ; rawIndex<=end; ++rawIndex )
+            {
+                u32 next = rawIndex == end ? start : rawIndex + 1;
+                if( g->m_onCurve[rawIndex] == g->m_onCurve[next] )
+                    realNumPoints++;
+            }
+        }
+
+        g->m_realNumPoints = realNumPoints;
+        g->m_points = (v2int*)malloc( sizeof( v2int ) * realNumPoints );
 
         u32 pointIndex  = 0;
-        s16 numContours = g->m_header.m_numberOfContours;
         u32 index       = 0;
         for( u32 c=0; c<numContours; ++c )
         {
@@ -512,7 +689,98 @@ void ReadGlyphTable( TtfFont* font )
         else if( numContours < 0 )
         {
             // composite glyph
-            // not supported now
+            u32 compoundOffset  = startOffset + headerSize;
+            u16 flag = 0;
+            do
+            {
+                if( compoundOffset + 4 > endOffset ) break;
+
+                CompoundComponent component = {0};
+                component.m_xx = 1.0f;
+                component.m_yy = 1.0f;
+
+                flag                = BigToLittleU16( glyphData, compoundOffset );
+                component.m_flags   = flag;
+                component.m_glyphId = BigToLittleU16( glyphData, compoundOffset + 2 );
+                compoundOffset += 4;
+
+                if( GetCompoundFlag( flag, ARG_1_AND_2_ARE_WORDS ) )
+                {
+                    if( compoundOffset + 4 > endOffset ) break;
+                    if( GetCompoundFlag( flag, ARGS_ARE_XY_VALUES ) )
+                    {
+                        component.m_arg1 = BigToLittleS16( glyphData, compoundOffset );
+                        component.m_arg2 = BigToLittleS16( glyphData, compoundOffset + 2 );
+                    }
+                    else
+                    {
+                        component.m_arg1 = BigToLittleU16( glyphData, compoundOffset );
+                        component.m_arg2 = BigToLittleU16( glyphData, compoundOffset + 2 );
+                    }
+                    compoundOffset += 4;
+                }
+                else
+                {
+                    if( compoundOffset + 2 > endOffset ) break;
+                    if( GetCompoundFlag( flag, ARGS_ARE_XY_VALUES ) )
+                    {
+                        component.m_arg1 = *((s8*)glyphData + compoundOffset);
+                        component.m_arg2 = *((s8*)glyphData + compoundOffset + 1 );
+                    }
+                    else
+                    {
+                        component.m_arg1 = *((u8*)glyphData + compoundOffset);
+                        component.m_arg2 = *((u8*)glyphData + compoundOffset + 1 );
+                    }
+                    compoundOffset += 2;
+                }
+
+                if( GetCompoundFlag( flag, WE_HAVE_A_SCALE ) )
+                {
+                    if( compoundOffset + 2 > endOffset ) break;
+                    component.m_xx = component.m_yy =
+                        F2Dot14ToF32( BigToLittleS16( glyphData, compoundOffset ) );
+                    compoundOffset += 2;
+                }
+                else if( GetCompoundFlag( flag, WE_HAVE_AN_X_AND_Y_SCALE ) )
+                {
+                    if( compoundOffset + 4 > endOffset ) break;
+                    component.m_xx = F2Dot14ToF32( BigToLittleS16( glyphData, compoundOffset ) );
+                    component.m_yy = F2Dot14ToF32( BigToLittleS16( glyphData, compoundOffset + 2 ) );
+                    compoundOffset += 4;
+                }
+                else if( GetCompoundFlag( flag, WE_HAVE_A_TWO_BY_TWO ) )
+                {
+                    if( compoundOffset + 8 > endOffset ) break;
+                    component.m_xx = F2Dot14ToF32( BigToLittleS16( glyphData, compoundOffset ) );
+                    component.m_yx = F2Dot14ToF32( BigToLittleS16( glyphData, compoundOffset + 2 ) );
+                    component.m_xy = F2Dot14ToF32( BigToLittleS16( glyphData, compoundOffset + 4 ) );
+                    component.m_yy = F2Dot14ToF32( BigToLittleS16( glyphData, compoundOffset + 6 ) );
+                    compoundOffset += 8;
+                }
+
+                CompoundComponent* components = (CompoundComponent*)realloc(
+                    g->m_components,
+                    sizeof( CompoundComponent ) * (g->m_numComponents + 1) );
+                if( components == NULL ) break;
+                g->m_components = components;
+                g->m_components[g->m_numComponents++] = component;
+            }
+            while( GetCompoundFlag( flag, MORE_COMPONENTS ) );
+
+            if( GetCompoundFlag( flag, WE_HAVE_INSTRUCTIONS ) &&
+                compoundOffset + 2 <= endOffset )
+            {
+                g->m_instructionLength = BigToLittleU16( glyphData, compoundOffset );
+                compoundOffset += 2;
+                if( compoundOffset + g->m_instructionLength <= endOffset )
+                {
+                    g->m_instructions = (u8*)malloc( g->m_instructionLength );
+                    memcpy( g->m_instructions,
+                            (u8*)glyphData + compoundOffset,
+                            g->m_instructionLength );
+                }
+            }
         }
         else if( numContours == 0 )
         {
@@ -520,6 +788,8 @@ void ReadGlyphTable( TtfFont* font )
             printf( "glyph ID:\t%d space character\n", glyphId );
         }
     }
+
+    ResolveCompoundGlyphs( font );
 
     printf( "\n" );
 }

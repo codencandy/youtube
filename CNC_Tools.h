@@ -62,6 +62,11 @@ u16 BigToLittleU16( void* stream, u32 offset )
     return little;
 }
 
+s16 BigToLittleS16( void* stream, u32 offset )
+{
+    return (s16)BigToLittleU16( stream, offset );
+}
+
 u32 StringLength( const char* string )
 {
     char terminator = 0x0;
