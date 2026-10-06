@@ -935,14 +935,13 @@ void ReadHtmxTable( TtfFont* font )
 
     if( glyphId < font->m_glyphTable.m_numGlyphs )
     {
-        u32 advanceWidth    = g->m_horMetric.m_advanceWith;
-        u32 leftSideBearing = g->m_horMetric.m_leftSideBearing;
+        u32 advanceWidth = g->m_horMetric.m_advanceWith;
 
         for( ; glyphId < font->m_glyphTable.m_numGlyphs; ++glyphId )
         {
             g = &font->m_glyphTable.m_glphys[glyphId];
             g->m_horMetric.m_advanceWith     = advanceWidth;
-            g->m_horMetric.m_leftSideBearing = leftSideBearing;
+            g->m_horMetric.m_leftSideBearing = BigToLittleS16( data, offset ); offset += 2;
         }
     }
 }
