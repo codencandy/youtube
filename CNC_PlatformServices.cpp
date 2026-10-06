@@ -67,6 +67,7 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
     ReadHheaTable      ( font );
     ReadGlyphTable     ( font );
     BuildGlyphIdMap    ( font );
+    ReadHtmxTable      ( font );
     InsertImpliedPoints( font );
 
     PrintGlyphData( &font->m_glyphTable.m_glphys[0] );

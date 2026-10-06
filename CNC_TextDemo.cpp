@@ -37,6 +37,7 @@ void RenderApplication( Application* app )
     const char* lowercase = "a b c d e f g h i";
     const char* umlauts   = "Ä ä Ü ü ß Ö ö & %";
     const char* numbers   = "1 2 3 4 5 6 7 8 9";
+    const char* pangram   = "Sphinx of black quartz, judge my vow!";
 
     f32 sizeFactor = 30.0f * fabs( sinf( app->m_timer.m_seconds / 2.0f ) );
     

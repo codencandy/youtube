@@ -27,6 +27,7 @@ void ReadMaxpTable ( TtfFont* font );
 void ReadLocaTable ( TtfFont* font );
 void ReadGlyphTable( TtfFont* font );
 void ReadHheaTable ( TtfFont* font );
+void ReadHtmxTable ( TtfFont* font );
 
 /******************************
  * Implementation
@@ -914,6 +915,36 @@ void ReadHheaTable ( TtfFont* font )
     hhea->m_numberOfHMetrics    = BigToLittleU16( data, hheaOffset + 26);
 
     printf( "num metrics:\t%d\n", hhea->m_numberOfHMetrics );
+}
+
+void ReadHtmxTable( TtfFont* font )
+{
+    u32 htmxOffset = GetTableOffset( font, HMTX_TAG );
+    void* data     = (u8*)font->m_fontFile->m_data + htmxOffset;
+    u32 numMetrics = font->m_hheaTable.m_numberOfHMetrics;
+    u32 offset     = 0;
+    u32 glyphId    = 0;
+    Glyph*g        = NULL;
+
+    for( glyphId = 0; glyphId < numMetrics; ++glyphId )
+    {
+        g                                = &font->m_glyphTable.m_glphys[glyphId];
+        g->m_horMetric.m_advanceWith     = BigToLittleU16( data, offset ); offset += 2;
+        g->m_horMetric.m_leftSideBearing = BigToLittleS16( data, offset ); offset += 2;
+    }
+
+    if( glyphId < font->m_glyphTable.m_numGlyphs )
+    {
+        u32 advanceWidth    = g->m_horMetric.m_advanceWith;
+        u32 leftSideBearing = g->m_horMetric.m_leftSideBearing;
+
+        for( ; glyphId < font->m_glyphTable.m_numGlyphs; ++glyphId )
+        {
+            g = &font->m_glyphTable.m_glphys[glyphId];
+            g->m_horMetric.m_advanceWith     = advanceWidth;
+            g->m_horMetric.m_leftSideBearing = leftSideBearing;
+        }
+    }
 }
 
 void ReadCmapTable( TtfFont* font )
