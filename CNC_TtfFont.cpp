@@ -26,6 +26,7 @@ void ReadHeadTable ( TtfFont* font );
 void ReadMaxpTable ( TtfFont* font );
 void ReadLocaTable ( TtfFont* font );
 void ReadGlyphTable( TtfFont* font );
+void ReadHheaTable ( TtfFont* font );
 
 /******************************
  * Implementation
@@ -884,6 +885,35 @@ void ReadMaxpTable( TtfFont* font )
     printf( "version: \t%d\n",   ( maxp->m_version == 0x00010000 ) ? 1 : 0  );
     printf( "num glyphs:\t%d\n", maxp->m_numGlyphs );
     printf( "\n" );
+}
+
+void ReadHheaTable ( TtfFont* font )
+{
+    u32 hheaOffset = GetTableOffset( font, HHEA_TAG );
+    printf( "read hhea at offset: %d\n", hheaOffset );
+
+    void*      data = (u8*)font->m_fontFile->m_data;
+    HheaTable* hhea = &font->m_hheaTable;
+
+    hhea->m_majorVersion        = BigToLittleU16( data, hheaOffset);
+    hhea->m_minorVersion        = BigToLittleU16( data, hheaOffset + 2);
+    hhea->m_ascender            = BigToLittleS16( data, hheaOffset + 4);
+    hhea->m_descender           = BigToLittleS16( data, hheaOffset + 6);
+    hhea->m_lineGap             = BigToLittleS16( data, hheaOffset + 8);
+    hhea->m_advanceWidthMax     = BigToLittleU16( data, hheaOffset + 10);
+    hhea->m_minLeftSideBearing  = BigToLittleS16( data, hheaOffset + 12);
+    hhea->m_minRightSideBearing = BigToLittleS16( data, hheaOffset + 14);
+    hhea->m_xMaxExtent          = BigToLittleS16( data, hheaOffset + 16);
+    hhea->m_caretSlopeRise      = BigToLittleS16( data, hheaOffset + 18);
+    hhea->m_caretSlopeRun       = BigToLittleS16( data, hheaOffset + 20);
+    hhea->m_caretOffset         = BigToLittleS16( data, hheaOffset + 22);
+
+    hheaOffset += 8;
+
+    hhea->m_metricDataFormat    = BigToLittleS16( data, hheaOffset + 24);
+    hhea->m_numberOfHMetrics    = BigToLittleU16( data, hheaOffset + 26);
+
+    printf( "num metrics:\t%d\n", hhea->m_numberOfHMetrics );
 }
 
 void ReadCmapTable( TtfFont* font )

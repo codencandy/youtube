@@ -64,6 +64,7 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
     ReadMaxpTable      ( font );
     ReadHeadTable      ( font );
     ReadLocaTable      ( font );
+    ReadHheaTable      ( font );
     ReadGlyphTable     ( font );
     BuildGlyphIdMap    ( font );
     InsertImpliedPoints( font );

@@ -62,6 +62,13 @@ typedef struct Codepoint
     
 } Codepoint;
 
+typedef struct HorMetric
+{
+    u16 m_advanceWith;
+    s16 m_leftSideBearing;
+
+} HorMetric;
+
 typedef struct TableOffsets
 {
     u32 m_sfntVersion;
@@ -126,6 +133,8 @@ typedef struct Glyph
 
     u32                m_numComponents;
     CompoundComponent* m_components;
+
+    HorMetric   m_horMetric;
 
 } Glyph;
 
@@ -227,6 +236,26 @@ typedef struct MaxpTable
 
 } MaxpTable;
 
+typedef struct HheaTable
+{
+    u16 m_majorVersion;
+    u16 m_minorVersion;
+    s16 m_ascender;
+    s16 m_descender;
+    s16 m_lineGap;
+    u16 m_advanceWidthMax;
+    s16 m_minLeftSideBearing;
+    s16 m_minRightSideBearing;
+    s16 m_xMaxExtent;
+    s16 m_caretSlopeRise;
+    s16 m_caretSlopeRun;
+    s16 m_caretOffset;
+    // 4 * 2 bytes reserved -> 8
+    s16 m_metricDataFormat;
+    u16 m_numberOfHMetrics;
+
+} HheaTable;
+
 typedef struct TtfFont
 {
     File*        m_fontFile;
@@ -240,6 +269,7 @@ typedef struct TtfFont
     MaxpTable    m_maxpTable;
     HeadTable    m_headTable;
     LocaTable    m_locaTable;
+    HheaTable    m_hheaTable;
 
     f32          m_fontScale;
 

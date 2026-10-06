@@ -36,8 +36,9 @@ void RenderApplication( Application* app )
     const char* capitals  = "A B C D E F G H I";
     const char* lowercase = "a b c d e f g h i";
     const char* umlauts   = "Ä ä Ü ü ß Ö ö & %";
+    const char* numbers   = "1 2 3 4 5 6 7 8 9";
 
     f32 sizeFactor = 30.0f * fabs( sinf( app->m_timer.m_seconds / 2.0f ) );
     
-    services->f_renderText( renderer, app, font, umlauts, vec2( 40.0f, 150.0f ), 150.0f + sizeFactor );
+    services->f_renderText( renderer, app, font, numbers, vec2( 40.0f, 150.0f ), 150.0f + sizeFactor );
 }
