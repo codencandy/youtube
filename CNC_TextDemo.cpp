@@ -3,6 +3,7 @@
 #include "CNC_TtfTypes.h"
 
 void fontDemo1( Application* app );
+void fontDemo2( Application* app );
 
 
 Application* LoadApplication( PlatformServices* services, void* renderer )
@@ -30,7 +31,20 @@ void UpdateApplication( Application* app )
 
 void RenderApplication( Application* app )
 {
-    fontDemo1( app );
+    fontDemo2( app );
+}
+
+void fontDemo2( Application* app )
+{
+    PlatformServices* services = app->m_services;
+    void*             renderer = app->m_renderer;
+
+    TextDemo* textDemo = (TextDemo*)app;
+    TtfFont*  font     = textDemo->m_ttfFont;
+
+    static const char* capitals  = "A B";
+
+    services->f_renderTextIntersections( renderer, app, font, capitals , vec2( 40.0f, 250.0f ), 400.0f );
 }
 
 void fontDemo1( Application* app )

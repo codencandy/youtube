@@ -184,6 +184,42 @@ void PlatformRenderText( void*       renderer,
     }
 }
 
+void PlatformRenderTextIntersections( void*       renderer, 
+                                      void*       app, 
+                                      TtfFont*    font, 
+                                      const char* text, 
+                                      v2          position, 
+                                      f32         size )
+{
+    Application*      application = (Application*)app;
+    PlatformServices* services    = application->m_services;
+
+    u32 width  = CNC_WINDOW_WIDTH;
+    u32 height = CNC_WINDOW_HEIGHT;
+    u32 radius = CNC_WINDOW_WIDTH / 150;
+    
+    f32   h         = radius;
+    color c         = GREY;
+    f32   baselineY = 0;
+    for( ; h<height; h+=(radius*2.0f) )
+    {
+        if( h >= 0.7*CNC_WINDOW_HEIGHT && h<0.73*CNC_WINDOW_HEIGHT )
+        {
+            c = RED;
+            baselineY = h;
+        }
+        for( u32 w=radius; w < width; w+=(radius*2.0f) )
+        {
+            services->f_renderCircle( renderer, vec2( w, h ), radius * 0.8f, c );
+        }
+        c= GREY;
+    }
+
+    v2 pos = position;
+    pos.y = baselineY;
+    PlatformRenderText( renderer, app, font, text, pos, size );
+}
+
 /* implemented in the Renderer 
 
     u32  PlatformUploadImage( void* renderer, Image* image );
@@ -198,18 +234,19 @@ PlatformServices* CreatePlatformServices()
 {
     PlatformServices* services = (PlatformServices*)malloc( sizeof( PlatformServices ) );
 
-    services->f_loadImage       = &PlatformLoadImage;
-    services->f_loadFile        = &PlatformLoadFile;
-    services->f_loadFont        = &PlatformLoadFont;
-    services->f_uploadImage     = &PlatformUploadImage;
-    services->f_uploadParticles = &PlatformUploadParticles;
-    services->f_renderImage     = &PlatformRenderImage;
-    services->f_renderParticles = &PlatformRenderParticles;
-    services->f_updateImage     = &PlatformUpdateImage;
-    services->f_renderRect      = &PlatformRenderRect;
-    services->f_renderCircle    = &PlatformRenderCircle;
-    services->f_renderLine      = &PlatformRenderLine;
-    services->f_renderText      = &PlatformRenderText;
+    services->f_loadImage               = &PlatformLoadImage;
+    services->f_loadFile                = &PlatformLoadFile;
+    services->f_loadFont                = &PlatformLoadFont;
+    services->f_uploadImage             = &PlatformUploadImage;
+    services->f_uploadParticles         = &PlatformUploadParticles;
+    services->f_renderImage             = &PlatformRenderImage;
+    services->f_renderParticles         = &PlatformRenderParticles;
+    services->f_updateImage             = &PlatformUpdateImage;
+    services->f_renderRect              = &PlatformRenderRect;
+    services->f_renderCircle            = &PlatformRenderCircle;
+    services->f_renderLine              = &PlatformRenderLine;
+    services->f_renderText              = &PlatformRenderText;
+    services->f_renderTextIntersections = &PlatformRenderTextIntersections;
 
     return services;
 }
