@@ -38,8 +38,11 @@ void RenderApplication( Application* app )
     const char* umlauts   = "Ä ä Ü ü ß Ö ö & %";
     const char* numbers   = "1 2 3 4 5 6 7 8 9";
     const char* pangram   = "Sphinx of black quartz, judge my vow!";
-
-    f32 sizeFactor = 30.0f * fabs( sinf( app->m_timer.m_seconds / 2.0f ) );
+    const char* hawking   = 
+"A well-known scientist (some say it was Bertrand Russell)\nonce gave a public \
+lecture on astronomy.\nHe described how the earth orbits around the sun and how\n\
+the sun, in turn, orbits around the center of a vast collection of stars called \
+our galaxy.";
     
-    services->f_renderText( renderer, app, font, numbers, vec2( 40.0f, 150.0f ), 150.0f + sizeFactor );
+    services->f_renderText( renderer, app, font, hawking, vec2( 40.0f, 150.0f ), 32.0f );
 }

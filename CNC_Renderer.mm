@@ -6,6 +6,8 @@
 #include "CNC_Math.h"
 #include "CNC_PlatformServices.h"
 
+#define MAX_DRAWCALLS 100000
+
 @interface MainRenderer : NSObject< MTKViewDelegate >
 {
     @public
@@ -28,7 +30,7 @@
         NSMutableArray*       m_modelBuffers;
 
         u32                   m_numDrawCalls;
-        DrawCall              m_drawCalls[10000];
+        DrawCall              m_drawCalls[MAX_DRAWCALLS];
 
         id< MTLBuffer >       m_particleBuffer;
         VertexInput           m_particleVertices[6];
@@ -417,6 +419,7 @@
     m_drawCalls[m_numDrawCalls].m_numInstances = 1;
 
     m_numDrawCalls++;
+    assert( m_numDrawCalls < MAX_DRAWCALLS );
 }
 
 - (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c

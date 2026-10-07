@@ -94,7 +94,6 @@ void PlatformRenderText( void*       renderer,
     f32               fontScale   = (f32)(size / font->m_headTable.m_unitsPerEm);
     f32               xOffset     = position.x;
     f32               baseline    = position.y;
-    f32               tmax        = fabs( sinf( t->m_seconds / 2.0f) );
 
     u32 textLength = StringLength( text );
     char* textPointer = (char*)text;
@@ -103,28 +102,30 @@ void PlatformRenderText( void*       renderer,
         Codepoint codepoint = Utf8ToCodepoint( textPointer );
         u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
         Glyph*    g         = GetGlyph( font, glyphId );
-
-        if( g == NULL )
+        
+        if( codepoint.m_codepoint == '\n' )
         {
-            continue;
-        }
-
-        if( (xOffset + (size * fontScale))               > CNC_WINDOW_WIDTH ||
-            (xOffset + (g->m_header.m_xMax * fontScale ) > CNC_WINDOW_WIDTH ))
-        {
-            xOffset      = position.x;
-            baseline    += size * 1.1;
+            xOffset = position.x;
+            baseline += size * 1.2f;
+            textPointer += codepoint.m_numUtf8Bytes;
+            i           += codepoint.m_numUtf8Bytes;
             continue;
         }
         
+        if( g == NULL )
+        {
+            textPointer += codepoint.m_numUtf8Bytes;
+            i           += codepoint.m_numUtf8Bytes;
+            continue;
+        }
+        
+        f32 advance = g->m_horMetric.m_advanceWith * fontScale;
         if( !g->m_header.m_emptyGlyph && g->m_header.m_numberOfContours > 0 )
         {
-            s16 index1 = 0;
-            v2  p1;
-            v2  p2;
-            v2  p3;
-
+            s16 index1     = 0;
             s16 startIndex = 0;
+            v2  p1, p2, p3;
+
             for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
             {
                 s16 endIndex   = g->m_endPtsOfContours[i];
@@ -138,15 +139,13 @@ void PlatformRenderText( void*       renderer,
                     p3 = vec2( g->m_points[index1+2].x * fontScale + xOffset,
                                baseline - g->m_points[index1+2].y * fontScale ); 
 
-                    services->f_renderCircle( renderer, p2, 2.0f, rgba( 1.0f, 0.0f, 0.0f,1.0f ) );
-
                     f32 d = distance( p1, p3 );
                     f32 t = 0.0f;
                     f32 numBeziers = d / 2.0f;
-                    for( u32 b=0; b<numBeziers && t <= tmax; ++b )
+                    for( u32 b=0; b<numBeziers; ++b )
                     {
                         v2 p = bezier( p1, p2, p3, t );
-                        services->f_renderCircle( renderer, p, 2.0f, rgba( 1.0f, 1.0f, 1.0f,1.0f ) );
+                        services->f_renderCircle( renderer, p, 1.5f, WHITE );
                         t += 1.0/numBeziers;
                     }
                 }
@@ -161,26 +160,27 @@ void PlatformRenderText( void*       renderer,
                 f32 d = distance( p1, p3 );
                 f32 t = 0.0f;
                 f32 numBeziers = d / 2.0f;
-                for( u32 b=0; b<numBeziers && t <= tmax; ++b )
+                for( u32 b=0; b<numBeziers; ++b )
                 {
                     v2 p = bezier( p1, p2, p3, t );
-                    services->f_renderCircle( renderer, p, 2.0f, rgba( 1.0f, 1.0f, 1.0f,1.0f ) );
+                    services->f_renderCircle( renderer, p, 1.5f, WHITE );
                     t += 1.0f/numBeziers;
                 }
                 
                 // go to start of next contour
                 index1 = endIndex + 1;
             }
+        }
 
-            xOffset += size;
-        }
-        else
-        {
-            xOffset += size;
-        }
-    
+        xOffset     += advance;
         textPointer += codepoint.m_numUtf8Bytes;
         i           += codepoint.m_numUtf8Bytes;
+
+        if( xOffset > CNC_WINDOW_WIDTH )
+        {
+            xOffset = position.x;
+            baseline += size * 1.2f;
+        }
     }
 }
 
