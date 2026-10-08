@@ -32,9 +32,9 @@ platform ()
 main ()
 {
     time platform
-    time christmas
+    #time christmas
+    #time clock
     time textdemo
-    time clock
 
     LINES_OF_CODE=$(cloc . --exclude-list-file=clocignore | grep -o -E '([0-9]+)' | tail -n 1)
     echo "lines of code:" $LINES_OF_CODE
