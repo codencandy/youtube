@@ -66,4 +66,72 @@ v2 bezier( v2 p1, v2 p2, v2 p3, f32 t )
     return result;
 }
 
+/*
+    p1 - on curve point
+    p2 - control point
+    p3 - on curve point
+    t1 - first intersection or -1.0f for no intersection
+    t2 - second intersection or -1.0f for no intersection
+    s  - scanline to test
+ */
+void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
+{
+    /*
+        This function solves if a given scanline intersects with the quadratic 
+        function ax² + bx + c which is derived from the bezier curve given by p1, 
+        p2 and p3 where p2 is the control point. More specifically it calculates
+        where this function is 0. The two potential results are stored in t1 and t2.
+
+        To move the curve for checking the scanline the parameter c is subtracted
+        by scanline.
+
+        The special case of a straight line can only have one solution.
+     */
+
+    *t1 = -1.0f;
+    *t2 = -1.0f;
+
+    f32 a = 0.0f;
+    f32 b = 0.0f;
+    f32 c = 0.0f;
+
+    /*
+        HOW TO BUILD THE BEZIER FUNCTION:
+
+        The Bezier function interpolates from p1 to p2 and from
+        p2 to p3. That means it adds to linear interpolations together.
+
+        (1) Linear interpolation:           p1 + (p2 - p1)t
+                                            p1 + p2t - p1t
+                                            p1 - p1t + p2t
+                                            (1 - t)p1 + p2t
+        
+        (2) Add two interpolations:         (1 - t)A + Bt          where A and B are interpolations
+                                            (1-t)[(1-t)p1 + p2t] + t[(1-t)p2 + p3t]
+
+        (3) Bezier function:                B(t) = (1-t)²p1 + 2(1-t)tp2 + t²p3
+
+        (4) Binomial formula:               (1-t)² = 1 - 2t + t²
+
+        (5) Substitute (4) in (3):           B(t) = (1-2t+t²)p₁ + (2-2t)tp₂ + t²p₃
+                                                 = p₁ - 2p₁t + p₁t² + 2p₂t - 2p₂t² + p₃t²
+                                                 = p₁ - 2p₁t + 2p₂t + p₁t² - 2p₂t² + p₃t²
+                                                 = p₁ - 2p₁t + 2p₂t + (p₁ - 2p₂ + p₃)t²
+                                                 = p₁ + 2p₂t - 2p₁t + (p₁ - 2p₂ + p₃)t²
+                                                 = p₁ + 2(p₂ - p₁)t + (p₁ - 2p₂ + p₃)t²
+
+        (6) Determine a, b and c:           B(t) = at² + bt + c                                                 
+                                                 = (p₁ - 2p₂ + p₃)t² + 2(p₂ - p₁)t + p₁
+                                                 
+                                            a = (p₁ - 2p₂ + p₃)
+                                            b = 2(p₂ - p₁)
+                                            c = p₁
+     */
+
+    /*
+        use the midnight formula to solve for 0
+            t₁,t₂ = (-b ± √(b²-4ac)) / 2a
+     */
+}
+
 #endif//CNC_MATH_H
