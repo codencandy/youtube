@@ -66,40 +66,46 @@ v2 bezier( v2 p1, v2 p2, v2 p3, f32 t )
     return result;
 }
 
+bool isNull( f32 value )
+{
+    static f32 epsilon = 0.000001f;
+    return fabs( value ) <= epsilon ? true : false;
+}
+
 /*
     p1 - on curve point
     p2 - control point
     p3 - on curve point
-    t1 - first intersection or -1.0f for no intersection
-    t2 - second intersection or -1.0f for no intersection
+    t1 - first intersection   [-1.0f for no intersection]
+    t2 - second intersection  [-1.0f for no intersection]
     s  - scanline to test
  */
 void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
 {
     /*
         This function solves if a given scanline intersects with the quadratic 
-        function ax² + bx + c which is derived from the bezier curve given by p1, 
+        function at² + bt + c which is derived from the bezier curve given by p1, 
         p2 and p3 where p2 is the control point. More specifically it calculates
         where this function is 0. The two potential results are stored in t1 and t2.
 
         To move the curve for checking the scanline the parameter c is subtracted
         by scanline.
 
-        The special case of a straight line can only have one solution.
+        The special case of a linear function where a is 0 only calculates one t value.
+
+        The intersections are calculated against the quadratic function, the bounds
+        check to ensure that t1 and t2 are inside the contour segment is done by
+        the caller.
      */
 
     *t1 = -1.0f;
     *t2 = -1.0f;
 
-    f32 a = 0.0f;
-    f32 b = 0.0f;
-    f32 c = 0.0f;
-
     /*
         HOW TO BUILD THE BEZIER FUNCTION:
 
         The Bezier function interpolates from p1 to p2 and from
-        p2 to p3. That means it adds to linear interpolations together.
+        p2 to p3. That means it interpolates between two linear interpolations.
 
         (1) Linear interpolation:           p1 + (p2 - p1)t
                                             p1 + p2t - p1t
@@ -126,12 +132,56 @@ void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
                                             a = (p₁ - 2p₂ + p₃)
                                             b = 2(p₂ - p₁)
                                             c = p₁
+    */
+
+    f32 a = p1.y - 2.0f*p2.y + p3.y;
+    f32 b = 2.0f*(p2.y - p1.y);
+    f32 c = p1.y;
+
+    /* 
+        move the bezier curve in position such that the scanline s equals 0 
      */
+    c -= s;
 
     /*
-        use the midnight formula to solve for 0
-            t₁,t₂ = (-b ± √(b²-4ac)) / 2a
+        check if the bezier curve is a linear function which constitutes a 
+        line with f(t) = b*t + c where a is 0 
+        
+            0 = bt + c
+            t = -c/b
+
      */
+    if( isNull( a ) )
+    {
+        if( !isNull( b ) )
+        {
+            *t1 = -c/b;
+        }
+        return;
+    }
+
+    /*
+        use the quadratic formula to solve for 0
+            t₁,t₂ = (-b ± √(b²-4ac)) / 2a
+
+        NOTE: make sure that (b²-4ac) is not negative since this
+              yields NaN when calculating the root
+     */
+
+    f32 discriminant = b*b - 4.0f*a*c;
+    if( discriminant < 0 && !isNull( discriminant ) )
+    {
+        return;
+    }
+
+    if( isNull( discriminant ) )
+    {
+        *t1 = -b / (2.0f*a);
+        return;
+    }
+
+    *t1 = (-b + sqrtf(discriminant)) / (2.0f*a);
+    *t2 = (-b - sqrtf(discriminant)) / (2.0f*a);
 }
 
 #endif//CNC_MATH_H
