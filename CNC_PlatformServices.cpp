@@ -207,6 +207,7 @@ void PlatformRenderTextIntersections( void*       renderer,
     f32   h         = radius;
     color c         = GREY;
     f32   baselineY = 0;
+    f32   dotRadius = radius * 1.2f;
     for( ; h<height; h+=(radius*2.0f) )
     {
         if( h >= 0.7*CNC_WINDOW_HEIGHT && h<0.73*CNC_WINDOW_HEIGHT )
@@ -216,12 +217,19 @@ void PlatformRenderTextIntersections( void*       renderer,
         }
     }
 
-    for( h=radius; h<height; h+=(radius*2.0f) )
+    v2 pos = position;
+    pos.y = baselineY;
+    PlatformRenderText( renderer, app, font, text, pos, size );
+
+    for( h=radius; h<baselineY + radius; h+=(radius*2.0f) )
     {
-        if( h >= 0.7*CNC_WINDOW_HEIGHT && h<0.73*CNC_WINDOW_HEIGHT )
+        for( u32 w=radius; w < width; w+=(radius*2.0f) )
         {
-            c = RED;
-            baselineY = h;
+            if( h >= 0.7*CNC_WINDOW_HEIGHT && h<0.73*CNC_WINDOW_HEIGHT )
+            {
+                c = RED;
+            }
+            services->f_renderCircle( renderer, vec2( w, h ), radius * 0.6f, c );
         }
 
         if( (h - step) <= radius && (h-step) > 0)
@@ -236,6 +244,9 @@ void PlatformRenderTextIntersections( void*       renderer,
             s16 startIndex = 0;
             v2  p1, p2, p3;
 
+            f32 t1 = -1.0f;
+            f32 t2 = -1.0f;
+
             for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
             {
                 s16 endIndex   = g->m_endPtsOfContours[i];
@@ -248,6 +259,19 @@ void PlatformRenderTextIntersections( void*       renderer,
                                baselineY - g->m_points[index1+1].y * fontScale ); 
                     p3 = vec2( g->m_points[index1+2].x * fontScale + position.x,
                                baselineY - g->m_points[index1+2].y * fontScale ); 
+
+                    bezierIntersection( p1, p2, p3, &t1, &t2, h );
+                    if( t1 >= 0 && t1 < 1.0f )
+                    {
+                        v2 p = bezier( p1, p2, p3, t1 );
+                        services->f_renderCircle( renderer, p, dotRadius, YELLOW );
+                    }
+
+                    if( t2 >= 0 && t2 < 1.0f )
+                    {
+                        v2 p = bezier( p1, p2, p3, t2 );
+                        services->f_renderCircle( renderer, p, dotRadius, YELLOW );
+                    }
                 }
 
                 p1 = vec2( g->m_points[index1].x * fontScale + position.x,
@@ -257,21 +281,25 @@ void PlatformRenderTextIntersections( void*       renderer,
                 p3 = vec2( g->m_points[startIndex].x * fontScale + position.x,
                             baselineY - g->m_points[startIndex].y * fontScale );
 
+                bezierIntersection( p1, p2, p3, &t1, &t2, h );
+                if( t1 >= 0 && t1 < 1.0f )
+                {
+                    v2 p = bezier( p1, p2, p3, t1 );
+                    services->f_renderCircle( renderer, p, dotRadius, YELLOW );
+                }
+
+                if( t2 >= 0 && t2 < 1.0f )
+                {
+                    v2 p = bezier( p1, p2, p3, t2 );
+                    services->f_renderCircle( renderer, p, dotRadius, YELLOW );
+                }
+
                 // go to start of next contour
                 index1 = endIndex + 1;  
             }
         }
-
-        for( u32 w=radius; w < width; w+=(radius*2.0f) )
-        {
-            services->f_renderCircle( renderer, vec2( w, h ), radius * 0.8f, c );
-        }
         c= GREY;
     }
-
-    v2 pos = position;
-    pos.y = baselineY;
-    PlatformRenderText( renderer, app, font, text, pos, size );
 }
 
 /* implemented in the Renderer 
