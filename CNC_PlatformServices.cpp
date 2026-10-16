@@ -229,12 +229,15 @@ void PlatformRenderTextIntersections( void*       renderer,
             {
                 c = RED;
             }
+            else if( (h - step) <= radius && (h-step) > 0 )
+            {
+                c = LIGHT_BLUE;
+            }
             services->f_renderCircle( renderer, vec2( w, h ), radius * 0.6f, c );
         }
 
         if( (h - step) <= radius && (h-step) > 0)
         {
-            c = LIGHT_BLUE;
             Codepoint codepoint = Utf8ToCodepoint( textPointer );
             u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
             Glyph*    g         = GetGlyph( font, glyphId );

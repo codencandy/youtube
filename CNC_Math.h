@@ -68,7 +68,7 @@ v2 bezier( v2 p1, v2 p2, v2 p3, f32 t )
 
 bool isNull( f32 value )
 {
-    static f32 epsilon = 0.000001f;
+    static f32 epsilon = 0.00001f;
     return fabs( value ) <= epsilon ? true : false;
 }
 
