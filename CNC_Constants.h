@@ -10,6 +10,6 @@ static color WHITE      = rgba( 1.0f, 1.0f, 1.0f, 1.0f );
 static color RED        = rgba( 1.0f, 0.0f, 0.0f, 1.0f );
 static color GREY       = rgba( 0.5f, 0.5f, 0.5f, 1.0f );
 static color LIGHT_BLUE = rgba( 0.3f, 0.7f, 0.6f, 1.0f );
-static color YELLOW     = rgba( 0.7f, 0.6f, 0.0f, 1.0f );
+static color YELLOW     = rgba( 0.9f, 0.8f, 0.0f, 1.0f );
 
 #endif//CNC_CONSTANTS_H

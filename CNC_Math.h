@@ -66,10 +66,11 @@ v2 bezier( v2 p1, v2 p2, v2 p3, f32 t )
     return result;
 }
 
-bool isNull( f32 value )
+bool isNull( f64 value, f64 scale )
 {
-    static f32 epsilon = 0.00001f;
-    return fabs( value ) <= epsilon ? true : false;
+    static f64 absoluteEpsilon = 1e-12;
+    static f64 relativeEpsilon = 1e-6;
+    return fabs( value ) <= absoluteEpsilon + relativeEpsilon * scale;
 }
 
 /*
@@ -134,14 +135,17 @@ void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
                                             c = p₁
     */
 
-    f32 a = p1.y - 2.0f*p2.y + p3.y;
-    f32 b = 2.0f*(p2.y - p1.y);
-    f32 c = p1.y;
+    /* Use f64 for the coefficient and root calculations to reduce cancellation errors. */
+    f64 y1 = (f64)p1.y;
+    f64 y2 = (f64)p2.y;
+    f64 y3 = (f64)p3.y;
 
-    /* 
-        move the bezier curve in position such that the scanline s equals 0 
-     */
-    c -= s;
+    f64 a = y1 - 2.0*y2 + y3;
+    f64 b = 2.0*(y2 - y1);
+    f64 c = y1 - (f64)s;
+
+    f64 aScale = fabs( y1 ) + 2.0*fabs( y2 ) + fabs( y3 );
+    f64 bScale = 2.0*(fabs( y2 ) + fabs( y1 ));
 
     /*
         check if the bezier curve is a linear function which constitutes a 
@@ -151,11 +155,11 @@ void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
             t = -c/b
 
      */
-    if( isNull( a ) )
+    if( isNull( a, aScale ) )
     {
-        if( !isNull( b ) )
+        if( !isNull( b, bScale ) )
         {
-            *t1 = -c/b;
+            *t1 = (f32)(-c/b);
         }
         return;
     }
@@ -168,20 +172,25 @@ void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
               yields NaN when calculating the root
      */
 
-    f32 discriminant = b*b - 4.0f*a*c;
-    if( discriminant < 0 && !isNull( discriminant ) )
+    f64 bSquared = b*b;
+    f64 fourAC = 4.0*a*c;
+    f64 discriminant = bSquared - fourAC;
+    f64 discriminantScale = fabs( bSquared ) + fabs( fourAC );
+
+    if( discriminant < 0.0 && !isNull( discriminant, discriminantScale ) )
     {
         return;
     }
 
-    if( isNull( discriminant ) )
+    if( isNull( discriminant, discriminantScale ) )
     {
-        *t1 = -b / (2.0f*a);
+        *t1 = (f32)(-b / (2.0*a));
         return;
     }
 
-    *t1 = (-b + sqrtf(discriminant)) / (2.0f*a);
-    *t2 = (-b - sqrtf(discriminant)) / (2.0f*a);
+    f64 discriminantRoot = sqrt( discriminant );
+    *t1 = (f32)((-b + discriminantRoot) / (2.0*a));
+    *t2 = (f32)((-b - discriminantRoot) / (2.0*a));
 }
 
 #endif//CNC_MATH_H
