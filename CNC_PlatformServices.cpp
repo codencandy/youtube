@@ -217,7 +217,7 @@ void PlatformRenderTextIntersections( void*       renderer,
     pos.y = baselineY;
     PlatformRenderText( renderer, app, font, text, pos, size );
 
-    for( h=radius; h<baselineY + radius; h+=(radius*2.0f) )
+    for( h=radius; h<=CNC_WINDOW_HEIGHT; h+=(radius*2.0f) )
     {
         for( u32 w=radius; w < width; w+=(radius*2.0f) )
         {
