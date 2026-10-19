@@ -130,15 +130,13 @@ void PlatformRenderText( void*       renderer,
             {
                 s16 endIndex   = g->m_endPtsOfContours[i];
                 s16 startIndex = index1;
+                v2  offset     = vec2( xOffset, baseline );
                 for( ; index1+2<=endIndex; index1 += 2 )
                 {
-                    p1 = vec2( g->m_points[index1].x * fontScale + xOffset,
-                               baseline - g->m_points[index1].y * fontScale);
-                    p2 = vec2( g->m_points[index1+1].x * fontScale + xOffset,
-                               baseline - g->m_points[index1+1].y * fontScale ); 
-                    p3 = vec2( g->m_points[index1+2].x * fontScale + xOffset,
-                               baseline - g->m_points[index1+2].y * fontScale ); 
-
+                    p1 = ((v2)g->m_points[index1]   * fontScale) + offset;
+                    p2 = ((v2)g->m_points[index1+1] * fontScale) + offset;
+                    p3 = ((v2)g->m_points[index1+2] * fontScale) + offset;
+                    
                     f32 d = distance( p1, p3 );
                     f32 t = 0.0f;
                     f32 numBeziers = d / 2.0f;
@@ -150,13 +148,10 @@ void PlatformRenderText( void*       renderer,
                     }
                 }
 
-                p1 = vec2( g->m_points[index1].x * fontScale + xOffset,
-                               baseline - g->m_points[index1].y * fontScale);
-                p2 = vec2( g->m_points[index1+1].x * fontScale + xOffset,
-                            baseline - g->m_points[index1+1].y * fontScale ); 
-                p3 = vec2( g->m_points[startIndex].x * fontScale + xOffset,
-                            baseline - g->m_points[startIndex].y * fontScale );
-
+                p1 = ((v2)g->m_points[index1]     * fontScale) + offset;
+                p2 = ((v2)g->m_points[index1+1]   * fontScale) + offset;
+                p3 = ((v2)g->m_points[startIndex] * fontScale) + offset;
+                
                 f32 d = distance( p1, p3 );
                 f32 t = 0.0f;
                 f32 numBeziers = d / 2.0f;
@@ -252,6 +247,7 @@ void PlatformRenderTextIntersections( void*       renderer,
 
                 f32 t1 = -1.0f;
                 f32 t2 = -1.0f;
+                v2  offset = vec2( position.x + advance, baselineY );
 
                 for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
                 {
@@ -259,13 +255,10 @@ void PlatformRenderTextIntersections( void*       renderer,
                     s16 startIndex = index1;
                     for( ; index1+2<=endIndex; index1 += 2 )
                     {
-                        p1 = vec2( g->m_points[index1].x * fontScale + position.x + advance,
-                                baselineY - g->m_points[index1].y * fontScale);
-                        p2 = vec2( g->m_points[index1+1].x * fontScale + position.x + advance,
-                                baselineY - g->m_points[index1+1].y * fontScale ); 
-                        p3 = vec2( g->m_points[index1+2].x * fontScale + position.x + advance,
-                                baselineY - g->m_points[index1+2].y * fontScale ); 
-
+                        p1 = ((v2)g->m_points[index1]   * fontScale) + offset;
+                        p2 = ((v2)g->m_points[index1+1] * fontScale) + offset;
+                        p3 = ((v2)g->m_points[index1+2] * fontScale) + offset;
+                        
                         bezierIntersection( p1, p2, p3, &t1, &t2, h );
                         if( t1 >= 0 && t1 < 1.0f )
                         {
@@ -280,13 +273,10 @@ void PlatformRenderTextIntersections( void*       renderer,
                         }
                     }
 
-                    p1 = vec2( g->m_points[index1].x * fontScale + position.x + advance,
-                                baselineY - g->m_points[index1].y * fontScale);
-                    p2 = vec2( g->m_points[index1+1].x * fontScale + position.x + advance,
-                                baselineY - g->m_points[index1+1].y * fontScale ); 
-                    p3 = vec2( g->m_points[startIndex].x * fontScale + position.x + advance,
-                                baselineY - g->m_points[startIndex].y * fontScale );
-
+                    p1 = ((v2)g->m_points[index1]     * fontScale) + offset;
+                    p2 = ((v2)g->m_points[index1+1]   * fontScale) + offset;
+                    p3 = ((v2)g->m_points[startIndex] * fontScale) + offset;
+                    
                     bezierIntersection( p1, p2, p3, &t1, &t2, h );
                     if( t1 >= 0 && t1 < 1.0f )
                     {

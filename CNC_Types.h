@@ -25,6 +25,14 @@ struct v2int
 {
     s16 x;
     s16 y;
+
+    operator v2()
+    {
+        v2 result;
+        result.x = x;
+        result.y = y;
+        return result;
+    }
 };
 
 v2int vec2( s16 x, s16 y )
@@ -33,6 +41,7 @@ v2int vec2( s16 x, s16 y )
     result.x = x;
     result.y = y;
     return result;
+
 }
 
 enum ENDIANESS

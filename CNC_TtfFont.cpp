@@ -363,6 +363,11 @@ void InsertImpliedPoints( TtfFont* font )
                 }
             }
         }
+
+        for( u32 j=0; j<g->m_realNumPoints; ++j )
+        {
+            g->m_points[j].y = -g->m_points[j].y;
+        }
     }
 
     printf( "inserting implied points\n------------------\n" );
