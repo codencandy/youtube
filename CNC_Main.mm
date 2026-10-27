@@ -2,10 +2,12 @@
 #include <dlfcn.h>
 
 #include "CNC_Types.h"
+#include "CNC_Input.h"
 #include "CNC_Application.h"
 
 #include "CNC_Window.mm"
 #include "CNC_Renderer.mm"
+#include "CNC_Input.mm"
 #include "CNC_PlatformServices.cpp"
 
 AppLib loadLib( const char* libName )
@@ -28,6 +30,9 @@ int main()
 {
     bool running = true;
 
+    Input input;
+    InitInput( &input );
+
     AppLib christmasLib = loadLib( "christmas.dylib" );
     AppLib clockLib     = loadLib( "clock.dylib" );
     AppLib textdemoLib  = loadLib( "textdemo.dylib" );
@@ -47,13 +52,17 @@ int main()
     Application* christmas = christmasLib.f_loadApp( services, renderer );
     Application* clock     = clockLib.f_loadApp( services, renderer );
     Application* textdemo  = textdemoLib.f_loadApp( services, renderer );
+
+    christmas->m_input = &input;
+    clock->m_input     = &input;
+    textdemo->m_input  = &input;
     
     while( running )
     {
         @autoreleasepool
         {
+            ResetInput( &input );
             NSEvent* event = NULL;
-
             do
             {
                 event = [app nextEventMatchingMask: NSEventMaskAny
@@ -61,7 +70,16 @@ int main()
                                             inMode: NSDefaultRunLoopMode
                                            dequeue: true];
 
-                [app sendEvent: event];
+                if( event == NULL )
+                {
+                    break;
+                }
+                
+                if( !ProcessInput( event, &input ) )
+                {
+                    [app sendEvent: event];
+                }
+
                 [app updateWindows];
             }
             while( event != NULL );

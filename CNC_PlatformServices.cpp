@@ -217,6 +217,8 @@ void PlatformRenderTextIntersections( void*       renderer,
                                       v2          position, 
                                       f32         size )
 {
+    static u32 scanline = 0;
+
     Application*      application = (Application*)app;
     PlatformServices* services    = application->m_services;
 
@@ -226,9 +228,18 @@ void PlatformRenderTextIntersections( void*       renderer,
     u32   height      = CNC_WINDOW_HEIGHT;
     f32   radius      = CNC_WINDOW_WIDTH / 150;
     u32   numSteps    = CNC_WINDOW_HEIGHT / (radius * 2.0);
-    u32   step        = (u32)application->m_timer.m_seconds % numSteps;
+    u32   step        = 0;
     f32   fontScale   = (f32)(size / font->m_headTable.m_unitsPerEm);
 
+    if( KeyPressed( application->m_input, ARROW_DOWN ) )
+    {
+        scanline++;
+    }
+    if( KeyPressed( application->m_input, ARROW_UP ) )
+    {
+        scanline--;
+    }
+    step = scanline % numSteps;
     step = step * (radius * 2.0f );
     
     f32   h         = radius;

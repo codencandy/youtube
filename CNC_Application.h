@@ -3,12 +3,14 @@
 
 #include "CNC_PlatformServices.h"
 #include "CNC_Timer.h"
+#include "CNC_Input.h"
 
 typedef struct Application
 {
     PlatformServices* m_services;
     void*             m_renderer;
     Timer             m_timer;
+    Input*            m_input;
 
 } Application;
 
