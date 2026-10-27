@@ -5,6 +5,10 @@
 #define KC_ARROWDOWN  0x7D
 #define KC_ARROWUP    0x7E
 
+#define KC_ESCAPE     0x35
+#define KC_ENTER      0x24
+#define KC_SPACE      0x30
+
 void InitInput( Input* input )
 {
     u32 numArrowKeys = 4;
@@ -13,6 +17,14 @@ void InitInput( Input* input )
         input->m_arrowKeys[i].m_wasDown     = false;
         input->m_arrowKeys[i].m_isDown      = false;
         input->m_arrowKeys[i].m_transitions = 0;
+    }
+
+    u32 numFunctionKeys = 3;
+    for( u32 i=0; i<numFunctionKeys; ++i )
+    {
+        input->m_functionKeys[i].m_wasDown     = false;
+        input->m_functionKeys[i].m_isDown      = false;
+        input->m_functionKeys[i].m_transitions = 0;
     }
 }
 
@@ -24,23 +36,46 @@ void ResetInput( Input* input )
         input->m_arrowKeys[i].m_wasDown     = input->m_arrowKeys[i].m_isDown;
         input->m_arrowKeys[i].m_transitions = 0;
     }
+
+    u32 numFunctionKeys = 3;
+    for( u32 i=0; i<numFunctionKeys; ++i )
+    {
+        input->m_functionKeys[i].m_wasDown     = input->m_functionKeys[i].m_isDown;
+        input->m_functionKeys[i].m_transitions = 0;
+    }
 }
 
 bool ProcessInput( NSEvent* event, Input* input )
 {
+    Key* k      = NULL;
     bool isDown = (event.type == NSEventTypeKeyDown );
 
     if( event.type == NSEventTypeKeyDown || event.type == NSEventTypeKeyUp )
     {
         if( event.keyCode >= KC_ARROWLEFT && event.keyCode <= KC_ARROWUP )
         {
-            Key* k = &input->m_arrowKeys[event.keyCode - KC_ARROWLEFT];
+            k = &input->m_arrowKeys[event.keyCode - KC_ARROWLEFT];
+        }
 
-            if( isDown != k->m_isDown )
-            {
-                k->m_isDown = isDown;
-                k->m_transitions++;
-            }
+        if( event.keyCode == KC_ESCAPE )
+        {
+            k = &input->m_functionKeys[ESCAPE];
+        }
+
+        if( event.keyCode == KC_ENTER )
+        {
+            k = &input->m_functionKeys[ENTER];
+        }
+
+        if( event.keyCode == KC_SPACE )
+        {
+            k = &input->m_functionKeys[SPACE];
+        }
+
+        if( k != NULL && isDown != k->m_isDown )
+        {
+            k->m_isDown = isDown;
+            k->m_transitions++;
             return true;
         }
         return false;

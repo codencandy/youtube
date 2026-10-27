@@ -89,6 +89,11 @@ int main()
 
             // render a new frame using the GPU
             Render( renderer );
+
+            if( KeyPressed( &input, ESCAPE ) )
+            {
+                running = false;
+            }
         }
     }
 
