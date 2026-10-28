@@ -7,7 +7,7 @@
 
 #define KC_ESCAPE     0x35
 #define KC_ENTER      0x24
-#define KC_SPACE      0x30
+#define KC_SPACE      0x31
 
 void InitInput( Input* input )
 {

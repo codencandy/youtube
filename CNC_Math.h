@@ -80,8 +80,9 @@ bool isNull( f64 value, f64 scale )
     t1 - first intersection   [-1.0f for no intersection]
     t2 - second intersection  [-1.0f for no intersection]
     s  - scanline to test
+    returns true if the scanline and the bezier path exactly overlap
  */
-void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
+bool bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
 {
     /*
         This function solves if a given scanline intersects with the quadratic 
@@ -140,9 +141,15 @@ void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
     f64 y2 = (f64)p2.y;
     f64 y3 = (f64)p3.y;
 
+    if( y1 == s && y2 == s && y3 == s )
+    {
+        return true;
+    }
+
     f64 a = y1 - 2.0*y2 + y3;
     f64 b = 2.0*(y2 - y1);
     f64 c = y1 - (f64)s;
+
 
     f64 aScale = fabs( y1 ) + 2.0*fabs( y2 ) + fabs( y3 );
     f64 bScale = 2.0*(fabs( y2 ) + fabs( y1 ));
@@ -161,7 +168,7 @@ void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
         {
             *t1 = (f32)(-c/b);
         }
-        return;
+        return false;
     }
 
     /*
@@ -179,18 +186,20 @@ void bezierIntersection( v2 p1, v2 p2, v2 p3, f32* t1, f32* t2, f32 s )
 
     if( discriminant < 0.0 && !isNull( discriminant, discriminantScale ) )
     {
-        return;
+        return false;
     }
 
     if( isNull( discriminant, discriminantScale ) )
     {
         *t1 = (f32)(-b / (2.0*a));
-        return;
+        return false;
     }
 
     f64 discriminantRoot = sqrt( discriminant );
     *t1 = (f32)((-b + discriminantRoot) / (2.0*a));
     *t2 = (f32)((-b - discriminantRoot) / (2.0*a));
+
+    return false;
 }
 
 #endif//CNC_MATH_H

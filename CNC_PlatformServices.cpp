@@ -179,31 +179,46 @@ void PlatformRenderText( void*       renderer,
     }
 }
 
-u32 renderIntersections( v2 p1, v2 p2, v2 p3, v2 ray, void* renderer, PlatformServices* services )
+u32 renderIntersections( v2 p1, v2 p2, v2 p3, v2 ray, bool* onPath, void* renderer, PlatformServices* services )
 {
     f32 dotRadius        = 5.0f;
     f32 t1               = -1.0f;
     f32 t2               = -1.0f;
     u32 numIntersections = 0;
 
-    bezierIntersection( p1, p2, p3, &t1, &t2, ray.y );
-    if( t1 >= 0 && t1 < 1.0f )
+    if( !bezierIntersection( p1, p2, p3, &t1, &t2, ray.y ) )
     {
-        v2 p = bezier( p1, p2, p3, t1 );
-        if( p.x >= ray.x )
+        if( t1 >= 0 && t1 < 1.0f )
         {
-            services->f_renderCircle( renderer, p, dotRadius, YELLOW );
-            numIntersections++;
+            v2 p = bezier( p1, p2, p3, t1 );
+            if( p.x >= ray.x )
+            {
+                services->f_renderCircle( renderer, p, dotRadius, GREEN );
+                numIntersections++;
+            }
+        }
+    
+        if( t2 >= 0 && t2 < 1.0f )
+        {
+            v2 p = bezier( p1, p2, p3, t2 );
+            if( p.x >= ray.x )
+            {
+                services->f_renderCircle( renderer, p, dotRadius, GREEN );
+                numIntersections++;
+            }
         }
     }
-
-    if( t2 >= 0 && t2 < 1.0f )
+    else
     {
-        v2 p = bezier( p1, p2, p3, t2 );
-        if( p.x >= ray.x )
+        // in this case the ray and the bezier path overlap
+        // that means that p1 and p3 are the intersection points
+        // now we check if the starting point of the ray is on the path
+        f32 left  = fminf( p1.x, p3.x );
+        f32 right = fmaxf( p1.x, p3.x );
+
+        if( ray.x >= left && ray.x <= right )
         {
-            services->f_renderCircle( renderer, p, dotRadius, YELLOW );
-            numIntersections++;
+            *onPath = true;
         }
     }
 
@@ -241,7 +256,13 @@ void PlatformRenderTextIntersections( void*       renderer,
     }
     step = scanline % numSteps;
     step = step * (radius * 2.0f );
-    
+
+    bool printInfo = false;
+    if( KeyPressed( application->m_input, SPACE ) )
+    {
+        printInfo = true;
+    }
+
     f32   h         = radius;
     color c         = GREY;
     f32   baselineY = 0;
@@ -288,11 +309,17 @@ void PlatformRenderTextIntersections( void*       renderer,
                     s16 index1           = 0;
                     v2  p1, p2, p3;
 
-                    f32 t1 = -1.0f;
-                    f32 t2 = -1.0f;
-                    v2  offset = vec2( position.x + advance, baselineY );
-                    v2  ray    = vec2( w, h );
-
+                    f32  t1 = -1.0f;
+                    f32  t2 = -1.0f;
+                    v2   offset = vec2( position.x + advance, baselineY );
+                    v2   ray    = vec2( w, h );
+                    
+                    if( printInfo )
+                    {
+                        printf( "ray: %f | %f\n", w, h );
+                    }
+                    
+                    bool onPath = false;
                     for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
                     {
                         s16 endIndex   = g->m_endPtsOfContours[i];
@@ -303,22 +330,32 @@ void PlatformRenderTextIntersections( void*       renderer,
                             p2 = ((v2)g->m_points[index1+1] * fontScale) + offset;
                             p3 = ((v2)g->m_points[index1+2] * fontScale) + offset;
                             
-                            numIntersections += renderIntersections( p1, p2, p3, ray, renderer, services );
+                            numIntersections += renderIntersections( p1, p2, p3, ray, &onPath, renderer, services );
                         }
 
                         p1 = ((v2)g->m_points[index1]     * fontScale) + offset;
                         p2 = ((v2)g->m_points[index1+1]   * fontScale) + offset;
                         p3 = ((v2)g->m_points[startIndex] * fontScale) + offset;
                         
-                        numIntersections += renderIntersections( p1, p2, p3, ray, renderer, services );
+                        numIntersections += renderIntersections( p1, p2, p3, ray, &onPath, renderer, services );
 
                         // go to start of next contour
                         index1 = endIndex + 1;  
                     }
-
-                    if( (numIntersections % 2) != 0 )
+                    
+                    if( onPath || (numIntersections % 2) != 0 )
                     {
                         services->f_renderCircle( renderer, vec2( w, h ), 5.0f, YELLOW );
+                    }
+
+                    if( printInfo )
+                    {
+                        printf( "p1(%f|%f)\n", p1.x, p1.y );
+                        printf( "p2(%f|%f)\n", p2.x, p2.y );
+                        printf( "p3(%f|%f)\n", p3.x, p3.y );
+                        printf( "intersections: %d\n", numIntersections );
+
+                        printInfo = false;
                     }
                     
                     text        += codepoint.m_numUtf8Bytes;
