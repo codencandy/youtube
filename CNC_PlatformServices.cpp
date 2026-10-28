@@ -179,31 +179,50 @@ void PlatformRenderText( void*       renderer,
     }
 }
 
-u32 renderIntersections( v2 p1, v2 p2, v2 p3, v2 ray, bool* onPath, void* renderer, PlatformServices* services )
+u32 calculateIntersections( v2 p1, v2 p2, v2 p3, v2 ray, bool* onPath )
 {
-    f32 dotRadius        = 5.0f;
     f32 t1               = -1.0f;
     f32 t2               = -1.0f;
     u32 numIntersections = 0;
+    f32 epsilon          = 0.01f;
 
     if( !bezierIntersection( p1, p2, p3, &t1, &t2, ray.y ) )
     {
-        if( t1 >= 0 && t1 < 1.0f )
+        if( t1 >= 0 && t1 <= 1.0f )
         {
             v2 p = bezier( p1, p2, p3, t1 );
-            if( p.x >= ray.x )
+
+            if( fabsf( p.x - ray.x ) <= epsilon )
             {
-                services->f_renderCircle( renderer, p, dotRadius, GREEN );
+                *onPath = true;
+            }
+
+            // This check is valid for a piece that does not turn in Y.
+            f32 minY = fminf( p1.y, p3.y );
+            f32 maxY = fmaxf( p1.y, p3.y );
+
+            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
+            {
                 numIntersections++;
             }
         }
     
-        if( t2 >= 0 && t2 < 1.0f )
+        if( t2 >= 0 && t2 <= 1.0f )
         {
             v2 p = bezier( p1, p2, p3, t2 );
-            if( p.x >= ray.x )
+
+            if( fabsf( p.x - ray.x ) <= epsilon )
             {
-                services->f_renderCircle( renderer, p, dotRadius, GREEN );
+                *onPath = true;
+            }
+
+            // this checks if the ray is between p1 and p3 
+            // or between p3 and p1 which is both possible
+            f32 minY = fminf( p1.y, p3.y );
+            f32 maxY = fmaxf( p1.y, p3.y );
+
+            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
+            {
                 numIntersections++;
             }
         }
@@ -241,10 +260,27 @@ void PlatformRenderTextIntersections( void*       renderer,
     u32   textLength  = StringLength( text );
     u32   width       = CNC_WINDOW_WIDTH;
     u32   height      = CNC_WINDOW_HEIGHT;
-    f32   radius      = CNC_WINDOW_WIDTH / 150;
+    f32   radius      = CNC_WINDOW_WIDTH / 180;
     u32   numSteps    = CNC_WINDOW_HEIGHT / (radius * 2.0);
     u32   step        = 0;
     f32   fontScale   = (f32)(size / font->m_headTable.m_unitsPerEm);
+
+    static u32 startCharacter = 0;
+    if( KeyPressed( application->m_input, ARROW_RIGHT ) )
+    {
+        if( startCharacter < textLength )
+        {
+            startCharacter++;
+        }
+    }
+
+    if( KeyPressed( application->m_input, ARROW_LEFT ) )
+    {
+        if( startCharacter > 0 )
+        {
+            startCharacter--;
+        }
+    }
 
     if( KeyPressed( application->m_input, ARROW_DOWN ) )
     {
@@ -278,7 +314,7 @@ void PlatformRenderTextIntersections( void*       renderer,
 
     v2 pos = position;
     pos.y = baselineY;
-    PlatformRenderText( renderer, app, font, text, pos, size );
+    PlatformRenderText( renderer, app, font, text + startCharacter, pos, size );
 
     for( h=radius; h<=CNC_WINDOW_HEIGHT; h+=(radius*2.0f) )
     {
@@ -296,9 +332,9 @@ void PlatformRenderTextIntersections( void*       renderer,
 
             if( (h-step) <= radius && (h-step) > 0)
             {
-                u32 advance = 0;
-                char* text  = textPointer;
-                for( u32 j=0; j<textLength; )
+                f32 advance = 0;
+                char* text  = textPointer + startCharacter;
+                for( u32 j=startCharacter; j<startCharacter+2; )
                 {
                     Codepoint codepoint = Utf8ToCodepoint( text );
                     u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
@@ -330,14 +366,14 @@ void PlatformRenderTextIntersections( void*       renderer,
                             p2 = ((v2)g->m_points[index1+1] * fontScale) + offset;
                             p3 = ((v2)g->m_points[index1+2] * fontScale) + offset;
                             
-                            numIntersections += renderIntersections( p1, p2, p3, ray, &onPath, renderer, services );
+                            numIntersections += calculateIntersections( p1, p2, p3, ray, &onPath );
                         }
 
                         p1 = ((v2)g->m_points[index1]     * fontScale) + offset;
                         p2 = ((v2)g->m_points[index1+1]   * fontScale) + offset;
                         p3 = ((v2)g->m_points[startIndex] * fontScale) + offset;
                         
-                        numIntersections += renderIntersections( p1, p2, p3, ray, &onPath, renderer, services );
+                        numIntersections += calculateIntersections( p1, p2, p3, ray, &onPath );
 
                         // go to start of next contour
                         index1 = endIndex + 1;  

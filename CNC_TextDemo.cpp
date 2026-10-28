@@ -42,7 +42,7 @@ void fontDemo2( Application* app )
     TextDemo* textDemo = (TextDemo*)app;
     TtfFont*  font     = textDemo->m_ttfFont;
 
-    static const char* capitals  = "HK";
+    static const char* capitals  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     services->f_renderTextIntersections( renderer, app, font, capitals , vec2( 40.0f, 250.0f ), 400.0f );
 }
