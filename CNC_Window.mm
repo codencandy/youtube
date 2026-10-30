@@ -55,6 +55,7 @@ MainWindow* CreateMainWindow( bool* running )
     [window setTitle: @"codencandy"];
     [window setDelegate: delegate];
     [window makeKeyAndOrderFront: NULL];            
+    [window setAcceptsMouseMovedEvents: true];
 
     return window;                                                          
 }

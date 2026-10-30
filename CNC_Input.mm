@@ -1,4 +1,5 @@
 #include "CNC_Input.h"
+#include "CNC_Constants.h"
 
 #define KC_ARROWLEFT  0x7B
 #define KC_ARROWRIGHT 0x7C
@@ -90,6 +91,14 @@ bool ProcessInput( NSEvent* event, Input* input )
     {
         input->m_mouse.m_wheel += (f32)event.scrollingDeltaY;
         return true;
+    }
+
+    if( event.type == NSEventTypeMouseMoved )
+    {
+        NSPoint p = event.locationInWindow;
+        s16 x = p.x;
+        s16 y = CNC_WINDOW_HEIGHT - p.y;
+        input->m_mouse.m_position = vec2( (s16)x, (s16)y );
     }
 
     return false;
