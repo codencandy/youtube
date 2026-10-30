@@ -26,6 +26,9 @@ void InitInput( Input* input )
         input->m_functionKeys[i].m_isDown      = false;
         input->m_functionKeys[i].m_transitions = 0;
     }
+
+    input->m_mouse.m_position = vec2( (s16)0, (s16)0 );
+    input->m_mouse.m_wheel    = 0.0f;
 }
 
 void ResetInput( Input* input )
@@ -43,6 +46,8 @@ void ResetInput( Input* input )
         input->m_functionKeys[i].m_wasDown     = input->m_functionKeys[i].m_isDown;
         input->m_functionKeys[i].m_transitions = 0;
     }
+
+    input->m_mouse.m_wheel = 0.0f;
 }
 
 bool ProcessInput( NSEvent* event, Input* input )
@@ -79,6 +84,12 @@ bool ProcessInput( NSEvent* event, Input* input )
             return true;
         }
         return false;
+    }
+
+    if( event.type == NSEventTypeScrollWheel )
+    {
+        input->m_mouse.m_wheel += (f32)event.scrollingDeltaY;
+        return true;
     }
 
     return false;

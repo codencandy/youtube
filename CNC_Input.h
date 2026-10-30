@@ -26,10 +26,18 @@ typedef struct Key
 
 } Key;
 
+typedef struct Mouse
+{
+    v2int m_position;
+    f32   m_wheel;
+
+} Mouse;
+
 typedef struct Input
 {
-    Key m_arrowKeys[4];
-    Key m_functionKeys[3];
+    Key   m_arrowKeys[4];
+    Key   m_functionKeys[3];
+    Mouse m_mouse;
 
 } Input;
 
@@ -53,6 +61,11 @@ bool KeyPressed( Input* input, function_keys key )
     }
 
     return false;
+}
+
+bool MouseWheelScrolled( Input* input )
+{
+    return input->m_mouse.m_wheel != 0.0f;
 }
 
 #endif//CNC_INPUT_H
