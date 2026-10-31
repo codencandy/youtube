@@ -1,2 +1,6 @@
 libs
 doc
+.vscode
+.res
+*.md
+.gitignore

@@ -20,6 +20,7 @@ u16        CodepointToGlyphId( TtfFont* font, u16 codepoint );
 void       BuildGlyphIdMap( TtfFont* font );
 u16        GetGlyphId( TtfFont* font, u16 codepoint );
 Glyph*     GetGlyph( TtfFont* font, u16 glyphId );
+u32        CalculateIntersections( v2 p1, v2 p2, v2 p3, v2 ray, bool* onPath );
 
 void ReadCmapTable ( TtfFont* font );
 void ReadHeadTable ( TtfFont* font );
@@ -1093,5 +1094,69 @@ void ReadCmapTable( TtfFont* font )
             // no-op
         }
     }
+}
 
+u32 CalculateIntersections( v2 p1, v2 p2, v2 p3, v2 ray, bool* onPath )
+{
+    f32 t1               = -1.0f;
+    f32 t2               = -1.0f;
+    u32 numIntersections = 0;
+    f32 epsilon          = 0.01f;
+
+    if( !bezierIntersection( p1, p2, p3, &t1, &t2, ray.y ) )
+    {
+        if( t1 >= 0 && t1 <= 1.0f )
+        {
+            v2 p = bezier( p1, p2, p3, t1 );
+
+            if( fabsf( p.x - ray.x ) <= epsilon )
+            {
+                *onPath = true;
+            }
+
+            // This check is valid for a piece that does not turn in Y.
+            f32 minY = fminf( p1.y, p3.y );
+            f32 maxY = fmaxf( p1.y, p3.y );
+
+            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
+            {
+                numIntersections++;
+            }
+        }
+    
+        if( t2 >= 0 && t2 <= 1.0f )
+        {
+            v2 p = bezier( p1, p2, p3, t2 );
+
+            if( fabsf( p.x - ray.x ) <= epsilon )
+            {
+                *onPath = true;
+            }
+
+            // this checks if the ray is between p1 and p3 
+            // or between p3 and p1 which is both possible
+            f32 minY = fminf( p1.y, p3.y );
+            f32 maxY = fmaxf( p1.y, p3.y );
+
+            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
+            {
+                numIntersections++;
+            }
+        }
+    }
+    else
+    {
+        // in this case the ray and the bezier path overlap
+        // that means that p1 and p3 are the intersection points
+        // now we check if the starting point of the ray is on the path
+        f32 left  = fminf( p1.x, p3.x );
+        f32 right = fmaxf( p1.x, p3.x );
+
+        if( ray.x >= left && ray.x <= right )
+        {
+            *onPath = true;
+        }
+    }
+
+    return numIntersections;
 }
