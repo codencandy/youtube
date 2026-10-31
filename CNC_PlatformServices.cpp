@@ -126,7 +126,7 @@ void PlatformRenderText( void*       renderer,
             s16 startIndex = 0;
             v2  p1, p2, p3;
 
-            v2 boxOrigin = vec2( g->m_header.m_xMin * fontScale, g->m_header.m_yMax * fontScale);
+            v2 boxOrigin = vec2( g->m_header.m_xMin * fontScale, g->m_header.m_yMin * fontScale);
             v2 boxSize   = vec2( (f32)(g->m_header.m_xMax - g->m_header.m_xMin) * fontScale, (f32)(g->m_header.m_yMax - g->m_header.m_yMin) * fontScale );
 
             for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
@@ -169,7 +169,7 @@ void PlatformRenderText( void*       renderer,
                 index1 = endIndex + 1;
             }
 
-            v2 boxPosition = vec2( boxOrigin.x + xOffset, baseline - boxSize.y );
+            v2 boxPosition = vec2( boxOrigin.x + xOffset, baseline - boxOrigin.y - boxSize.y );
             services->f_renderRect( renderer, boxPosition, boxSize.x, boxSize.y, WHITE_20 );
         }
 
