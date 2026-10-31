@@ -16,6 +16,7 @@
         MTKView*              m_view;
 
         id< MTLLibrary >      m_library;
+        id< MTLLibrary >      m_textLibrary;
         UniformData           m_uniform;
         
         id< MTLRenderPipelineState > m_renderStateImage;
@@ -182,7 +183,7 @@
     }
     else
     {
-        NSLog( @"no error" );
+        NSLog( @"no error: %@", msg );
         return true;
     }
 }
@@ -200,7 +201,18 @@
                                     options: options
                                       error: &error];
 
-    [self checkError: error message: @"shader compile"];                                      
+    [self checkError: error message: @"shader compile"];  
+
+    NSString* textShader = [NSString stringWithContentsOfFile: @"CNC_TextShader.metal"
+                                                     encoding: NSUTF8StringEncoding 
+                                                     error: &error];
+
+    [self checkError: error message: @"text shader source"];
+    m_textLibrary = [m_gpu newLibraryWithSource: textShader 
+                                        options: options 
+                                          error: &error];   
+
+    [self checkError: error message: @"text shader compile"];
 }
 
 - (id< MTLBuffer >)createGeometry:(u32)width height:(u32)height
