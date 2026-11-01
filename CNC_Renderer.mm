@@ -33,6 +33,8 @@
         
         id< MTLBuffer >       m_boundingBoxBuffer;
         id< MTLBuffer >       m_glyphBuffer;
+        id< MTLBuffer >       m_contourBuffer;
+        id< MTLBuffer >       m_pointBuffer;
 
         u32                   m_numDrawCalls;
         DrawCall              m_drawCalls[MAX_DRAWCALLS];
