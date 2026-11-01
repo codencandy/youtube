@@ -111,7 +111,8 @@ enum draw_type
     CNC_PARTICLE = 1,
     CNC_RECT     = 2,
     CNC_CIRCLE   = 3,
-    CNC_LINE     = 4
+    CNC_LINE     = 4,
+    CNC_TEXT     = 5
 };
 
 typedef struct DrawCall
@@ -157,5 +158,12 @@ typedef struct Particle
     f32 m_time;
     
 } Particle;
+
+typedef struct BoundingBox
+{
+    v2 m_position;
+    v2 m_size;
+
+} BoundingBox;
 
 #endif//CNC_TYPES_H

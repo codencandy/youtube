@@ -24,11 +24,14 @@
         id< MTLRenderPipelineState > m_renderStateRect;
         id< MTLRenderPipelineState > m_renderStateCircle;
         id< MTLRenderPipelineState > m_renderStateLine;
+        id< MTLRenderPipelineState > m_renderStateText;
 
         u32                   m_nextTextureId;
         NSMutableArray*       m_textures;
         NSMutableArray*       m_vertexBuffers;
         NSMutableArray*       m_modelBuffers;
+        
+        id< MTLBuffer >       m_boundingBoxBuffer;
 
         u32                   m_numDrawCalls;
         DrawCall              m_drawCalls[MAX_DRAWCALLS];
@@ -54,6 +57,7 @@
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c;
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c;
 - (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c;
+- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num;
 
 @end
 
@@ -161,8 +165,16 @@
                     
                     break;
                 }
-            }
-            
+
+                case CNC_TEXT:
+                {
+                    [commandEncoder setRenderPipelineState: m_renderStateText];
+                    [commandEncoder setVertexBuffer:m_boundingBoxBuffer  offset: 0                      atIndex: 0];
+                    [commandEncoder setVertexBytes: &m_uniform           length: sizeof( UniformData )  atIndex: 1];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: call.m_numInstances];
+                    break;
+                }
+            }            
         }
 
         [commandEncoder endEncoding];
@@ -321,6 +333,12 @@
     renderDesc.fragmentFunction = [m_library newFunctionWithName: @"LineFragmentShader"];
     m_renderStateLine           = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
     [self checkError: error message: @"line state"];
+
+    error = NULL;
+    renderDesc.vertexFunction   = [m_textLibrary newFunctionWithName: @"TextVertexShader"];
+    renderDesc.fragmentFunction = [m_textLibrary newFunctionWithName: @"TextFragmentShader"];
+    m_renderStateText           = [m_gpu newRenderPipelineStateWithDescriptor: renderDesc error: &error];
+    [self checkError: error message: @"text state"];
 }
 
 - (u32)uploadImage:(Image*)image
@@ -450,6 +468,16 @@
     m_numDrawCalls++;
 }
 
+- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num
+{
+    m_drawCalls[m_numDrawCalls].m_type         = CNC_TEXT;
+    m_drawCalls[m_numDrawCalls].m_numInstances = num;
+
+    memcpy( [m_boundingBoxBuffer contents], boxes, sizeof( BoundingBox ) * num );
+
+    m_numDrawCalls++;
+}
+
 - (void)updateImage:(Image*)image
 {
     id< MTLBuffer > modelBuffer = m_modelBuffers[image->m_textureId];
@@ -512,6 +540,12 @@ void PlatformRenderLine( void* renderer, v2 start, v2 end, f32 width, color c )
     [r renderLine:start end:end width:width color:c];
 }
 
+void PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 num )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r renderText: boxes numBoxes:num];
+}
+
 MainRenderer* CreateMainRenderer()
 {
     MainRenderer* renderer = [MainRenderer new];
@@ -531,6 +565,9 @@ MainRenderer* CreateMainRenderer()
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
+
+    renderer->m_boundingBoxBuffer = [renderer->m_gpu newBufferWithLength: sizeof( BoundingBox ) * 1000
+                                                                 options: MTLResourceStorageModeShared];
 
     [renderer createShader];
     [renderer createUniform];

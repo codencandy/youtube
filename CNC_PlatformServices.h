@@ -14,6 +14,7 @@ void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, 
 u32    PlatformUploadImage( void* renderer, Image* image );
 void   PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances = 1 );
 void   PlatformUpdateImage( void* renderer, Image* image );
+void   PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 numBoxes );
 void   PlatformRenderText ( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size );
 void   PlatformRenderTextIntersections( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size );
 
@@ -34,6 +35,7 @@ typedef struct PlatformServices
     void     (*f_renderRect)(void*, v2, f32, f32, color);
     void     (*f_renderCircle)(void*, v2, f32, color );
     void     (*f_renderLine)(void*, v2, v2, f32, color);
+    void     (*f_uploadBoxes)(void*, BoundingBox*, u32);
     void     (*f_renderText)(void*, void*, TtfFont*, const char*, v2, f32 );
     void     (*f_renderTextIntersections)( void*, void*, TtfFont*, const char*, v2, f32 );
 

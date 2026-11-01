@@ -96,6 +96,8 @@ void PlatformRenderText( void*       renderer,
     f32               baseline    = position.y;
 
     u32 textLength = StringLength( text );
+    BoundingBox boxes[textLength];
+
     char* textPointer = (char*)text;
     for( u32 i=0; i<textLength; )
     {
@@ -170,7 +172,9 @@ void PlatformRenderText( void*       renderer,
             }
 
             v2 boxPosition = vec2( boxOrigin.x + xOffset, baseline - boxOrigin.y - boxSize.y );
-            services->f_renderRect( renderer, boxPosition, boxSize.x, boxSize.y, WHITE_20 );
+            
+            boxes[i].m_position = boxPosition;
+            boxes[i].m_size     = boxSize;
         }
 
         xOffset     += advance;
@@ -183,6 +187,8 @@ void PlatformRenderText( void*       renderer,
             baseline += size * 1.2f;
         }
     }
+    
+    PlatformUploadBoxes( renderer, boxes, textLength );
 }
 
 void PlatformRenderTextIntersections( void*       renderer, 
@@ -380,6 +386,7 @@ PlatformServices* CreatePlatformServices()
     services->f_renderRect              = &PlatformRenderRect;
     services->f_renderCircle            = &PlatformRenderCircle;
     services->f_renderLine              = &PlatformRenderLine;
+    services->f_uploadBoxes             = &PlatformUploadBoxes;
     services->f_renderText              = &PlatformRenderText;
     services->f_renderTextIntersections = &PlatformRenderTextIntersections;
 
