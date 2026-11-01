@@ -141,7 +141,7 @@ typedef struct Glyph
 typedef struct GlyphTable
 {
     u32    m_numGlyphs;
-    Glyph* m_glphys;
+    Glyph* m_glyphs;
 
 } GlyphTable;
 

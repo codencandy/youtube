@@ -191,7 +191,7 @@ static bool ResolveCompoundGlyph( TtfFont* font, u32 glyphId, u8* state, u32 dep
     if( state[glyphId] == 1 ) return false;
     if( depth > font->m_maxpTable.m_maxComponentDepth + 1 ) return false;
 
-    Glyph* glyph = &font->m_glyphTable.m_glphys[glyphId];
+    Glyph* glyph = &font->m_glyphTable.m_glyphs[glyphId];
     if( glyph->m_header.m_numberOfContours >= 0 )
     {
         state[glyphId] = 2;
@@ -207,7 +207,7 @@ static bool ResolveCompoundGlyph( TtfFont* font, u32 glyphId, u8* state, u32 dep
         if( !ResolveCompoundGlyph( font, description->m_glyphId, state, depth + 1 ) )
             return false;
 
-        Glyph* component = &font->m_glyphTable.m_glphys[description->m_glyphId];
+        Glyph* component = &font->m_glyphTable.m_glyphs[description->m_glyphId];
         if( !AppendCompoundComponent( glyph, component, description ) )
             return false;
     }
@@ -297,7 +297,7 @@ void InsertImpliedPoints( TtfFont* font )
 {
     for( u32 i=0; i<font->m_glyphTable.m_numGlyphs; ++i )
     {
-        Glyph*g = &font->m_glyphTable.m_glphys[i];
+        Glyph*g = &font->m_glyphTable.m_glyphs[i];
         
         if( g->m_header.m_emptyGlyph || g->m_header.m_numberOfContours <= 0 )
         {
@@ -507,7 +507,7 @@ Glyph* GetGlyph( TtfFont* font, u16 glyphId )
 
     if( glyphId > 0 )
     {
-        g = &font->m_glyphTable.m_glphys[glyphId];
+        g = &font->m_glyphTable.m_glyphs[glyphId];
     }
 
     return g;
@@ -577,11 +577,11 @@ void ReadGlyphTable( TtfFont* font )
     u32         numGlyphs = font->m_maxpTable.m_numGlyphs;
     GlyphTable* glyphs    = &font->m_glyphTable;
     glyphs->m_numGlyphs   = numGlyphs;
-    glyphs->m_glphys      = (Glyph*)malloc( numGlyphs * sizeof( Glyph ) );
+    glyphs->m_glyphs      = (Glyph*)malloc( numGlyphs * sizeof( Glyph ) );
 
     for( u32 glyphId=0; glyphId<numGlyphs; ++glyphId )
     {
-        Glyph* g        = &glyphs->m_glphys[glyphId];
+        Glyph* g        = &glyphs->m_glyphs[glyphId];
         memset( g, 0x0, sizeof( Glyph) );
 
         u32 startOffset = font->m_locaTable.m_glyphTableOffsets[glyphId];
@@ -934,7 +934,7 @@ void ReadHtmxTable( TtfFont* font )
 
     for( glyphId = 0; glyphId < numMetrics; ++glyphId )
     {
-        g                                = &font->m_glyphTable.m_glphys[glyphId];
+        g                                = &font->m_glyphTable.m_glyphs[glyphId];
         g->m_horMetric.m_advanceWith     = BigToLittleU16( data, offset ); offset += 2;
         g->m_horMetric.m_leftSideBearing = BigToLittleS16( data, offset ); offset += 2;
     }
@@ -945,7 +945,7 @@ void ReadHtmxTable( TtfFont* font )
 
         for( ; glyphId < font->m_glyphTable.m_numGlyphs; ++glyphId )
         {
-            g = &font->m_glyphTable.m_glphys[glyphId];
+            g = &font->m_glyphTable.m_glyphs[glyphId];
             g->m_horMetric.m_advanceWith     = advanceWidth;
             g->m_horMetric.m_leftSideBearing = BigToLittleS16( data, offset ); offset += 2;
         }

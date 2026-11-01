@@ -42,7 +42,7 @@ File* PlatformLoadFile( const char* filePath )
     return file;
 }
 
-TtfFont* PlatformLoadFont( File* ttfFontFile )
+TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
 {
     TtfFont* font = (TtfFont*)malloc( sizeof( TtfFont ) );
 
@@ -70,13 +70,27 @@ TtfFont* PlatformLoadFont( File* ttfFontFile )
     ReadHtmxTable      ( font );
     InsertImpliedPoints( font );
 
-    PrintGlyphData( &font->m_glyphTable.m_glphys[0] );
+    PrintGlyphData( &font->m_glyphTable.m_glyphs[0] );
     Codepoint test = Utf8ToCodepoint( "Ä" );
     u16 glyphId    = GetGlyphId( font, test.m_codepoint );
     printf( "utf8 input:\t%s\n", "Ä" );
     printf( "codepoint:\t%x\n",   test.m_codepoint );
     printf( "num bytes:\t%d\n",   test.m_numUtf8Bytes );
     printf( "glyph id:\t%d\n",    glyphId );
+
+    u32       numGlyphs = font->m_glyphTable.m_numGlyphs;
+    GpuGlyph* gpuGlyphs = (GpuGlyph*)malloc( sizeof( GpuGlyph ) * numGlyphs );
+    for( u32 i=0; i<numGlyphs; ++i )
+    {
+        Glyph*    g   = &font->m_glyphTable.m_glyphs[i];
+        GpuGlyph* gpu = &gpuGlyphs[i];
+
+        gpu->m_numContours      = g->m_header.m_numberOfContours;
+        gpu->m_numPoints        = g->m_numPoints;
+    }
+
+    PlatformUploadGlyphs( renderer, gpuGlyphs, numGlyphs );
+    free( gpuGlyphs );
 
     return font;
 }
@@ -187,7 +201,7 @@ void PlatformRenderText( void*       renderer,
             baseline += size * 1.2f;
         }
     }
-    
+
     PlatformUploadBoxes( renderer, boxes, textLength );
 }
 
@@ -386,6 +400,7 @@ PlatformServices* CreatePlatformServices()
     services->f_renderRect              = &PlatformRenderRect;
     services->f_renderCircle            = &PlatformRenderCircle;
     services->f_renderLine              = &PlatformRenderLine;
+    services->f_uploadGlyphs            = &PlatformUploadGlyphs;
     services->f_uploadBoxes             = &PlatformUploadBoxes;
     services->f_renderText              = &PlatformRenderText;
     services->f_renderTextIntersections = &PlatformRenderTextIntersections;

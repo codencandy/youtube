@@ -4,8 +4,8 @@
 #include "CNC_Types.h"
 #include "CNC_TtfTypes.h"
 
-Image* PlatformLoadImage( const char* imagePath );
-File*  PlatformLoadFile( const char* filePath );
+Image*    PlatformLoadImage( const char* imagePath );
+File*     PlatformLoadFile( const char* filePath, void* renderer );
 TtfFont*  PlatformLoadFont( File* ttfFontFile );
 
 void   PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles );
@@ -14,6 +14,7 @@ void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, 
 u32    PlatformUploadImage( void* renderer, Image* image );
 void   PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances = 1 );
 void   PlatformUpdateImage( void* renderer, Image* image );
+void   PlatformUploadGlyphs( void* renderer, GpuGlyph* glyphs, u32 numGlphys );
 void   PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 numBoxes );
 void   PlatformRenderText ( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size );
 void   PlatformRenderTextIntersections( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size );
@@ -26,7 +27,7 @@ typedef struct PlatformServices
 {
     Image*   (*f_loadImage)(const char*);
     File*    (*f_loadFile)(const char*);
-    TtfFont* (*f_loadFont)(File*);
+    TtfFont* (*f_loadFont)(File*, void*);
     u32      (*f_uploadImage)(void*, Image*);
     void     (*f_uploadParticles)(void*, Particle*, u32);
     void     (*f_renderImage)(void*, u32, u32 );
@@ -35,6 +36,7 @@ typedef struct PlatformServices
     void     (*f_renderRect)(void*, v2, f32, f32, color);
     void     (*f_renderCircle)(void*, v2, f32, color );
     void     (*f_renderLine)(void*, v2, v2, f32, color);
+    void     (*f_uploadGlyphs)(void*, GpuGlyph*, u32);
     void     (*f_uploadBoxes)(void*, BoundingBox*, u32);
     void     (*f_renderText)(void*, void*, TtfFont*, const char*, v2, f32 );
     void     (*f_renderTextIntersections)( void*, void*, TtfFont*, const char*, v2, f32 );

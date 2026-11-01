@@ -17,7 +17,7 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     File* ttfFile = services->f_loadFile( "./res/montserrat-regular.ttf" );
     ttfFile->m_endianess = BIGENDIAN;
 
-    TtfFont* ttfFont = services->f_loadFont( ttfFile );
+    TtfFont* ttfFont = services->f_loadFont( ttfFile, renderer );
 
     textdemo->m_ttfFont = ttfFont;
     
@@ -43,8 +43,9 @@ void fontDemo2( Application* app )
     TtfFont*  font     = textDemo->m_ttfFont;
 
     static const char* capitals  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static const char* lowercase = "abcdefghijklmnopqrstuvwyxz";
 
-    services->f_renderTextIntersections( renderer, app, font, capitals , vec2( 40.0f, 250.0f ), 400.0f );
+    services->f_renderTextIntersections( renderer, app, font, lowercase , vec2( 40.0f, 250.0f ), 400.0f );
 }
 
 void fontDemo1( Application* app )

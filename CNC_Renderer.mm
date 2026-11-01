@@ -32,6 +32,7 @@
         NSMutableArray*       m_modelBuffers;
         
         id< MTLBuffer >       m_boundingBoxBuffer;
+        id< MTLBuffer >       m_glyphBuffer;
 
         u32                   m_numDrawCalls;
         DrawCall              m_drawCalls[MAX_DRAWCALLS];
@@ -53,6 +54,7 @@
 - (void)updateImage:(Image*)image;
 - (void)renderImage:(u32)textureId instances:(u32)numInstances;
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
+- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num;
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c;
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c;
@@ -169,8 +171,9 @@
                 case CNC_TEXT:
                 {
                     [commandEncoder setRenderPipelineState: m_renderStateText];
-                    [commandEncoder setVertexBuffer:m_boundingBoxBuffer  offset: 0                      atIndex: 0];
-                    [commandEncoder setVertexBytes: &m_uniform           length: sizeof( UniformData )  atIndex: 1];
+                    [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: 0                      atIndex: 0];
+                    [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
+                    [commandEncoder setFragmentBuffer: m_glyphBuffer        offset: 0                      atIndex: 0];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: call.m_numInstances];
                     break;
                 }
@@ -407,6 +410,13 @@
     m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );                                         
 }
 
+- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num
+{
+    m_glyphBuffer = [m_gpu newBufferWithBytes: glyphs 
+                                          length: sizeof( GpuGlyph ) * num 
+                                         options: MTLStorageModeShared];
+}
+
 - (void)renderImage:(u32)textureId instances:(u32)numInstances
 {
     m_drawCalls[m_numDrawCalls].m_type         = CNC_IMAGE;
@@ -498,6 +508,12 @@ u32 PlatformUploadImage( void* renderer, Image* image )
     return [r uploadImage: image];
 }
 
+void PlatformUploadGlyphs( void* renderer, GpuGlyph* glyphs, u32 num )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r uploadGlyphs: glyphs numGlyphs:num];
+}
+
 void PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles )
 {
     MainRenderer* r = (MainRenderer*)renderer;
@@ -567,6 +583,8 @@ MainRenderer* CreateMainRenderer()
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
 
     renderer->m_boundingBoxBuffer = [renderer->m_gpu newBufferWithLength: sizeof( BoundingBox ) * 1000
+                                                                 options: MTLResourceStorageModeShared];
+    renderer->m_glyphBuffer       = [renderer->m_gpu newBufferWithLength: sizeof( GpuGlyph ) * 2000
                                                                  options: MTLResourceStorageModeShared];
 
     [renderer createShader];

@@ -166,4 +166,13 @@ typedef struct BoundingBox
 
 } BoundingBox;
 
+typedef struct GpuGlyph
+{
+    u32         m_numContours;
+    u32         m_numPoints;
+    u32*        m_endPtsOfContours;
+    v2int*      m_points;
+
+} GpuGlyph;
+
 #endif//CNC_TYPES_H
