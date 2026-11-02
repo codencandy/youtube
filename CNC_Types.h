@@ -161,17 +161,18 @@ typedef struct Particle
 
 typedef struct BoundingBox
 {
-    v2 m_position;
-    v2 m_size;
+    v2  m_position;
+    v2  m_size;
+    u32 m_glyphId;
 
 } BoundingBox;
 
 typedef struct GpuGlyph
 {
-    u32         m_numContours;
-    u32         m_numPoints;
-    u32*        m_endPtsOfContours;
-    v2int*      m_points;
+    u32 m_contourIndex;
+    u32 m_numContours;
+    u32 m_pointIndex;
+    u32 m_numPoints;
 
 } GpuGlyph;
 

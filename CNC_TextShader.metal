@@ -8,26 +8,31 @@ typedef uint   u32;
 struct VertexOutput
 {
     float4 m_position [[position]];
-    float2 m_uv;
+    v2     m_uv;
+    u32    m_glyphId;
 };
 
 struct UniformData
 {
     float4x4 m_projection2D;
-    float    m_screenWidth;
-    float    m_screenHeight;
-    float    m_time;
+    f32      m_screenWidth;
+    f32      m_screenHeight;
+    f32      m_time;
 };
 
 struct BoundingBox
 {
-    float2 m_position;
-    float2 m_size;
+    v2  m_position;
+    v2  m_size;
+    u32 m_glyphId;
 };
 
-struct Glyph
+struct GpuGlyph
 {
-
+    u32 m_contourIndex;
+    u32 m_numContours;
+    u32 m_pointIndex;
+    u32 m_numPoints;
 };
 
 bool isNull( f32 value, f32 scale )
@@ -259,37 +264,40 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
     if( vertexId == 0 )
     {
         out.m_position = float4( b.m_position.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
-        out.m_uv       = float2( 0.0, 0.0 ) * b.m_size;
+        out.m_uv       = v2( 0.0, 0.0 ) * b.m_size;
     }
 
     // bottom right
     if( vertexId == 1 )
     {
         out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
-        out.m_uv       = float2( 1.0, 0.0 ) * b.m_size;
+        out.m_uv       = v2( 1.0, 0.0 ) * b.m_size;
     }
 
     // top left
     if( vertexId == 2 )
     {
         out.m_position = float4( b.m_position.x, b.m_position.y, 0.0, 1.0 );
-        out.m_uv       = float2( 0.0, 1.0 ) * b.m_size;
+        out.m_uv       = v2( 0.0, 1.0 ) * b.m_size;
     }
 
     // top right
     if( vertexId == 3 )
     {
         out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y, 0.0, 1.0 );
-        out.m_uv       = float2( 1.0, 1.0 ) * b.m_size;
+        out.m_uv       = v2( 1.0, 1.0 ) * b.m_size;
     }
 
     out.m_position = uniform.m_projection2D * out.m_position;
+    out.m_glyphId  = b.m_glyphId;
 
     return out;
 }              
 
-fragment float4 TextFragmentShader( VertexOutput    in          [[stage_in]],
-                                    constant Glyph* glphyBuffer [[buffer(0)]])
+fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]],
+                                    constant GpuGlyph* glphyBuffer   [[buffer(0)]],
+                                    constant v2*       pointsBuffer  [[buffer(1)]],
+                                    constant u32*      contourBuffer [[buffer(2)]])
 {
     float4 color = float4( 1.0, 1.0, 1.0, 0.2 );
     return color;

@@ -175,7 +175,10 @@
                     [commandEncoder setRenderPipelineState: m_renderStateText];
                     [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: 0                      atIndex: 0];
                     [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
+
                     [commandEncoder setFragmentBuffer: m_glyphBuffer        offset: 0                      atIndex: 0];
+                    [commandEncoder setFragmentBuffer: m_pointBuffer        offset: 0                      atIndex: 1];
+                    [commandEncoder setFragmentBuffer: m_contourBuffer      offset: 0                      atIndex: 2];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: call.m_numInstances];
                     break;
                 }

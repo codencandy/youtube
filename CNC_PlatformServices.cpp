@@ -90,6 +90,28 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
     v2*  points   = (v2*)malloc( sizeof( v2 ) * numPoints );
     u32* contours = (u32*)malloc( sizeof( u32 ) * numContours );
 
+    u32 pointIndex   = 0;
+    u32 contourIndex = 0;
+    for( u32 i=0; i<numGlyphs; ++i )
+    {
+        Glyph*    g   = &font->m_glyphTable.m_glyphs[i];
+        GpuGlyph* gpu = &gpuGlyphs[i];
+
+        u32 gNumPoints   = g->m_numPoints;
+        u32 gNumContours = g->m_header.m_numberOfContours;
+
+        for( u32 j=0; j<gNumPoints; ++j )
+        {
+            points[pointIndex] = g->m_points[j];
+            pointIndex++;
+        }
+
+        for( u32 k=0; k<gNumContours; ++k )
+        {
+            contourIndex++;
+        }
+    }
+
     PlatformUploadGlyphs( renderer, gpuGlyphs, numGlyphs, points, numPoints, contours, numContours );
     
     free( gpuGlyphs );
@@ -193,6 +215,7 @@ void PlatformRenderText( void*       renderer,
             
             boxes[i].m_position = boxPosition;
             boxes[i].m_size     = boxSize;
+            boxes[i].m_glyphId  = glyphId;
         }
 
         xOffset     += advance;
