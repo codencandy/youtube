@@ -70,27 +70,31 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
     ReadHtmxTable      ( font );
     InsertImpliedPoints( font );
 
-    PrintGlyphData( &font->m_glyphTable.m_glyphs[0] );
-    Codepoint test = Utf8ToCodepoint( "Ä" );
-    u16 glyphId    = GetGlyphId( font, test.m_codepoint );
-    printf( "utf8 input:\t%s\n", "Ä" );
-    printf( "codepoint:\t%x\n",   test.m_codepoint );
-    printf( "num bytes:\t%d\n",   test.m_numUtf8Bytes );
-    printf( "glyph id:\t%d\n",    glyphId );
+    u32       numGlyphs   = font->m_glyphTable.m_numGlyphs;
+    u32       numPoints   = 0;
+    u32       numContours = 0;
+    GpuGlyph* gpuGlyphs   = (GpuGlyph*)malloc( sizeof( GpuGlyph ) * numGlyphs );
 
-    u32       numGlyphs = font->m_glyphTable.m_numGlyphs;
-    GpuGlyph* gpuGlyphs = (GpuGlyph*)malloc( sizeof( GpuGlyph ) * numGlyphs );
     for( u32 i=0; i<numGlyphs; ++i )
     {
         Glyph*    g   = &font->m_glyphTable.m_glyphs[i];
         GpuGlyph* gpu = &gpuGlyphs[i];
 
-        gpu->m_numContours      = g->m_header.m_numberOfContours;
         gpu->m_numPoints        = g->m_numPoints;
+        gpu->m_numContours      = g->m_header.m_numberOfContours;
+
+        numPoints              += g->m_numPoints;
+        numContours            += g->m_header.m_numberOfContours;
     }
 
-    PlatformUploadGlyphs( renderer, gpuGlyphs, numGlyphs );
+    v2*  points   = (v2*)malloc( sizeof( v2 ) * numPoints );
+    u32* contours = (u32*)malloc( sizeof( u32 ) * numContours );
+
+    PlatformUploadGlyphs( renderer, gpuGlyphs, numGlyphs, points, numPoints, contours, numContours );
+    
     free( gpuGlyphs );
+    free( points );
+    free( contours );
 
     return font;
 }

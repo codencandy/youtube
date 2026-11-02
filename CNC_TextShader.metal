@@ -259,28 +259,28 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
     if( vertexId == 0 )
     {
         out.m_position = float4( b.m_position.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
-        out.m_uv       = float2( 0.0, 0.0 );
+        out.m_uv       = float2( 0.0, 0.0 ) * b.m_size;
     }
 
     // bottom right
     if( vertexId == 1 )
     {
         out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
-        out.m_uv       = float2( 1.0, 0.0 );
+        out.m_uv       = float2( 1.0, 0.0 ) * b.m_size;
     }
 
     // top left
     if( vertexId == 2 )
     {
         out.m_position = float4( b.m_position.x, b.m_position.y, 0.0, 1.0 );
-        out.m_uv       = float2( 0.0, 1.0 );
+        out.m_uv       = float2( 0.0, 1.0 ) * b.m_size;
     }
 
     // top right
     if( vertexId == 3 )
     {
         out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y, 0.0, 1.0 );
-        out.m_uv       = float2( 1.0, 1.0 );
+        out.m_uv       = float2( 1.0, 1.0 ) * b.m_size;
     }
 
     out.m_position = uniform.m_projection2D * out.m_position;

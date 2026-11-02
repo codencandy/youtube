@@ -56,7 +56,7 @@
 - (void)updateImage:(Image*)image;
 - (void)renderImage:(u32)textureId instances:(u32)numInstances;
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
-- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num;
+- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num points:(v2*)points numPoints:(u32)numPoints contours:(u32*)contours numContours:(u32)numContours;
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c;
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c;
@@ -412,11 +412,21 @@
     m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );                                         
 }
 
-- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num
+- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num 
+              points:(v2*)points       numPoints:(u32)numPoints
+            contours:(u32*)contours  numContours:(u32)numContours
 {
-    m_glyphBuffer = [m_gpu newBufferWithBytes: glyphs 
-                                          length: sizeof( GpuGlyph ) * num 
-                                         options: MTLStorageModeShared];
+    m_glyphBuffer   = [m_gpu newBufferWithBytes: glyphs 
+                                         length: sizeof( GpuGlyph ) * num 
+                                        options: MTLStorageModeShared];
+
+    m_pointBuffer   = [m_gpu newBufferWithBytes: points 
+                                         length: sizeof( v2 ) * numPoints 
+                                        options: MTLStorageModeShared];
+
+    m_contourBuffer = [m_gpu newBufferWithBytes: contours 
+                                         length: sizeof( u32 ) * numContours 
+                                        options: MTLStorageModeShared];                                      
 }
 
 - (void)renderImage:(u32)textureId instances:(u32)numInstances
@@ -510,10 +520,15 @@ u32 PlatformUploadImage( void* renderer, Image* image )
     return [r uploadImage: image];
 }
 
-void PlatformUploadGlyphs( void* renderer, GpuGlyph* glyphs, u32 num )
+void PlatformUploadGlyphs( void*     renderer, 
+                           GpuGlyph* glyphs,   u32 num,
+                           v2*       points,   u32 numPoints,
+                           u32*      contours, u32 numContours )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r uploadGlyphs: glyphs numGlyphs:num];
+    [r uploadGlyphs: glyphs   numGlyphs:num 
+             points: points   numPoints:numPoints 
+           contours: contours numContours:numContours];
 }
 
 void PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles )
