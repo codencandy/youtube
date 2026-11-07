@@ -1,6 +1,7 @@
 #include "CNC_TextDemo.h"
 #include "CNC_PlatformServices.h"
 #include "CNC_TtfTypes.h"
+#include "CNC_Tools.h"
 
 void fontDemo1( Application* app );
 void fontDemo2( Application* app );
@@ -42,10 +43,38 @@ void fontDemo2( Application* app )
     TextDemo* textDemo = (TextDemo*)app;
     TtfFont*  font     = textDemo->m_ttfFont;
 
-    static const char* capitals  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    static const char* lowercase = "abcdefghijklmnopqrstuvwyxz";
+    static const char* capitals       = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static const char* lowercase      = "abcdefghijklmnopqrstuvwyxz";
+    static f32         fontSize       = 400.0f;
+    static u32         startCharacter = 0;
+    
+    u32 textLength = StringLength( lowercase );
 
-    services->f_renderTextIntersections( renderer, app, font, lowercase , vec2( 40.0f, 250.0f ), 400.0f );
+    if( MouseWheelScrolled( app->m_input ) )
+    {
+        if( app->m_input->m_mouse.m_wheel > 0 )
+            fontSize += 2.0f;
+        else
+            fontSize -= 2.0f;
+    }
+
+    if( KeyPressed( app->m_input, ARROW_RIGHT ) )
+    {
+        if( startCharacter < textLength )
+        {
+            startCharacter++;
+        }
+    }
+
+    if( KeyPressed( app->m_input, ARROW_LEFT ) )
+    {
+        if( startCharacter > 0 )
+        {
+            startCharacter--;
+        }
+    }
+
+    services->f_renderText( renderer, app, font, lowercase + startCharacter , vec2( 40.0f, 250.0f ), fontSize );
 }
 
 void fontDemo1( Application* app )

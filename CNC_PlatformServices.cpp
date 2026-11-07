@@ -196,69 +196,6 @@ void PlatformRenderText( void*       renderer,
         PlatformUploadBoxes( renderer, boxes, numBoxes );
 }
 
-void PlatformRenderTextIntersections( void*       renderer, 
-                                      void*       app, 
-                                      TtfFont*    font, 
-                                      const char* text, 
-                                      v2          position, 
-                                      f32         size )
-{
-    static u32 scanline       = 0;
-    static f32 fontSize       = size;
-    static u32 startCharacter = 0;
-
-    Application*      application = (Application*)app;
-    PlatformServices* services    = application->m_services;
-
-    char* textPointer = (char*)text;
-    u32   textLength  = StringLength( text );
-    u32   width       = CNC_WINDOW_WIDTH;
-    u32   height      = CNC_WINDOW_HEIGHT;
-    f32   radius      = CNC_WINDOW_WIDTH / 180;
-    u32   numSteps    = CNC_WINDOW_HEIGHT / (radius * 2.0);
-    u32   step        = 0;
-    f32   fontScale   = (f32)(fontSize / font->m_headTable.m_unitsPerEm);
-
-    if( MouseWheelScrolled( application->m_input ) )
-    {
-        if( application->m_input->m_mouse.m_wheel > 0 )
-            fontSize += 2.0f;
-        else
-            fontSize -= 2.0f;
-    }
-
-    if( KeyPressed( application->m_input, ARROW_RIGHT ) )
-    {
-        if( startCharacter < textLength )
-        {
-            startCharacter++;
-        }
-    }
-
-    if( KeyPressed( application->m_input, ARROW_LEFT ) )
-    {
-        if( startCharacter > 0 )
-        {
-            startCharacter--;
-        }
-    }
-    
-    f32   h         = radius;
-    f32   baselineY = 0;
-    for( ; h<height; h+=(radius*2.0f) )
-    {
-        if( h >= 0.7*CNC_WINDOW_HEIGHT && h<0.73*CNC_WINDOW_HEIGHT )
-        {
-            baselineY = h;
-            break;
-        }
-    }
-
-    v2 pos = position;
-    pos.y = baselineY;
-    PlatformRenderText( renderer, app, font, text + startCharacter, pos, fontSize );
-}
-
 /* implemented in the Renderer 
 
     u32  PlatformUploadImage( void* renderer, Image* image );
@@ -287,7 +224,6 @@ PlatformServices* CreatePlatformServices()
     services->f_uploadGlyphs            = &PlatformUploadGlyphs;
     services->f_uploadBoxes             = &PlatformUploadBoxes;
     services->f_renderText              = &PlatformRenderText;
-    services->f_renderTextIntersections = &PlatformRenderTextIntersections;
 
     return services;
 }

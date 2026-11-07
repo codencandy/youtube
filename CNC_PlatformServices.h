@@ -17,7 +17,6 @@ void   PlatformUpdateImage( void* renderer, Image* image );
 void   PlatformUploadGlyphs( void* renderer, GpuGlyph* glyphs, u32 numGlphys, v2* points, u32 numPoints, u32* contours, u32 numContours );
 void   PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 numBoxes );
 void   PlatformRenderText ( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size );
-void   PlatformRenderTextIntersections( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size );
 
 void   PlatformRenderRect(   void* renderer, v2 pos, f32 width, f32 height, color c );
 void   PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c );
@@ -39,8 +38,7 @@ typedef struct PlatformServices
     void     (*f_uploadGlyphs)(void*, GpuGlyph*, u32, v2*, u32, u32*, u32);
     void     (*f_uploadBoxes)(void*, BoundingBox*, u32);
     void     (*f_renderText)(void*, void*, TtfFont*, const char*, v2, f32 );
-    void     (*f_renderTextIntersections)( void*, void*, TtfFont*, const char*, v2, f32 );
-
+    
 } PlatformServices;
 
 PlatformServices* CreatePlatformServices();
