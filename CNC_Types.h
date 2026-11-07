@@ -163,7 +163,9 @@ typedef struct BoundingBox
 {
     v2  m_position;
     v2  m_size;
+    v2  m_glyphOrigin;
     u32 m_glyphId;
+    f32 m_fontScale;
 
 } BoundingBox;
 

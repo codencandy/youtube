@@ -80,11 +80,13 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
         Glyph*    g   = &font->m_glyphTable.m_glyphs[i];
         GpuGlyph* gpu = &gpuGlyphs[i];
 
-        gpu->m_numPoints        = g->m_numPoints;
-        gpu->m_numContours      = g->m_header.m_numberOfContours;
+        gpu->m_numPoints        = g->m_realNumPoints;
+        gpu->m_pointIndex       = numPoints;
+        numPoints              += g->m_realNumPoints;
 
-        numPoints              += g->m_numPoints;
-        numContours            += g->m_header.m_numberOfContours;
+        gpu->m_numContours      = g->m_header.m_numberOfContours;
+        gpu->m_contourIndex     = numContours;
+        numContours            += gpu->m_numContours;
     }
 
     v2*  points   = (v2*)malloc( sizeof( v2 ) * numPoints );
@@ -97,7 +99,7 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
         Glyph*    g   = &font->m_glyphTable.m_glyphs[i];
         GpuGlyph* gpu = &gpuGlyphs[i];
 
-        u32 gNumPoints   = g->m_numPoints;
+        u32 gNumPoints   = gpu->m_numPoints;
         u32 gNumContours = g->m_header.m_numberOfContours;
 
         for( u32 j=0; j<gNumPoints; ++j )
@@ -108,6 +110,7 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
 
         for( u32 k=0; k<gNumContours; ++k )
         {
+            contours[contourIndex] = g->m_endPtsOfContours[k];
             contourIndex++;
         }
     }
@@ -137,6 +140,7 @@ void PlatformRenderText( void*       renderer,
 
     u32 textLength = StringLength( text );
     BoundingBox boxes[textLength];
+    u32 numBoxes = 0;
 
     char* textPointer = (char*)text;
     for( u32 i=0; i<textLength; )
@@ -164,58 +168,17 @@ void PlatformRenderText( void*       renderer,
         f32 advance = g->m_horMetric.m_advanceWith * fontScale;
         if( !g->m_header.m_emptyGlyph && g->m_header.m_numberOfContours > 0 )
         {
-            s16 index1     = 0;
-            s16 startIndex = 0;
-            v2  p1, p2, p3;
-
-            v2 boxOrigin = vec2( g->m_header.m_xMin * fontScale, g->m_header.m_yMin * fontScale);
-            v2 boxSize   = vec2( (f32)(g->m_header.m_xMax - g->m_header.m_xMin) * fontScale, (f32)(g->m_header.m_yMax - g->m_header.m_yMin) * fontScale );
-
-            for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
-            {
-                s16 endIndex   = g->m_endPtsOfContours[i];
-                s16 startIndex = index1;
-                v2  offset     = vec2( xOffset, baseline );
-                for( ; index1+2<=endIndex; index1 += 2 )
-                {
-                    p1 = ((v2)g->m_points[index1]   * fontScale) + offset;
-                    p2 = ((v2)g->m_points[index1+1] * fontScale) + offset;
-                    p3 = ((v2)g->m_points[index1+2] * fontScale) + offset;
-                    
-                    f32 d = distance( p1, p3 );
-                    f32 t = 0.0f;
-                    f32 numBeziers = d / 2.0f;
-                    for( u32 b=0; b<numBeziers; ++b )
-                    {
-                        v2 p = bezier( p1, p2, p3, t );
-                        services->f_renderCircle( renderer, p, 1.5f, WHITE );
-                        t += 1.0/numBeziers;
-                    }
-                }
-
-                p1 = ((v2)g->m_points[index1]     * fontScale) + offset;
-                p2 = ((v2)g->m_points[index1+1]   * fontScale) + offset;
-                p3 = ((v2)g->m_points[startIndex] * fontScale) + offset;
-                
-                f32 d = distance( p1, p3 );
-                f32 t = 0.0f;
-                f32 numBeziers = d / 2.0f;
-                for( u32 b=0; b<numBeziers; ++b )
-                {
-                    v2 p = bezier( p1, p2, p3, t );
-                    services->f_renderCircle( renderer, p, 1.5f, WHITE );
-                    t += 1.0f/numBeziers;
-                }
-                
-                // go to start of next contour
-                index1 = endIndex + 1;
-            }
-
+            v2 boxOrigin   = vec2( g->m_header.m_xMin * fontScale, g->m_header.m_yMin * fontScale);
+            v2 boxSize     = vec2( (f32)(g->m_header.m_xMax - g->m_header.m_xMin) * fontScale, (f32)(g->m_header.m_yMax - g->m_header.m_yMin) * fontScale );
             v2 boxPosition = vec2( boxOrigin.x + xOffset, baseline - boxOrigin.y - boxSize.y );
             
-            boxes[i].m_position = boxPosition;
-            boxes[i].m_size     = boxSize;
-            boxes[i].m_glyphId  = glyphId;
+            boxes[numBoxes].m_position    = boxPosition;
+            boxes[numBoxes].m_size        = boxSize;
+            boxes[numBoxes].m_glyphOrigin = vec2( (f32)g->m_header.m_xMin,
+                                                  -(f32)g->m_header.m_yMax );
+            boxes[numBoxes].m_glyphId     = glyphId;
+            boxes[numBoxes].m_fontScale   = fontScale;
+            ++numBoxes;
         }
 
         xOffset     += advance;
@@ -229,7 +192,8 @@ void PlatformRenderText( void*       renderer,
         }
     }
 
-    PlatformUploadBoxes( renderer, boxes, textLength );
+    if( numBoxes > 0 )
+        PlatformUploadBoxes( renderer, boxes, numBoxes );
 }
 
 void PlatformRenderTextIntersections( void*       renderer, 
@@ -278,29 +242,9 @@ void PlatformRenderTextIntersections( void*       renderer,
             startCharacter--;
         }
     }
-
-    if( KeyPressed( application->m_input, ARROW_DOWN ) )
-    {
-        scanline++;
-    }
-
-    if( KeyPressed( application->m_input, ARROW_UP ) )
-    {
-        scanline--;
-    }
-    step = scanline % numSteps;
-    step = step * (radius * 2.0f );
-
-    bool printInfo = false;
-    if( KeyPressed( application->m_input, SPACE ) )
-    {
-        printInfo = true;
-    }
-
+    
     f32   h         = radius;
-    color c         = GREY;
     f32   baselineY = 0;
-    f32   dotRadius = radius * 1.2f;
     for( ; h<height; h+=(radius*2.0f) )
     {
         if( h >= 0.7*CNC_WINDOW_HEIGHT && h<0.73*CNC_WINDOW_HEIGHT )
@@ -313,93 +257,6 @@ void PlatformRenderTextIntersections( void*       renderer,
     v2 pos = position;
     pos.y = baselineY;
     PlatformRenderText( renderer, app, font, text + startCharacter, pos, fontSize );
-
-    for( h=radius; h<=CNC_WINDOW_HEIGHT; h+=(radius*2.0f) )
-    {
-        for( f32 w=radius; w < width; w+=(radius*2.0f) )
-        {
-            if( h >= 0.7*CNC_WINDOW_HEIGHT && h<0.73*CNC_WINDOW_HEIGHT )
-            {
-                c = RED;
-            }
-            else if( (h - step) <= radius && (h-step) > 0 )
-            {
-                c = LIGHT_BLUE;
-            }
-            services->f_renderCircle( renderer, vec2( w, h ), radius * 0.6f, c );
-
-            if( (h-step) <= radius && (h-step) > 0)
-            {
-                f32 advance = 0;
-                char* text  = textPointer + startCharacter;
-                for( u32 j=startCharacter; j<startCharacter+2; )
-                {
-                    Codepoint codepoint = Utf8ToCodepoint( text );
-                    u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
-                    Glyph*    g         = GetGlyph( font, glyphId );
-
-                    u32 numContours      = g->m_header.m_numberOfContours;
-                    u32 numIntersections = 0;
-                    s16 index1           = 0;
-                    v2  p1, p2, p3;
-
-                    f32  t1 = -1.0f;
-                    f32  t2 = -1.0f;
-                    v2   offset = vec2( position.x + advance, baselineY );
-                    v2   ray    = vec2( w, h );
-                    
-                    if( printInfo )
-                    {
-                        printf( "ray: %f | %f\n", w, h );
-                    }
-                    
-                    bool onPath = false;
-                    for( u32 i=0; i<g->m_header.m_numberOfContours; ++i )
-                    {
-                        s16 endIndex   = g->m_endPtsOfContours[i];
-                        s16 startIndex = index1;
-                        for( ; index1+2<=endIndex; index1 += 2 )
-                        {
-                            p1 = ((v2)g->m_points[index1]   * fontScale) + offset;
-                            p2 = ((v2)g->m_points[index1+1] * fontScale) + offset;
-                            p3 = ((v2)g->m_points[index1+2] * fontScale) + offset;
-                            
-                            numIntersections += CalculateIntersections( p1, p2, p3, ray, &onPath );
-                        }
-
-                        p1 = ((v2)g->m_points[index1]     * fontScale) + offset;
-                        p2 = ((v2)g->m_points[index1+1]   * fontScale) + offset;
-                        p3 = ((v2)g->m_points[startIndex] * fontScale) + offset;
-                        
-                        numIntersections += CalculateIntersections( p1, p2, p3, ray, &onPath );
-
-                        // go to start of next contour
-                        index1 = endIndex + 1;  
-                    }
-                    
-                    if( onPath || (numIntersections % 2) != 0 )
-                    {
-                        services->f_renderCircle( renderer, vec2( w, h ), 5.0f, YELLOW );
-                    }
-
-                    if( printInfo )
-                    {
-                        printf( "p1(%f|%f)\n", p1.x, p1.y );
-                        printf( "p2(%f|%f)\n", p2.x, p2.y );
-                        printf( "p3(%f|%f)\n", p3.x, p3.y );
-                        printf( "intersections: %d\n", numIntersections );
-
-                        printInfo = false;
-                    }
-                    
-                    text        += codepoint.m_numUtf8Bytes;
-                    j           += codepoint.m_numUtf8Bytes;
-                    advance     += (g->m_horMetric.m_advanceWith * fontScale);
-                }
-            }
-        }
-        c= GREY;
-    }
 }
 
 /* implemented in the Renderer 

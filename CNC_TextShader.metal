@@ -24,12 +24,14 @@ struct BoundingBox
 {
     v2  m_position;
     v2  m_size;
+    v2  m_glyphOrigin;
     u32 m_glyphId;
+    f32 m_fontScale;
 };
 
 struct GpuGlyph
 {
-    u32 m_contourIndex;
+    u32 m_contourIndex; // Offset of this glyph's first contour endpoint.
     u32 m_numContours;
     u32 m_pointIndex;
     u32 m_numPoints;
@@ -288,6 +290,11 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
         out.m_uv       = v2( 1.0, 1.0 ) * b.m_size;
     }
 
+    // Convert bottom-up pixel UVs to font units with Y pointing down,
+    // matching the points produced by InsertImpliedPoints.
+    out.m_uv = b.m_glyphOrigin
+             + v2( out.m_uv.x, b.m_size.y - out.m_uv.y ) / b.m_fontScale;
+
     out.m_position = uniform.m_projection2D * out.m_position;
     out.m_glyphId  = b.m_glyphId;
 
@@ -300,5 +307,45 @@ fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]
                                     constant u32*      contourBuffer [[buffer(2)]])
 {
     float4 color = float4( 1.0, 1.0, 1.0, 0.2 );
+
+    GpuGlyph g = glphyBuffer[in.m_glyphId];
+    v2 ray = in.m_uv;
+    v2 p1;
+    v2 p2;
+    v2 p3;
+
+    f32  alpha            = 0.0;
+    u32  numIntersections = 0;
+    u32  startPoint       = g.m_pointIndex;
+    bool onPath           = false;
+
+    for( u32 c=0; c<g.m_numContours; ++c )
+    {
+        u32 endPoint = g.m_pointIndex + contourBuffer[g.m_contourIndex + c];
+
+        // Assumes each contour starts on-curve, followed by a control point.
+        // Adjacent quadratic segments share their on-curve endpoint.
+        for( u32 point=startPoint; point+1<=endPoint; point+=2 )
+        {
+            p1 = pointsBuffer[point];
+            p2 = pointsBuffer[point + 1];
+
+            // The final control point connects back to this contour's start.
+            u32 nextPoint = point + 2 <= endPoint ? point + 2 : startPoint;
+            p3 = pointsBuffer[nextPoint];
+
+            numIntersections += CalculateIntersections( p1, p2, p3, ray, &onPath );
+        }
+
+        startPoint = endPoint + 1;
+    }
+
+    if( onPath || (numIntersections % 2) != 0 )
+    {
+        alpha = 1.0;
+    }
+
+    color.a = alpha;
+
     return color;
 }
