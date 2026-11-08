@@ -188,21 +188,24 @@ bool bezierIntersection( v2 p1, v2 p2, v2 p3, thread f32* t1, thread f32* t2, f3
     return false;
 }
 
-uint3 CalculateIntersections( v2 p1,
-                              v2 p2,
-                              v2 p3,
-                              float3 rayX,
-                              f32 rayY,
-                              thread bool3* onPath )
+int3 CalculateWinding( v2 p1,
+                       v2 p2,
+                       v2 p3,
+                       float3 rayX,
+                       f32 rayY,
+                       thread bool3* onPath )
 {
-    f32 t1               = -1.0f;
-    f32 t2               = -1.0f;
-    uint3 numIntersections = uint3( 0 );
-    f32 epsilon          = 0.01f;
+    f32 t1      = -1.0f;
+    f32 t2      = -1.0f;
+    int3 winding = int3( 0 );
+    f32 epsilon = 0.01f;
+
+    f32 a = p1.y - 2.0f*p2.y + p3.y;
+    f32 b = 2.0f*(p2.y - p1.y);
 
     if( !bezierIntersection( p1, p2, p3, &t1, &t2, rayY ) )
     {
-        if( t1 >= 0 && t1 <= 1.0f )
+        if( t1 >= 0.0f && t1 < 1.0f )
         {
             v2 p = bezier( p1, p2, p3, t1 );
 
@@ -210,19 +213,18 @@ uint3 CalculateIntersections( v2 p1,
             if( abs( p.x - rayX.y ) <= epsilon ) (*onPath).y = true;
             if( abs( p.x - rayX.z ) <= epsilon ) (*onPath).z = true;
 
-            // This check is valid for a piece that does not turn in Y.
-            f32 minY = min( p1.y, p3.y );
-            f32 maxY = max( p1.y, p3.y );
-
-            if( rayY >= minY && rayY < maxY )
+            f32 derivative = 2.0f*a*t1 + b;
+            f32 derivativeScale = abs( 2.0f*a*t1 ) + abs( b );
+            if( !isNull( derivative, derivativeScale ) )
             {
-                if( p.x > rayX.x ) numIntersections.x++;
-                if( p.x > rayX.y ) numIntersections.y++;
-                if( p.x > rayX.z ) numIntersections.z++;
+                int direction = derivative > 0.0f ? 1 : -1;
+                if( p.x > rayX.x ) winding.x += direction;
+                if( p.x > rayX.y ) winding.y += direction;
+                if( p.x > rayX.z ) winding.z += direction;
             }
         }
     
-        if( t2 >= 0 && t2 <= 1.0f )
+        if( t2 >= 0.0f && t2 < 1.0f )
         {
             v2 p = bezier( p1, p2, p3, t2 );
 
@@ -230,16 +232,14 @@ uint3 CalculateIntersections( v2 p1,
             if( abs( p.x - rayX.y ) <= epsilon ) (*onPath).y = true;
             if( abs( p.x - rayX.z ) <= epsilon ) (*onPath).z = true;
 
-            // this checks if the ray is between p1 and p3 
-            // or between p3 and p1 which is both possible
-            f32 minY = min( p1.y, p3.y );
-            f32 maxY = max( p1.y, p3.y );
-
-            if( rayY >= minY && rayY < maxY )
+            f32 derivative = 2.0f*a*t2 + b;
+            f32 derivativeScale = abs( 2.0f*a*t2 ) + abs( b );
+            if( !isNull( derivative, derivativeScale ) )
             {
-                if( p.x > rayX.x ) numIntersections.x++;
-                if( p.x > rayX.y ) numIntersections.y++;
-                if( p.x > rayX.z ) numIntersections.z++;
+                int direction = derivative > 0.0f ? 1 : -1;
+                if( p.x > rayX.x ) winding.x += direction;
+                if( p.x > rayX.y ) winding.y += direction;
+                if( p.x > rayX.z ) winding.z += direction;
             }
         }
     }
@@ -256,7 +256,7 @@ uint3 CalculateIntersections( v2 p1,
         if( rayX.z >= left && rayX.z <= right ) (*onPath).z = true;
     }
 
-    return numIntersections;
+    return winding;
 }
 
 vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer(0)]],
@@ -319,9 +319,9 @@ f32 GlyphCoverage( GpuGlyph          g,
 {
     v2 p1, p2, p3;
 
-    uint3 numIntersections = uint3( 0 );
-    u32  startPoint       = g.m_pointIndex;
-    bool3 onPath          = bool3( false );
+    int3 winding    = int3( 0 );
+    u32 startPoint = g.m_pointIndex;
+    bool3 onPath   = bool3( false );
 
     for( u32 c=0; c<g.m_numContours; ++c )
     {
@@ -338,15 +338,15 @@ f32 GlyphCoverage( GpuGlyph          g,
             u32 nextPoint = point + 2 <= endPoint ? point + 2 : startPoint;
             p3 = pointsBuffer[nextPoint];
 
-            numIntersections += CalculateIntersections( p1, p2, p3, rayX, rayY, &onPath );
+            winding += CalculateWinding( p1, p2, p3, rayX, rayY, &onPath );
         }
 
         startPoint = endPoint + 1;
     }
 
-    bool inside0 = onPath.x || (numIntersections.x % 2) != 0;
-    bool inside1 = onPath.y || (numIntersections.y % 2) != 0;
-    bool inside2 = onPath.z || (numIntersections.z % 2) != 0;
+    bool inside0 = onPath.x || winding.x != 0;
+    bool inside1 = onPath.y || winding.y != 0;
+    bool inside2 = onPath.z || winding.z != 0;
 
     f32 coverage = 0.0f;
     coverage += inside0 ? 1.0f / 3.0f : 0.0f;
