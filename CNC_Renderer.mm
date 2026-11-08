@@ -39,6 +39,8 @@
         u32                   m_numDrawCalls;
         DrawCall              m_drawCalls[MAX_DRAWCALLS];
 
+        DrawCall              m_textCall;
+
         id< MTLBuffer >       m_particleBuffer;
         VertexInput           m_particleVertices[6];
 
@@ -171,18 +173,20 @@
                 }
 
                 case CNC_TEXT:
-                {
-                    [commandEncoder setRenderPipelineState: m_renderStateText];
-                    [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: 0                      atIndex: 0];
-                    [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
-
-                    [commandEncoder setFragmentBuffer: m_glyphBuffer        offset: 0                      atIndex: 0];
-                    [commandEncoder setFragmentBuffer: m_pointBuffer        offset: 0                      atIndex: 1];
-                    [commandEncoder setFragmentBuffer: m_contourBuffer      offset: 0                      atIndex: 2];
-                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: call.m_numInstances];
                     break;
-                }
-            }            
+            }         
+        }
+        
+        if( m_textCall.m_numInstances > 0 )
+        {
+            [commandEncoder setRenderPipelineState: m_renderStateText];
+            [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: 0                      atIndex: 0];
+            [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
+
+            [commandEncoder setFragmentBuffer: m_glyphBuffer        offset: 0                      atIndex: 0];
+            [commandEncoder setFragmentBuffer: m_pointBuffer        offset: 0                      atIndex: 1];
+            [commandEncoder setFragmentBuffer: m_contourBuffer      offset: 0                      atIndex: 2];
+            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: m_textCall.m_numInstances];
         }
 
         [commandEncoder endEncoding];
@@ -191,7 +195,8 @@
     }
 
     // reset this after every frame !!!
-    m_numDrawCalls = 0;
+    m_numDrawCalls            = 0;
+    m_textCall.m_numInstances = 0;
 }
 
 - (bool)checkError:(NSError*)error message:(NSString*)msg
@@ -495,12 +500,11 @@
 
 - (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num
 {
-    m_drawCalls[m_numDrawCalls].m_type         = CNC_TEXT;
-    m_drawCalls[m_numDrawCalls].m_numInstances = num;
+    m_textCall.m_type          = CNC_TEXT;
+    
+    memcpy( (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_textCall.m_numInstances), boxes, sizeof( BoundingBox ) * num );
 
-    memcpy( [m_boundingBoxBuffer contents], boxes, sizeof( BoundingBox ) * num );
-
-    m_numDrawCalls++;
+    m_textCall.m_numInstances += num;
 }
 
 - (void)updateImage:(Image*)image
@@ -588,9 +592,9 @@ MainRenderer* CreateMainRenderer()
 
     CGRect renderFrame = CGRectMake( 0, 0, CNC_WINDOW_WIDTH, CNC_WINDOW_HEIGHT );
 
-    renderer->m_gpu = MTLCreateSystemDefaultDevice();
-    renderer->m_commandQueue = [renderer->m_gpu newCommandQueue];
-    renderer->m_view         = [[MTKView alloc] initWithFrame: renderFrame device: renderer->m_gpu];
+    renderer->m_gpu               = MTLCreateSystemDefaultDevice();
+    renderer->m_commandQueue      = [renderer->m_gpu newCommandQueue];
+    renderer->m_view              = [[MTKView alloc] initWithFrame: renderFrame device: renderer->m_gpu];
 
     renderer->m_view.paused       = true;
     renderer->m_view.needsDisplay = false;
@@ -601,7 +605,6 @@ MainRenderer* CreateMainRenderer()
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
-
     renderer->m_boundingBoxBuffer = [renderer->m_gpu newBufferWithLength: sizeof( BoundingBox ) * 1000
                                                                  options: MTLResourceStorageModeShared];
     renderer->m_glyphBuffer       = [renderer->m_gpu newBufferWithLength: sizeof( GpuGlyph ) * 2000

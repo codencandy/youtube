@@ -138,9 +138,9 @@ void PlatformRenderText( void*       renderer,
     f32               xOffset     = position.x;
     f32               baseline    = position.y;
 
-    u32 textLength = StringLength( text );
-    BoundingBox boxes[textLength];
-    u32 numBoxes = 0;
+    u32          textLength = StringLength( text );
+    BoundingBox* boxes = (BoundingBox*)malloc( sizeof( BoundingBox ) * textLength );
+    u32          numBoxes = 0;
 
     char* textPointer = (char*)text;
     for( u32 i=0; i<textLength; )
@@ -198,6 +198,7 @@ void PlatformRenderText( void*       renderer,
     if( numBoxes > 0 )
     {
         PlatformUploadBoxes( renderer, boxes, numBoxes );
+        free( boxes );
     }
 }
 

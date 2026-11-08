@@ -32,53 +32,6 @@ void UpdateApplication( Application* app )
 
 void RenderApplication( Application* app )
 {
-    fontDemo2( app );
-}
-
-void fontDemo2( Application* app )
-{
-    PlatformServices* services = app->m_services;
-    void*             renderer = app->m_renderer;
-
-    TextDemo* textDemo = (TextDemo*)app;
-    TtfFont*  font     = textDemo->m_ttfFont;
-
-    static const char* capitals       = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    static const char* lowercase      = "abcdefghijklmnopqrstuvwyxz";
-    static f32         fontSize       = 400.0f;
-    static u32         startCharacter = 0;
-    
-    u32 textLength = StringLength( lowercase );
-
-    if( MouseWheelScrolled( app->m_input ) )
-    {
-        if( app->m_input->m_mouse.m_wheel > 0 )
-            fontSize += 2.0f;
-        else
-            fontSize -= 2.0f;
-    }
-
-    if( KeyPressed( app->m_input, ARROW_RIGHT ) )
-    {
-        if( startCharacter < textLength )
-        {
-            startCharacter++;
-        }
-    }
-
-    if( KeyPressed( app->m_input, ARROW_LEFT ) )
-    {
-        if( startCharacter > 0 )
-        {
-            startCharacter--;
-        }
-    }
-
-    services->f_renderText( renderer, app, font, lowercase + startCharacter , vec2( 40.0f, 250.0f ), fontSize );
-}
-
-void fontDemo1( Application* app )
-{
     PlatformServices* services = app->m_services;
     void*             renderer = app->m_renderer;
 
@@ -94,10 +47,19 @@ void fontDemo1( Application* app )
 lecture on astronomy.\nHe described how the earth orbits around the sun and how\n\
 the sun, in turn, orbits around the center of a vast collection of stars called \
 our galaxy.";
+
+    static f32 fontSize = 32.0f;
+    if( MouseWheelScrolled( app->m_input ) )
+    {
+        if( app->m_input->m_mouse.m_wheel > 0 )
+            fontSize += 2.0f;
+        else
+            fontSize -= 2.0f;
+    }
     
-    services->f_renderText( renderer, app, font, capitals, vec2( 40.0f, 40.0f ),  32.0f );
-    services->f_renderText( renderer, app, font, numbers , vec2( 40.0f, 80.0f ),  32.0f );
-    services->f_renderText( renderer, app, font, umlauts , vec2( 40.0f, 120.0f ), 32.0f );
-    services->f_renderText( renderer, app, font, pangram , vec2( 40.0f, 160.0f ), 32.0f );
-    services->f_renderText( renderer, app, font, hawking,  vec2( 40.0f, 250.0f ), 32.0f );
+    services->f_renderText( renderer, app, font, capitals, vec2( 40.0f, 40.0f ),  fontSize );
+    services->f_renderText( renderer, app, font, numbers , vec2( 40.0f, 80.0f ),  fontSize );
+    services->f_renderText( renderer, app, font, umlauts , vec2( 40.0f, 120.0f ), fontSize );
+    services->f_renderText( renderer, app, font, pangram , vec2( 40.0f, 160.0f ), fontSize );
+    services->f_renderText( renderer, app, font, hawking,  vec2( 40.0f, 250.0f ), fontSize );
 }
