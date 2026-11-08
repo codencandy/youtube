@@ -301,20 +301,15 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
     return out;
 }              
 
-fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]],
-                                    constant GpuGlyph* glphyBuffer   [[buffer(0)]],
-                                    constant v2*       pointsBuffer  [[buffer(1)]],
-                                    constant u32*      contourBuffer [[buffer(2)]])
+bool IsInsideGlyph( GpuGlyph          g,
+                    v2                ray,
+                    constant v2*      pointsBuffer,
+                    constant u32*     contourBuffer )
 {
-    float4 color = float4( 1.0, 1.0, 1.0, 0.2 );
-
-    GpuGlyph g = glphyBuffer[in.m_glyphId];
-    v2 ray = in.m_uv;
     v2 p1;
     v2 p2;
     v2 p3;
 
-    f32  alpha            = 0.0;
     u32  numIntersections = 0;
     u32  startPoint       = g.m_pointIndex;
     bool onPath           = false;
@@ -340,12 +335,32 @@ fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]
         startPoint = endPoint + 1;
     }
 
-    if( onPath || (numIntersections % 2) != 0 )
+    return onPath || (numIntersections % 2) != 0;
+}
+
+fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]],
+                                    constant GpuGlyph* glphyBuffer   [[buffer(0)]],
+                                    constant v2*       pointsBuffer  [[buffer(1)]],
+                                    constant u32*      contourBuffer [[buffer(2)]])
+{
+    GpuGlyph g = glphyBuffer[in.m_glyphId];
+    v2 pixelX = dfdx( in.m_uv );
+
+    constexpr f32 sampleOffsets[3] = {
+        -1.0f / 3.0f,
+         0.0f,
+         1.0f / 3.0f
+    };
+
+    f32 coverage = 0.0f;
+    for( u32 sample=0; sample<3; ++sample )
     {
-        alpha = 1.0;
+        v2 ray = in.m_uv + pixelX * sampleOffsets[sample];
+        if( IsInsideGlyph( g, ray, pointsBuffer, contourBuffer ) )
+        {
+            coverage += 1.0f / 3.0f;
+        }
     }
 
-    color.a = alpha;
-
-    return color;
+    return float4( 1.0f, 1.0f, 1.0f, coverage );
 }
