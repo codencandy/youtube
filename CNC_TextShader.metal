@@ -188,31 +188,37 @@ bool bezierIntersection( v2 p1, v2 p2, v2 p3, thread f32* t1, thread f32* t2, f3
     return false;
 }
 
-u32 CalculateIntersections( v2 p1, v2 p2, v2 p3, v2 ray, thread bool* onPath )
+uint3 CalculateIntersections( v2 p1,
+                              v2 p2,
+                              v2 p3,
+                              float3 rayX,
+                              f32 rayY,
+                              thread bool3* onPath )
 {
     f32 t1               = -1.0f;
     f32 t2               = -1.0f;
-    u32 numIntersections = 0;
+    uint3 numIntersections = uint3( 0 );
     f32 epsilon          = 0.01f;
 
-    if( !bezierIntersection( p1, p2, p3, &t1, &t2, ray.y ) )
+    if( !bezierIntersection( p1, p2, p3, &t1, &t2, rayY ) )
     {
         if( t1 >= 0 && t1 <= 1.0f )
         {
             v2 p = bezier( p1, p2, p3, t1 );
 
-            if( abs( p.x - ray.x ) <= epsilon )
-            {
-                *onPath = true;
-            }
+            if( abs( p.x - rayX.x ) <= epsilon ) (*onPath).x = true;
+            if( abs( p.x - rayX.y ) <= epsilon ) (*onPath).y = true;
+            if( abs( p.x - rayX.z ) <= epsilon ) (*onPath).z = true;
 
             // This check is valid for a piece that does not turn in Y.
             f32 minY = min( p1.y, p3.y );
             f32 maxY = max( p1.y, p3.y );
 
-            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
+            if( rayY >= minY && rayY < maxY )
             {
-                numIntersections++;
+                if( p.x > rayX.x ) numIntersections.x++;
+                if( p.x > rayX.y ) numIntersections.y++;
+                if( p.x > rayX.z ) numIntersections.z++;
             }
         }
     
@@ -220,19 +226,20 @@ u32 CalculateIntersections( v2 p1, v2 p2, v2 p3, v2 ray, thread bool* onPath )
         {
             v2 p = bezier( p1, p2, p3, t2 );
 
-            if( abs( p.x - ray.x ) <= epsilon )
-            {
-                *onPath = true;
-            }
+            if( abs( p.x - rayX.x ) <= epsilon ) (*onPath).x = true;
+            if( abs( p.x - rayX.y ) <= epsilon ) (*onPath).y = true;
+            if( abs( p.x - rayX.z ) <= epsilon ) (*onPath).z = true;
 
             // this checks if the ray is between p1 and p3 
             // or between p3 and p1 which is both possible
             f32 minY = min( p1.y, p3.y );
             f32 maxY = max( p1.y, p3.y );
 
-            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
+            if( rayY >= minY && rayY < maxY )
             {
-                numIntersections++;
+                if( p.x > rayX.x ) numIntersections.x++;
+                if( p.x > rayX.y ) numIntersections.y++;
+                if( p.x > rayX.z ) numIntersections.z++;
             }
         }
     }
@@ -244,10 +251,9 @@ u32 CalculateIntersections( v2 p1, v2 p2, v2 p3, v2 ray, thread bool* onPath )
         f32 left  = min( p1.x, p3.x );
         f32 right = max( p1.x, p3.x );
 
-        if( ray.x >= left && ray.x <= right )
-        {
-            *onPath = true;
-        }
+        if( rayX.x >= left && rayX.x <= right ) (*onPath).x = true;
+        if( rayX.y >= left && rayX.y <= right ) (*onPath).y = true;
+        if( rayX.z >= left && rayX.z <= right ) (*onPath).z = true;
     }
 
     return numIntersections;
@@ -262,32 +268,36 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
 
     BoundingBox b = box[instanceId];
 
-    // bottom left
-    if( vertexId == 0 )
+    switch( vertexId )
     {
-        out.m_position = float4( b.m_position.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
-        out.m_uv       = v2( 0.0, 0.0 ) * b.m_size;
-    }
-
-    // bottom right
-    if( vertexId == 1 )
-    {
-        out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
-        out.m_uv       = v2( 1.0, 0.0 ) * b.m_size;
-    }
-
-    // top left
-    if( vertexId == 2 )
-    {
-        out.m_position = float4( b.m_position.x, b.m_position.y, 0.0, 1.0 );
-        out.m_uv       = v2( 0.0, 1.0 ) * b.m_size;
-    }
-
-    // top right
-    if( vertexId == 3 )
-    {
-        out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y, 0.0, 1.0 );
-        out.m_uv       = v2( 1.0, 1.0 ) * b.m_size;
+        case 0:
+        {
+            // bottom left
+            out.m_position = float4( b.m_position.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
+            out.m_uv       = v2( 0.0, 0.0 ) * b.m_size;
+            break;
+        }
+        case 1:
+        {
+            // bottom right
+            out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y + b.m_size.y, 0.0, 1.0 );
+            out.m_uv       = v2( 1.0, 0.0 ) * b.m_size;
+            break;
+        }
+        case 2:
+        {
+            // top left
+            out.m_position = float4( b.m_position.x, b.m_position.y, 0.0, 1.0 );
+            out.m_uv       = v2( 0.0, 1.0 ) * b.m_size;
+            break;
+        }
+        case 3:
+        {
+            // top right
+            out.m_position = float4( b.m_position.x + b.m_size.x, b.m_position.y, 0.0, 1.0 );
+            out.m_uv       = v2( 1.0, 1.0 ) * b.m_size;
+            break;
+        }
     }
 
     // Convert bottom-up pixel UVs to font units with Y pointing down,
@@ -301,18 +311,17 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
     return out;
 }              
 
-bool IsInsideGlyph( GpuGlyph          g,
-                    v2                ray,
-                    constant v2*      pointsBuffer,
-                    constant u32*     contourBuffer )
+f32 GlyphCoverage( GpuGlyph          g,
+                   float3            rayX,
+                   f32               rayY,
+                   constant v2*      pointsBuffer,
+                   constant u32*     contourBuffer )
 {
-    v2 p1;
-    v2 p2;
-    v2 p3;
+    v2 p1, p2, p3;
 
-    u32  numIntersections = 0;
+    uint3 numIntersections = uint3( 0 );
     u32  startPoint       = g.m_pointIndex;
-    bool onPath           = false;
+    bool3 onPath          = bool3( false );
 
     for( u32 c=0; c<g.m_numContours; ++c )
     {
@@ -329,13 +338,21 @@ bool IsInsideGlyph( GpuGlyph          g,
             u32 nextPoint = point + 2 <= endPoint ? point + 2 : startPoint;
             p3 = pointsBuffer[nextPoint];
 
-            numIntersections += CalculateIntersections( p1, p2, p3, ray, &onPath );
+            numIntersections += CalculateIntersections( p1, p2, p3, rayX, rayY, &onPath );
         }
 
         startPoint = endPoint + 1;
     }
 
-    return onPath || (numIntersections % 2) != 0;
+    bool inside0 = onPath.x || (numIntersections.x % 2) != 0;
+    bool inside1 = onPath.y || (numIntersections.y % 2) != 0;
+    bool inside2 = onPath.z || (numIntersections.z % 2) != 0;
+
+    f32 coverage = 0.0f;
+    coverage += inside0 ? 1.0f / 3.0f : 0.0f;
+    coverage += inside1 ? 1.0f / 3.0f : 0.0f;
+    coverage += inside2 ? 1.0f / 3.0f : 0.0f;
+    return coverage;
 }
 
 fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]],
@@ -344,23 +361,20 @@ fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]
                                     constant u32*      contourBuffer [[buffer(2)]])
 {
     GpuGlyph g = glphyBuffer[in.m_glyphId];
-    v2 pixelX = dfdx( in.m_uv );
-
-    constexpr f32 sampleOffsets[3] = {
+    f32 pixelWidth = dfdx( in.m_uv.x );
+    float3 rayX = in.m_uv.x + pixelWidth * float3(
         -1.0f / 3.0f,
          0.0f,
          1.0f / 3.0f
-    };
+    );
 
-    f32 coverage = 0.0f;
-    for( u32 sample=0; sample<3; ++sample )
-    {
-        v2 ray = in.m_uv + pixelX * sampleOffsets[sample];
-        if( IsInsideGlyph( g, ray, pointsBuffer, contourBuffer ) )
-        {
-            coverage += 1.0f / 3.0f;
-        }
-    }
+    f32 coverage = GlyphCoverage(
+        g,
+        rayX,
+        in.m_uv.y,
+        pointsBuffer,
+        contourBuffer
+    );
 
     return float4( 1.0f, 1.0f, 1.0f, coverage );
 }

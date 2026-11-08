@@ -152,7 +152,10 @@ void PlatformRenderText( void*       renderer,
         if( codepoint.m_codepoint == '\n' )
         {
             xOffset = position.x;
-            baseline += size * 1.2f;
+            f32 lineAdvance = ( font->m_hheaTable.m_ascender - 
+                                font->m_hheaTable.m_descender + font->m_hheaTable.m_lineGap) * 
+                                fontScale;
+            baseline += lineAdvance;
             textPointer += codepoint.m_numUtf8Bytes;
             i           += codepoint.m_numUtf8Bytes;
             continue;
@@ -193,7 +196,9 @@ void PlatformRenderText( void*       renderer,
     }
 
     if( numBoxes > 0 )
+    {
         PlatformUploadBoxes( renderer, boxes, numBoxes );
+    }
 }
 
 /* implemented in the Renderer 
