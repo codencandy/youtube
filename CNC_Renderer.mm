@@ -179,9 +179,14 @@
         
         if( m_textCall.m_numInstances > 0 )
         {
+            // Convert one drawable pixel to the logical coordinates of the projection.
+            CGSize drawableSize = view.drawableSize;
+            v2 pixelSize = vec2( m_uniform.m_screenWidth / fmaxf( (f32)drawableSize.width, 1.0f ),
+                                 m_uniform.m_screenHeight / fmaxf( (f32)drawableSize.height, 1.0f ) );
             [commandEncoder setRenderPipelineState: m_renderStateText];
             [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: 0                      atIndex: 0];
             [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
+            [commandEncoder setVertexBytes:    &pixelSize           length: sizeof( v2 )           atIndex: 2];
 
             [commandEncoder setFragmentBuffer: m_glyphBuffer        offset: 0                      atIndex: 0];
             [commandEncoder setFragmentBuffer: m_pointBuffer        offset: 0                      atIndex: 1];
@@ -306,13 +311,13 @@
     renderDesc.vertexDescriptor                = vertexDesc;
     renderDesc.vertexFunction                  = [m_library newFunctionWithName: @"MainVertexShader"];
     renderDesc.fragmentFunction                = [m_library newFunctionWithName: @"MainFragmentShader"];
-    renderDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+    renderDesc.colorAttachments[0].pixelFormat = m_view.colorPixelFormat;
 
     renderDesc.colorAttachments[0].blendingEnabled = true;
     renderDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
     renderDesc.colorAttachments[0].rgbBlendOperation   = MTLBlendOperationAdd;
 
-    renderDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+    renderDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
     renderDesc.colorAttachments[0].sourceRGBBlendFactor   = MTLBlendFactorSourceAlpha;
 
     renderDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
@@ -361,7 +366,8 @@
     MTLTextureDescriptor* textureDesc = [MTLTextureDescriptor new];
     textureDesc.width       = image->m_width;
     textureDesc.height      = image->m_height;
-    textureDesc.pixelFormat = MTLPixelFormatRGBA8Unorm;
+    // Decode image RGB into linear light when sampled; alpha remains linear.
+    textureDesc.pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
 
     id< MTLTexture > texture      = [m_gpu newTextureWithDescriptor: textureDesc];
     id< MTLBuffer >  vertexBuffer = [self createGeometry: image->m_width height: image->m_height];
@@ -595,6 +601,7 @@ MainRenderer* CreateMainRenderer()
     renderer->m_gpu               = MTLCreateSystemDefaultDevice();
     renderer->m_commandQueue      = [renderer->m_gpu newCommandQueue];
     renderer->m_view              = [[MTKView alloc] initWithFrame: renderFrame device: renderer->m_gpu];
+    renderer->m_view.colorPixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
 
     renderer->m_view.paused       = true;
     renderer->m_view.needsDisplay = false;

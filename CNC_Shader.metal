@@ -47,6 +47,14 @@ struct PrimitiveData
 
 constexpr sampler textureSampler( mag_filter::linear, min_filter::linear );
 
+// Application colors are specified in sRGB; the render target blends in linear light.
+float4 LinearColor( float4 color )
+{
+    color.rgb = select( pow( (color.rgb + 0.055f) / 1.055f, float3( 2.4f ) ),
+                        color.rgb / 12.92f, color.rgb <= 0.04045f );
+    return color;
+}
+
 vertex VertexOutput MainVertexShader( VertexInput           in         [[stage_in]],
                                       constant UniformData& uniform    [[buffer(1)]],
                                       constant ModelData&   model      [[buffer(2)]],
@@ -152,7 +160,7 @@ vertex VertexOutput ParticleVertexShader( VertexInput           in         [[sta
 
 fragment float4 ParticleFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color = in.m_color;
+    float4 color = LinearColor( in.m_color );
 
     float2 center = float2( 0.5 );
     float  d      = distance( center, in.m_uv );
@@ -193,7 +201,7 @@ vertex VertexOutput RectVertexShader( VertexInput             in         [[stage
 
 fragment float4 RectFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color = in.m_color;
+    float4 color = LinearColor( in.m_color );
     return color;
 }
 
@@ -225,7 +233,7 @@ vertex VertexOutput CircleVertexShader( VertexInput             in         [[sta
 
 fragment float4 CircleFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color  = in.m_color;
+    float4 color  = LinearColor( in.m_color );
     float2 center = float2( 0.5 );
     float  d      = distance( center, in.m_uv );
     float  edge   = 0.05;
@@ -282,6 +290,6 @@ vertex VertexOutput LineVertexShader( VertexInput             in         [[stage
 
 fragment float4 LineFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color = in.m_color;
+    float4 color = LinearColor( in.m_color );
     return color;
 }

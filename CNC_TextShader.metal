@@ -188,16 +188,16 @@ bool bezierIntersection( v2 p1, v2 p2, v2 p3, thread f32* t1, thread f32* t2, f3
     return false;
 }
 
-int3 CalculateWinding( v2 p1,
+int4 CalculateWinding( v2 p1,
                        v2 p2,
                        v2 p3,
-                       float3 rayX,
+                       float4 rayX,
                        f32 rayY,
-                       thread bool3* onPath )
+                       thread bool4* onPath )
 {
     f32 t1      = -1.0f;
     f32 t2      = -1.0f;
-    int3 winding = int3( 0 );
+    int4 winding = int4( 0 );
     f32 epsilon = 0.01f;
 
     f32 a = p1.y - 2.0f*p2.y + p3.y;
@@ -212,6 +212,7 @@ int3 CalculateWinding( v2 p1,
             if( abs( p.x - rayX.x ) <= epsilon ) (*onPath).x = true;
             if( abs( p.x - rayX.y ) <= epsilon ) (*onPath).y = true;
             if( abs( p.x - rayX.z ) <= epsilon ) (*onPath).z = true;
+            if( abs( p.x - rayX.w ) <= epsilon ) (*onPath).w = true;
 
             f32 derivative = 2.0f*a*t1 + b;
             f32 derivativeScale = abs( 2.0f*a*t1 ) + abs( b );
@@ -221,6 +222,7 @@ int3 CalculateWinding( v2 p1,
                 if( p.x > rayX.x ) winding.x += direction;
                 if( p.x > rayX.y ) winding.y += direction;
                 if( p.x > rayX.z ) winding.z += direction;
+                if( p.x > rayX.w ) winding.w += direction;
             }
         }
     
@@ -231,6 +233,7 @@ int3 CalculateWinding( v2 p1,
             if( abs( p.x - rayX.x ) <= epsilon ) (*onPath).x = true;
             if( abs( p.x - rayX.y ) <= epsilon ) (*onPath).y = true;
             if( abs( p.x - rayX.z ) <= epsilon ) (*onPath).z = true;
+            if( abs( p.x - rayX.w ) <= epsilon ) (*onPath).w = true;
 
             f32 derivative = 2.0f*a*t2 + b;
             f32 derivativeScale = abs( 2.0f*a*t2 ) + abs( b );
@@ -240,6 +243,7 @@ int3 CalculateWinding( v2 p1,
                 if( p.x > rayX.x ) winding.x += direction;
                 if( p.x > rayX.y ) winding.y += direction;
                 if( p.x > rayX.z ) winding.z += direction;
+                if( p.x > rayX.w ) winding.w += direction;
             }
         }
     }
@@ -254,6 +258,7 @@ int3 CalculateWinding( v2 p1,
         if( rayX.x >= left && rayX.x <= right ) (*onPath).x = true;
         if( rayX.y >= left && rayX.y <= right ) (*onPath).y = true;
         if( rayX.z >= left && rayX.z <= right ) (*onPath).z = true;
+        if( rayX.w >= left && rayX.w <= right ) (*onPath).w = true;
     }
 
     return winding;
@@ -261,12 +266,18 @@ int3 CalculateWinding( v2 p1,
 
 vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer(0)]],
                                       constant UniformData& uniform     [[buffer(1)]],    
+                                      constant v2&          pixelSize   [[buffer(2)]],
                                       uint                  instanceId  [[instance_id]],
                                       uint                  vertexId    [[vertex_id]])
 {
     VertexOutput out;
 
     BoundingBox b = box[instanceId];
+
+    // Extend rasterization by one drawable pixel without moving the outline.
+    b.m_position    -= pixelSize;
+    b.m_size        += 2.0f * pixelSize;
+    b.m_glyphOrigin -= pixelSize / b.m_fontScale;
 
     switch( vertexId )
     {
@@ -312,16 +323,16 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
 }              
 
 f32 GlyphCoverage( GpuGlyph          g,
-                   float3            rayX,
+                   float4            rayX,
                    f32               rayY,
                    constant v2*      pointsBuffer,
                    constant u32*     contourBuffer )
 {
     v2 p1, p2, p3;
 
-    int3 winding    = int3( 0 );
+    int4 winding    = int4( 0 );
     u32 startPoint = g.m_pointIndex;
-    bool3 onPath   = bool3( false );
+    bool4 onPath   = bool4( false );
 
     for( u32 c=0; c<g.m_numContours; ++c )
     {
@@ -347,11 +358,13 @@ f32 GlyphCoverage( GpuGlyph          g,
     bool inside0 = onPath.x || winding.x != 0;
     bool inside1 = onPath.y || winding.y != 0;
     bool inside2 = onPath.z || winding.z != 0;
+    bool inside3 = onPath.w || winding.w != 0;
 
     f32 coverage = 0.0f;
-    coverage += inside0 ? 1.0f / 3.0f : 0.0f;
-    coverage += inside1 ? 1.0f / 3.0f : 0.0f;
-    coverage += inside2 ? 1.0f / 3.0f : 0.0f;
+    coverage += inside0 ? 1.0f / 4.0f : 0.0f;
+    coverage += inside1 ? 1.0f / 4.0f : 0.0f;
+    coverage += inside2 ? 1.0f / 4.0f : 0.0f;
+    coverage += inside3 ? 1.0f / 4.0f : 0.0f;
     return coverage;
 }
 
@@ -362,19 +375,23 @@ fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]
 {
     GpuGlyph g = glphyBuffer[in.m_glyphId];
     f32 pixelWidth = dfdx( in.m_uv.x );
-    float3 rayX = in.m_uv.x + pixelWidth * float3(
-        -1.0f / 3.0f,
-         0.0f,
-         1.0f / 3.0f
+    f32 pixelHeight = dfdy( in.m_uv.y );
+    float4 rayX = in.m_uv.x + pixelWidth * float4(
+        -3.0f / 8.0f,
+        -1.0f / 8.0f,
+         1.0f / 8.0f,
+         3.0f / 8.0f
     );
 
-    f32 coverage = GlyphCoverage(
-        g,
-        rayX,
-        in.m_uv.y,
-        pointsBuffer,
-        contourBuffer
-    );
+    // Four horizontal samples on each of four rows within the pixel.
+    // GlyphCoverage already averages the four samples in a row.
+    f32 coverage = 0.0f;
+    for( int row=0; row<4; ++row )
+    {
+        f32 rayY = in.m_uv.y + pixelHeight * ((f32(row) + 0.5f) / 4.0f - 0.5f);
+        coverage += GlyphCoverage( g, rayX, rayY, pointsBuffer, contourBuffer );
+    }
+    coverage /= 4.0f;
 
     return float4( 1.0f, 1.0f, 1.0f, coverage );
 }
