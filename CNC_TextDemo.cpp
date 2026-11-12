@@ -15,12 +15,16 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
 
     StartTimer( &textdemo->m_timer );
 
-    File* ttfFile = services->f_loadFile( "./res/montserrat-regular.ttf" );
-    ttfFile->m_endianess = BIGENDIAN;
+    File* montserratFile  = services->f_loadFile( "./res/montserrat-regular.ttf" );
+    File* bladerunnerFile = services->f_loadFile( "./res/bladerunner.ttf" );
+    montserratFile->m_endianess  = BIGENDIAN;
+    bladerunnerFile->m_endianess = BIGENDIAN;
 
-    TtfFont* ttfFont = services->f_loadFont( ttfFile, renderer );
+    TtfFont* montserrat  = services->f_loadFont( montserratFile, renderer );
+    TtfFont* bladerunner = services->f_loadFont( bladerunnerFile, renderer );
 
-    textdemo->m_ttfFont = ttfFont;
+    textdemo->m_montserrat  = montserrat;
+    textdemo->m_bladerunner = bladerunner;
     
     return textdemo;
 }
@@ -36,7 +40,7 @@ void RenderApplication( Application* app )
     void*             renderer = app->m_renderer;
 
     TextDemo* textDemo = (TextDemo*)app;
-    TtfFont*  font     = textDemo->m_ttfFont;
+    TtfFont*  font     = textDemo->m_montserrat;
 
     static const char* capitals  = "A B C D E F G H I";
     static const char* umlauts   = "Ä ä Ü ü ß Ö ö & %";

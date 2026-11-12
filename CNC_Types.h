@@ -119,6 +119,7 @@ typedef struct DrawCall
 {
     draw_type m_type;
     u32       m_textureId;
+    u32       m_fontId;
     u32       m_snowMask;
     u32       m_skyMask;
     u32       m_numInstances;

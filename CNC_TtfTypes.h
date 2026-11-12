@@ -261,6 +261,8 @@ typedef struct TtfFont
     File*        m_fontFile;
     TableOffsets m_offsets;
 
+    u32          m_fontId;
+
     u32          m_numTables;
     TableEntry*  m_tableEntries;
 

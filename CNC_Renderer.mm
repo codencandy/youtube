@@ -7,6 +7,19 @@
 #include "CNC_PlatformServices.h"
 
 #define MAX_DRAWCALLS 100000
+#define MAX_TEXTCALLS 1000
+
+@interface TextBuffers : NSObject
+{
+    @public
+        id< MTLBuffer > m_pointBuffer;
+        id< MTLBuffer > m_contourBuffer;
+        id< MTLBuffer > m_glyphBuffer;
+}
+@end
+
+@implementation TextBuffers
+@end
 
 @interface MainRenderer : NSObject< MTKViewDelegate >
 {
@@ -27,17 +40,19 @@
         id< MTLRenderPipelineState > m_renderStateText;
 
         u32                   m_nextTextureId;
+        u32                   m_nextFontId;
+
         NSMutableArray*       m_textures;
         NSMutableArray*       m_vertexBuffers;
         NSMutableArray*       m_modelBuffers;
+        NSMutableArray*       m_textBuffers;
         
         id< MTLBuffer >       m_boundingBoxBuffer;
-        id< MTLBuffer >       m_glyphBuffer;
-        id< MTLBuffer >       m_contourBuffer;
-        id< MTLBuffer >       m_pointBuffer;
-
+        
         u32                   m_numDrawCalls;
+        u32                   m_numTextCalls;
         DrawCall              m_drawCalls[MAX_DRAWCALLS];
+        DrawCall              m_textCalls[MAX_TEXTCALLS];
 
         DrawCall              m_textCall;
 
@@ -54,16 +69,16 @@
 - (void)createUniform;
 - (void)createPipeline;
 
-- (u32)uploadImage:(Image*)image;
+- (u32) uploadImage:(Image*)image;
 - (void)updateImage:(Image*)image;
 - (void)renderImage:(u32)textureId instances:(u32)numInstances;
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
-- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num points:(v2*)points numPoints:(u32)numPoints contours:(u32*)contours numContours:(u32)numContours;
+- (u32) uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num points:(v2*)points numPoints:(u32)numPoints contours:(u32*)contours numContours:(u32)numContours;
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c;
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c;
 - (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c;
-- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num;
+- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num fontId:(u32)id;
 
 @end
 
@@ -183,14 +198,20 @@
             CGSize drawableSize = view.drawableSize;
             v2 pixelSize = vec2( m_uniform.m_screenWidth / fmaxf( (f32)drawableSize.width, 1.0f ),
                                  m_uniform.m_screenHeight / fmaxf( (f32)drawableSize.height, 1.0f ) );
+
+            TextBuffers*  textBuffers   = m_textBuffers[m_textCall.m_fontId];
+            id<MTLBuffer> pointBuffer   = textBuffers->m_pointBuffer;
+            id<MTLBuffer> glyphBuffer   = textBuffers->m_glyphBuffer;
+            id<MTLBuffer> contourBuffer = textBuffers->m_contourBuffer;
+
             [commandEncoder setRenderPipelineState: m_renderStateText];
             [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: 0                      atIndex: 0];
             [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
             [commandEncoder setVertexBytes:    &pixelSize           length: sizeof( v2 )           atIndex: 2];
 
-            [commandEncoder setFragmentBuffer: m_glyphBuffer        offset: 0                      atIndex: 0];
-            [commandEncoder setFragmentBuffer: m_pointBuffer        offset: 0                      atIndex: 1];
-            [commandEncoder setFragmentBuffer: m_contourBuffer      offset: 0                      atIndex: 2];
+            [commandEncoder setFragmentBuffer: glyphBuffer        offset: 0                      atIndex: 0];
+            [commandEncoder setFragmentBuffer: pointBuffer        offset: 0                      atIndex: 1];
+            [commandEncoder setFragmentBuffer: contourBuffer      offset: 0                      atIndex: 2];
             [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: m_textCall.m_numInstances];
         }
 
@@ -201,6 +222,7 @@
 
     // reset this after every frame !!!
     m_numDrawCalls            = 0;
+    m_numTextCalls            = 0;
     m_textCall.m_numInstances = 0;
 }
 
@@ -426,21 +448,29 @@
     m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );                                         
 }
 
-- (void)uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num 
-              points:(v2*)points       numPoints:(u32)numPoints
-            contours:(u32*)contours  numContours:(u32)numContours
+- (u32)uploadGlyphs:(GpuGlyph*)glyphs    numGlyphs:  (u32)numGlyphs
+             points:(v2*)      points    numPoints:  (u32)numPoints
+           contours:(u32*)     contours  numContours:(u32)numContours
 {
-    m_glyphBuffer   = [m_gpu newBufferWithBytes: glyphs 
-                                         length: sizeof( GpuGlyph ) * num 
-                                        options: MTLStorageModeShared];
+    TextBuffers* textBuffers = [[TextBuffers alloc] init];
 
-    m_pointBuffer   = [m_gpu newBufferWithBytes: points 
-                                         length: sizeof( v2 ) * numPoints 
-                                        options: MTLStorageModeShared];
+    textBuffers->m_glyphBuffer   = [m_gpu newBufferWithBytes: glyphs 
+                                                      length: sizeof( GpuGlyph ) * numGlyphs
+                                                     options: MTLStorageModeShared];
 
-    m_contourBuffer = [m_gpu newBufferWithBytes: contours 
-                                         length: sizeof( u32 ) * numContours 
-                                        options: MTLStorageModeShared];                                      
+    textBuffers->m_pointBuffer   = [m_gpu newBufferWithBytes: points 
+                                                      length: sizeof( v2 ) * numPoints 
+                                                     options: MTLStorageModeShared];
+
+    textBuffers->m_contourBuffer = [m_gpu newBufferWithBytes: contours 
+                                                      length: sizeof( u32 ) * numContours 
+                                                     options: MTLStorageModeShared];
+
+    [m_textBuffers insertObject: textBuffers atIndex: m_nextFontId];
+
+    u32 fontId = m_nextFontId;
+    m_nextFontId++;
+    return fontId;                                   
 }
 
 - (void)renderImage:(u32)textureId instances:(u32)numInstances
@@ -504,13 +534,18 @@
     m_numDrawCalls++;
 }
 
-- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num
+- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num fontId:(u32)id
 {
-    m_textCall.m_type          = CNC_TEXT;
-    
-    memcpy( (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_textCall.m_numInstances), boxes, sizeof( BoundingBox ) * num );
+    m_textCalls[m_numTextCalls].m_type         = CNC_TEXT;
+    m_textCalls[m_numTextCalls].m_numInstances = num;
+    m_textCalls[m_numTextCalls].m_fontId   = id;
 
+    m_textCall.m_type          = CNC_TEXT;
+    m_textCall.m_fontId        = id;
+    memcpy( (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_textCall.m_numInstances), boxes, sizeof( BoundingBox ) * num );
     m_textCall.m_numInstances += num;
+
+    m_numTextCalls++;
 }
 
 - (void)updateImage:(Image*)image
@@ -533,15 +568,15 @@ u32 PlatformUploadImage( void* renderer, Image* image )
     return [r uploadImage: image];
 }
 
-void PlatformUploadGlyphs( void*     renderer, 
+u32 PlatformUploadGlyphs( void*     renderer, 
                            GpuGlyph* glyphs,   u32 num,
                            v2*       points,   u32 numPoints,
                            u32*      contours, u32 numContours )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r uploadGlyphs: glyphs   numGlyphs:num 
-             points: points   numPoints:numPoints 
-           contours: contours numContours:numContours];
+    return [r uploadGlyphs: glyphs   numGlyphs:num 
+                    points: points   numPoints:numPoints 
+                  contours: contours numContours:numContours];
 }
 
 void PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles )
@@ -586,10 +621,10 @@ void PlatformRenderLine( void* renderer, v2 start, v2 end, f32 width, color c )
     [r renderLine:start end:end width:width color:c];
 }
 
-void PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 num )
+void PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 num, u32 fontId )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r renderText: boxes numBoxes:num];
+    [r renderText: boxes numBoxes:num fontId:fontId];
 }
 
 MainRenderer* CreateMainRenderer()
@@ -608,13 +643,16 @@ MainRenderer* CreateMainRenderer()
     renderer->m_view.delegate     = renderer;
 
     renderer->m_nextTextureId     = 0;
+    renderer->m_nextFontId        = 0;
     renderer->m_numDrawCalls      = 0;
+    renderer->m_numTextCalls      = 0;
+
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_modelBuffers      = [[NSMutableArray alloc] initWithCapacity: 10];
+    renderer->m_textBuffers       = [[NSMutableArray alloc] initWithCapacity: 100];
+
     renderer->m_boundingBoxBuffer = [renderer->m_gpu newBufferWithLength: sizeof( BoundingBox ) * 1000
-                                                                 options: MTLResourceStorageModeShared];
-    renderer->m_glyphBuffer       = [renderer->m_gpu newBufferWithLength: sizeof( GpuGlyph ) * 2000
                                                                  options: MTLResourceStorageModeShared];
 
     [renderer createShader];

@@ -115,7 +115,8 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
         }
     }
 
-    PlatformUploadGlyphs( renderer, gpuGlyphs, numGlyphs, points, numPoints, contours, numContours );
+    u32 fontId = PlatformUploadGlyphs( renderer, gpuGlyphs, numGlyphs, points, numPoints, contours, numContours );
+    font->m_fontId = fontId;
     
     free( gpuGlyphs );
     free( points );
@@ -197,7 +198,7 @@ void PlatformRenderText( void*       renderer,
 
     if( numBoxes > 0 )
     {
-        PlatformUploadBoxes( renderer, boxes, numBoxes );
+        PlatformUploadBoxes( renderer, boxes, numBoxes, font->m_fontId );
         free( boxes );
     }
 }
