@@ -79,7 +79,7 @@
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c;
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c;
 - (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c;
-- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num fontId:(u32)id;
+- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num fontId:(u32)id color:(color)c;
 
 @end
 
@@ -194,12 +194,15 @@
         }
 
         CGSize drawableSize = view.drawableSize;
-        v2 pixelSize = vec2( m_uniform.m_screenWidth  / fmaxf( (f32)drawableSize.width, 1.0f ),
-                             m_uniform.m_screenHeight / fmaxf( (f32)drawableSize.height, 1.0f ) );
+        StringData data;
+        data.m_pixelSize = vec2( m_uniform.m_screenWidth  / fmaxf( (f32)drawableSize.width,  1.0f ),
+                                 m_uniform.m_screenHeight / fmaxf( (f32)drawableSize.height, 1.0f ) );
 
         for( u32 c=0; c<m_numTextCalls; ++c )
         {
             DrawCall call = m_textCalls[c];
+
+            data.m_color = call.m_color;
 
             TextBuffers*  textBuffers   = m_textBuffers[call.m_fontId];
             id<MTLBuffer> pointBuffer   = textBuffers->m_pointBuffer;
@@ -212,7 +215,7 @@
 
             [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: boxOffset              atIndex: 0];
             [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
-            [commandEncoder setVertexBytes:    &pixelSize           length: sizeof( v2 )           atIndex: 2];
+            [commandEncoder setVertexBytes:    &data                length: sizeof( StringData )   atIndex: 2];
 
             [commandEncoder setFragmentBuffer: glyphBuffer          offset: 0                      atIndex: 0];
             [commandEncoder setFragmentBuffer: pointBuffer          offset: 0                      atIndex: 1];
@@ -541,12 +544,13 @@
     m_numDrawCalls++;
 }
 
-- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num fontId:(u32)id
+- (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num fontId:(u32)id color:(color)c
 {
     m_textCalls[m_numTextCalls].m_type         = CNC_TEXT;
     m_textCalls[m_numTextCalls].m_numInstances = num;
     m_textCalls[m_numTextCalls].m_fontId       = id;
     m_textCalls[m_numTextCalls].m_startBox     = m_nextBoxIndex;
+    m_textCalls[m_numTextCalls].m_color        = c;
 
     u8* bufferStart = (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_nextBoxIndex);
     memcpy( bufferStart, boxes, sizeof( BoundingBox ) * num );
@@ -633,10 +637,10 @@ void PlatformRenderLine( void* renderer, v2 start, v2 end, f32 width, color c )
     [r renderLine:start end:end width:width color:c];
 }
 
-void PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 num, u32 fontId )
+void PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 num, u32 fontId, color c )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r renderText: boxes numBoxes:num fontId:fontId];
+    [r renderText: boxes numBoxes:num fontId:fontId color:c];
 }
 
 MainRenderer* CreateMainRenderer()

@@ -62,6 +62,18 @@ color rgba( f32 r, f32 g, f32 b, f32 a )
     return c;
 }
 
+color rgb( u16 r, u16 g, u16 b )
+{
+    color c;
+
+    c.x = (f32)((f32)r/(f32)255.0f);
+    c.y = (f32)((f32)g/(f32)255.0f);
+    c.z = (f32)((f32)b/(f32)255.0f);
+    c.w = 1.0f;
+
+    return c;
+}
+
 v2 vec2( f32 x, f32 y )
 {
     v2 result;
@@ -113,6 +125,12 @@ enum draw_type
     CNC_CIRCLE   = 3,
     CNC_LINE     = 4,
     CNC_TEXT     = 5
+};
+
+struct StringData
+{
+    v2 m_pixelSize;
+    v4 m_color;
 };
 
 typedef struct DrawCall

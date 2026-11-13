@@ -2,6 +2,7 @@
 #include "CNC_PlatformServices.h"
 #include "CNC_TtfTypes.h"
 #include "CNC_Tools.h"
+#include "CNC_Constants.h"
 
 void fontDemo1( Application* app );
 void fontDemo2( Application* app );
@@ -63,9 +64,11 @@ our galaxy.";
             fontSize -= 2.0f;
     }
     
-    services->f_renderText( renderer, app, bladerunner, capitals, vec2( 40.0f, 40.0f ),  fontSize );
-    services->f_renderText( renderer, app, bladerunner, numbers , vec2( 40.0f, 80.0f ),  fontSize );
-    services->f_renderText( renderer, app, montserrat,  umlauts , vec2( 40.0f, 120.0f ), fontSize );
-    services->f_renderText( renderer, app, montserrat,  pangram , vec2( 40.0f, 160.0f ), fontSize );
-    services->f_renderText( renderer, app, montserrat,  hawking,  vec2( 40.0f, 250.0f ), fontSize );
+
+
+    services->f_renderText( renderer, app, bladerunner, capitals, vec2( 40.0f, 40.0f ),  fontSize, sanzo1.paleRawUmber );
+    services->f_renderText( renderer, app, bladerunner, numbers , vec2( 40.0f, 80.0f ),  fontSize, sanzo1.ochraceousSalmon );
+    services->f_renderText( renderer, app, montserrat,  umlauts , vec2( 40.0f, 120.0f ), fontSize, sanzo1.slateColor );
+    services->f_renderText( renderer, app, montserrat,  pangram , vec2( 40.0f, 160.0f ), fontSize, sanzo1.sulpurYellow );
+    services->f_renderText( renderer, app, montserrat,  hawking,  vec2( 40.0f, 250.0f ), fontSize, sanzo1.paleRawUmber );
 }

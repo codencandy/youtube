@@ -2,14 +2,22 @@
 using namespace metal;
 
 typedef float2 v2;
+typedef float4 v4;
 typedef float  f32;
 typedef uint   u32;
+
+struct StringData
+{
+    v2 m_pixelSize;
+    v4 m_color;
+};
 
 struct VertexOutput
 {
     float4 m_position [[position]];
     v2     m_uv;
-    u32    m_glyphId;
+    u32    m_glyphId  [[flat]];
+    v4     m_color    [[flat]];
 };
 
 struct UniformData
@@ -266,7 +274,7 @@ int4 CalculateWinding( v2 p1,
 
 vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer(0)]],
                                       constant UniformData& uniform     [[buffer(1)]],    
-                                      constant v2&          pixelSize   [[buffer(2)]],
+                                      constant StringData&  stringData  [[buffer(2)]],
                                       uint                  instanceId  [[instance_id]],
                                       uint                  vertexId    [[vertex_id]])
 {
@@ -275,9 +283,9 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
     BoundingBox b = box[instanceId];
 
     // Extend rasterization by one drawable pixel without moving the outline.
-    b.m_position    -= pixelSize;
-    b.m_size        += 2.0f * pixelSize;
-    b.m_glyphOrigin -= pixelSize / b.m_fontScale;
+    b.m_position    -= stringData.m_pixelSize;
+    b.m_size        += 2.0f * stringData.m_pixelSize;
+    b.m_glyphOrigin -= stringData.m_pixelSize / b.m_fontScale;
 
     switch( vertexId )
     {
@@ -318,6 +326,7 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
 
     out.m_position = uniform.m_projection2D * out.m_position;
     out.m_glyphId  = b.m_glyphId;
+    out.m_color    = stringData.m_color;
 
     return out;
 }              
@@ -393,5 +402,8 @@ fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]
     }
     coverage /= 4.0f;
 
-    return float4( 1.0f, 1.0f, 1.0f, coverage );
+    v4 color = in.m_color;
+    color.a = coverage;
+
+    return color;
 }

@@ -130,7 +130,8 @@ void PlatformRenderText( void*       renderer,
                          TtfFont*    font, 
                          const char* text, 
                          v2          position, 
-                         f32         size )
+                         f32         size,
+                         color       c )
 {
     Application*      application = (Application*)app;
     PlatformServices* services    = application->m_services;
@@ -198,7 +199,7 @@ void PlatformRenderText( void*       renderer,
 
     if( numBoxes > 0 )
     {
-        PlatformUploadBoxes( renderer, boxes, numBoxes, font->m_fontId );
+        PlatformUploadBoxes( renderer, boxes, numBoxes, font->m_fontId, c );
         free( boxes );
     }
 }

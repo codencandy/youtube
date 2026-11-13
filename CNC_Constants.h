@@ -17,4 +17,18 @@ static color GREEN      = rgba( 0.0f, 1.0f, 0.0f, 1.0f );
 static color WHITE_50   = rgba( 1.0f, 1.0f, 1.0f, 0.5f );
 static color WHITE_20   = rgba( 1.0f, 1.0f, 1.0f, 0.2f );
 
+// Sanzo Wada
+struct Sanzo_Wada_296
+{
+    color sulpurYellow;
+    color ochraceousSalmon;
+    color paleRawUmber;
+    color slateColor;
+};
+
+static Sanzo_Wada_296 sanzo1 = { rgb(245, 236, 194),
+                                 rgb(216, 163, 123),
+                                 rgb(113, 80, 47),
+                                 rgb(52, 69, 76) };
+
 #endif//CNC_CONSTANTS_H
