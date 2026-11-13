@@ -47,6 +47,7 @@
         NSMutableArray*       m_modelBuffers;
         NSMutableArray*       m_textBuffers;
         
+        u32                   m_nextBoxIndex;
         id< MTLBuffer >       m_boundingBoxBuffer;
         
         u32                   m_numDrawCalls;
@@ -191,28 +192,32 @@
                     break;
             }         
         }
-        
-        if( m_textCall.m_numInstances > 0 )
-        {
-            // Convert one drawable pixel to the logical coordinates of the projection.
-            CGSize drawableSize = view.drawableSize;
-            v2 pixelSize = vec2( m_uniform.m_screenWidth / fmaxf( (f32)drawableSize.width, 1.0f ),
-                                 m_uniform.m_screenHeight / fmaxf( (f32)drawableSize.height, 1.0f ) );
 
-            TextBuffers*  textBuffers   = m_textBuffers[m_textCall.m_fontId];
+        CGSize drawableSize = view.drawableSize;
+        v2 pixelSize = vec2( m_uniform.m_screenWidth  / fmaxf( (f32)drawableSize.width, 1.0f ),
+                             m_uniform.m_screenHeight / fmaxf( (f32)drawableSize.height, 1.0f ) );
+
+        for( u32 c=0; c<m_numTextCalls; ++c )
+        {
+            DrawCall call = m_textCalls[c];
+
+            TextBuffers*  textBuffers   = m_textBuffers[call.m_fontId];
             id<MTLBuffer> pointBuffer   = textBuffers->m_pointBuffer;
             id<MTLBuffer> glyphBuffer   = textBuffers->m_glyphBuffer;
             id<MTLBuffer> contourBuffer = textBuffers->m_contourBuffer;
 
+            u32 boxOffset = call.m_startBox * sizeof( BoundingBox );
+
             [commandEncoder setRenderPipelineState: m_renderStateText];
-            [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: 0                      atIndex: 0];
+
+            [commandEncoder setVertexBuffer:   m_boundingBoxBuffer  offset: boxOffset              atIndex: 0];
             [commandEncoder setVertexBytes:    &m_uniform           length: sizeof( UniformData )  atIndex: 1];
             [commandEncoder setVertexBytes:    &pixelSize           length: sizeof( v2 )           atIndex: 2];
 
-            [commandEncoder setFragmentBuffer: glyphBuffer        offset: 0                      atIndex: 0];
-            [commandEncoder setFragmentBuffer: pointBuffer        offset: 0                      atIndex: 1];
-            [commandEncoder setFragmentBuffer: contourBuffer      offset: 0                      atIndex: 2];
-            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: m_textCall.m_numInstances];
+            [commandEncoder setFragmentBuffer: glyphBuffer          offset: 0                      atIndex: 0];
+            [commandEncoder setFragmentBuffer: pointBuffer          offset: 0                      atIndex: 1];
+            [commandEncoder setFragmentBuffer: contourBuffer        offset: 0                      atIndex: 2];
+            [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangleStrip vertexStart: 0 vertexCount: 4 instanceCount: call.m_numInstances];
         }
 
         [commandEncoder endEncoding];
@@ -223,6 +228,8 @@
     // reset this after every frame !!!
     m_numDrawCalls            = 0;
     m_numTextCalls            = 0;
+    m_nextBoxIndex            = 0;
+
     m_textCall.m_numInstances = 0;
 }
 
@@ -538,13 +545,18 @@
 {
     m_textCalls[m_numTextCalls].m_type         = CNC_TEXT;
     m_textCalls[m_numTextCalls].m_numInstances = num;
-    m_textCalls[m_numTextCalls].m_fontId   = id;
+    m_textCalls[m_numTextCalls].m_fontId       = id;
+    m_textCalls[m_numTextCalls].m_startBox     = m_nextBoxIndex;
 
-    m_textCall.m_type          = CNC_TEXT;
-    m_textCall.m_fontId        = id;
-    memcpy( (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_textCall.m_numInstances), boxes, sizeof( BoundingBox ) * num );
-    m_textCall.m_numInstances += num;
+    u8* bufferStart = (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_nextBoxIndex);
+    memcpy( bufferStart, boxes, sizeof( BoundingBox ) * num );
 
+    //m_textCall.m_type          = CNC_TEXT;
+    //m_textCall.m_fontId        = id;
+    //memcpy( (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_textCall.m_numInstances), boxes, sizeof( BoundingBox ) * num );
+    //m_textCall.m_numInstances += num;
+
+    m_nextBoxIndex += num;
     m_numTextCalls++;
 }
 
@@ -646,6 +658,7 @@ MainRenderer* CreateMainRenderer()
     renderer->m_nextFontId        = 0;
     renderer->m_numDrawCalls      = 0;
     renderer->m_numTextCalls      = 0;
+    renderer->m_nextBoxIndex      = 0;
 
     renderer->m_textures          = [[NSMutableArray alloc] initWithCapacity: 10];
     renderer->m_vertexBuffers     = [[NSMutableArray alloc] initWithCapacity: 10];

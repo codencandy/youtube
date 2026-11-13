@@ -39,8 +39,10 @@ void RenderApplication( Application* app )
     PlatformServices* services = app->m_services;
     void*             renderer = app->m_renderer;
 
-    TextDemo* textDemo = (TextDemo*)app;
-    TtfFont*  font     = textDemo->m_montserrat;
+    TextDemo* textDemo   = (TextDemo*)app;
+
+    TtfFont*  montserrat  = textDemo->m_montserrat;
+    TtfFont*  bladerunner = textDemo->m_bladerunner;
 
     static const char* capitals  = "A B C D E F G H I";
     static const char* umlauts   = "Ä ä Ü ü ß Ö ö & %";
@@ -61,9 +63,9 @@ our galaxy.";
             fontSize -= 2.0f;
     }
     
-    services->f_renderText( renderer, app, font, capitals, vec2( 40.0f, 40.0f ),  fontSize );
-    services->f_renderText( renderer, app, font, numbers , vec2( 40.0f, 80.0f ),  fontSize );
-    services->f_renderText( renderer, app, font, umlauts , vec2( 40.0f, 120.0f ), fontSize );
-    services->f_renderText( renderer, app, font, pangram , vec2( 40.0f, 160.0f ), fontSize );
-    services->f_renderText( renderer, app, font, hawking,  vec2( 40.0f, 250.0f ), fontSize );
+    services->f_renderText( renderer, app, bladerunner, capitals, vec2( 40.0f, 40.0f ),  fontSize );
+    services->f_renderText( renderer, app, bladerunner, numbers , vec2( 40.0f, 80.0f ),  fontSize );
+    services->f_renderText( renderer, app, montserrat,  umlauts , vec2( 40.0f, 120.0f ), fontSize );
+    services->f_renderText( renderer, app, montserrat,  pangram , vec2( 40.0f, 160.0f ), fontSize );
+    services->f_renderText( renderer, app, montserrat,  hawking,  vec2( 40.0f, 250.0f ), fontSize );
 }

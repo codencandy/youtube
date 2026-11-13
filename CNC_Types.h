@@ -123,6 +123,7 @@ typedef struct DrawCall
     u32       m_snowMask;
     u32       m_skyMask;
     u32       m_numInstances;
+    u32       m_startBox;
     v2        m_position;
     v2        m_size;
     f32       m_angle;
