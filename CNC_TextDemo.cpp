@@ -24,8 +24,10 @@ Application* LoadApplication( PlatformServices* services, void* renderer )
     TtfFont* montserrat  = services->f_loadFont( montserratFile, renderer );
     TtfFont* bladerunner = services->f_loadFont( bladerunnerFile, renderer );
 
-    textdemo->m_montserrat  = montserrat;
-    textdemo->m_bladerunner = bladerunner;
+    textdemo->m_montserrat                          = montserrat;
+    textdemo->m_bladerunner                         = bladerunner;
+    textdemo->m_windowProperties.m_backgroundColor  = GREY;
+    services->f_windowProperties( renderer, &textdemo->m_windowProperties );
     
     return textdemo;
 }
@@ -63,8 +65,6 @@ our galaxy.";
         else
             fontSize -= 2.0f;
     }
-    
-
 
     services->f_renderText( renderer, app, bladerunner, capitals, vec2( 40.0f, 40.0f ),  fontSize, sanzo1.paleRawUmber );
     services->f_renderText( renderer, app, bladerunner, numbers , vec2( 40.0f, 80.0f ),  fontSize, sanzo1.ochraceousSalmon );

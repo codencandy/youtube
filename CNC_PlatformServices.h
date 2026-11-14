@@ -22,6 +22,8 @@ void   PlatformRenderRect(   void* renderer, v2 pos, f32 width, f32 height, colo
 void   PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c );
 void   PlatformRenderLine(   void* renderer, v2 start, v2 end, f32 width, color c );
 
+void   PlatformSetWindowProperties( void* renderer, WindowProperties* properties );
+
 typedef struct PlatformServices
 {
     Image*   (*f_loadImage)(const char*);
@@ -38,6 +40,7 @@ typedef struct PlatformServices
     u32      (*f_uploadGlyphs)(void*, GpuGlyph*, u32, v2*, u32, u32*, u32);
     void     (*f_uploadBoxes)(void*, BoundingBox*, u32, u32, color);
     void     (*f_renderText)(void*, void*, TtfFont*, const char*, v2, f32, color );
+    void     (*f_windowProperties)(void*,WindowProperties*);
     
 } PlatformServices;
 

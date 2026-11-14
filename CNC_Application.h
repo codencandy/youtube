@@ -11,6 +11,7 @@ typedef struct Application
     void*             m_renderer;
     Timer             m_timer;
     Input*            m_input;
+    WindowProperties  m_windowProperties;
 
 } Application;
 

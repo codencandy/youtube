@@ -95,6 +95,9 @@
     @autoreleasepool
     {
         MTLRenderPassDescriptor* renderDesc = [m_view currentRenderPassDescriptor];
+
+        renderDesc.colorAttachments[0].loadAction = MTLLoadActionClear;
+        renderDesc.colorAttachments[0].clearColor = m_view.clearColor;
         
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
@@ -343,9 +346,9 @@
     renderDesc.vertexDescriptor                = vertexDesc;
     renderDesc.vertexFunction                  = [m_library newFunctionWithName: @"MainVertexShader"];
     renderDesc.fragmentFunction                = [m_library newFunctionWithName: @"MainFragmentShader"];
-    renderDesc.colorAttachments[0].pixelFormat = m_view.colorPixelFormat;
+    renderDesc.colorAttachments[0].pixelFormat = m_view.colorPixelFormat;    
 
-    renderDesc.colorAttachments[0].blendingEnabled = true;
+    renderDesc.colorAttachments[0].blendingEnabled     = true;
     renderDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
     renderDesc.colorAttachments[0].rgbBlendOperation   = MTLBlendOperationAdd;
 
@@ -641,6 +644,18 @@ void PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 num, u32 fontI
 {
     MainRenderer* r = (MainRenderer*)renderer;
     [r renderText: boxes numBoxes:num fontId:fontId color:c];
+}
+
+void PlatformSetWindowProperties( void* renderer, WindowProperties* props )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+
+    f32 red, green, blue;
+    red   = props->m_backgroundColor.x;
+    green = props->m_backgroundColor.y;
+    blue  = props->m_backgroundColor.z;
+
+    r->m_view.clearColor = MTLClearColorMake( (f64)red, (f64)green, (f64)blue, 1.0 );
 }
 
 MainRenderer* CreateMainRenderer()

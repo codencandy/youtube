@@ -198,4 +198,12 @@ typedef struct GpuGlyph
 
 } GpuGlyph;
 
+typedef struct WindowProperties
+{
+    bool  m_fullscreen;
+    v2int m_size;
+    color m_backgroundColor;
+
+} WindowProperties;
+
 #endif//CNC_TYPES_H

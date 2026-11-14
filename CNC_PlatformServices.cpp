@@ -232,6 +232,7 @@ PlatformServices* CreatePlatformServices()
     services->f_uploadGlyphs            = &PlatformUploadGlyphs;
     services->f_uploadBoxes             = &PlatformUploadBoxes;
     services->f_renderText              = &PlatformRenderText;
+    services->f_windowProperties        = &PlatformSetWindowProperties;
 
     return services;
 }
