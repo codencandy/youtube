@@ -135,20 +135,22 @@ bool LineBreak( TtfFont* font, const char* text, f32 size, f32 current, f32 end 
     for( u32 i=0; i<textLength; )
     {
         Codepoint codepoint = Utf8ToCodepoint( textPointer );
+
+        // Always make progress when the input contains an unsupported or
+        // malformed UTF-8 sequence.
+        if( codepoint.m_numUtf8Bytes == 0 )
+            break;
+
+        // We only measure the current word. The caller handles explicit
+        // newlines separately.
+        if( codepoint.m_codepoint == 0x20 || codepoint.m_codepoint == '\n' )
+            break;
+
         u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
         Glyph*    g         = GetGlyph( font, glyphId );
 
         if( g != NULL )
         {
-            // find the next space
-            if( codepoint.m_codepoint == 0x20 )
-            {
-                if( offset > end )
-                    return true;
-                else
-                    return false;
-            }
-            
             f32 advance  = g->m_horMetric.m_advanceWith * fontScale;
             offset      += advance;    
         }
@@ -156,7 +158,7 @@ bool LineBreak( TtfFont* font, const char* text, f32 size, f32 current, f32 end 
         i           += codepoint.m_numUtf8Bytes;
     }
 
-    return false;
+    return offset > end;
 }
 
 void PlatformRenderText( void*       renderer, 
@@ -173,6 +175,9 @@ void PlatformRenderText( void*       renderer,
     f32               fontScale   = (f32)(size / font->m_headTable.m_unitsPerEm);
     f32               xOffset     = position.x;
     f32               baseline    = position.y;
+    f32               lineAdvance = ( font->m_hheaTable.m_ascender -
+                                      font->m_hheaTable.m_descender +
+                                      font->m_hheaTable.m_lineGap ) * fontScale;
 
     u32          textLength = StringLength( text );
     BoundingBox* boxes = (BoundingBox*)malloc( sizeof( BoundingBox ) * textLength );
@@ -182,16 +187,33 @@ void PlatformRenderText( void*       renderer,
     for( u32 i=0; i<textLength; )
     {
         Codepoint codepoint = Utf8ToCodepoint( textPointer );
+
+        if( codepoint.m_numUtf8Bytes == 0 )
+        {
+            ++textPointer;
+            ++i;
+            continue;
+        }
+
+        if( codepoint.m_codepoint == '\n' )
+        {
+            xOffset  = position.x;
+            baseline += lineAdvance;
+            textPointer += codepoint.m_numUtf8Bytes;
+            i           += codepoint.m_numUtf8Bytes;
+            continue;
+        }
+
         u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
         Glyph*    g         = GetGlyph( font, glyphId );
         
-        if( LineBreak( font, textPointer, size, xOffset, CNC_WINDOW_WIDTH - size ) )
+        // Do not repeatedly wrap a word that is wider than an entire line.
+        // Once it is at the beginning of a line, render it and allow overflow.
+        if( xOffset != position.x &&
+            LineBreak( font, textPointer, size, xOffset, CNC_WINDOW_WIDTH - size ) )
         {
-            xOffset = position.x;
-            f32 lineAdvance = ( font->m_hheaTable.m_ascender - 
-                                font->m_hheaTable.m_descender + font->m_hheaTable.m_lineGap) * 
-                                fontScale;
-            baseline    += lineAdvance;
+            xOffset  = position.x;
+            baseline += lineAdvance;
             continue;
         }
         
@@ -226,8 +248,9 @@ void PlatformRenderText( void*       renderer,
     if( numBoxes > 0 )
     {
         PlatformUploadBoxes( renderer, boxes, numBoxes, font->m_fontId, c );
-        free( boxes );
     }
+
+    free( boxes );
 }
 
 /* implemented in the Renderer 
