@@ -125,6 +125,40 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
     return font;
 }
 
+bool LineBreak( TtfFont* font, const char* text, f32 size, f32 current, f32 end )
+{
+    u32 textLength = StringLength( text );
+    f32 offset     = current;
+    f32 fontScale  = (f32)(size / font->m_headTable.m_unitsPerEm);
+
+    char* textPointer = (char*)text;
+    for( u32 i=0; i<textLength; )
+    {
+        Codepoint codepoint = Utf8ToCodepoint( textPointer );
+        u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
+        Glyph*    g         = GetGlyph( font, glyphId );
+
+        if( g != NULL )
+        {
+            // find the next space
+            if( codepoint.m_codepoint == 0x20 )
+            {
+                if( offset > end )
+                    return true;
+                else
+                    return false;
+            }
+            
+            f32 advance  = g->m_horMetric.m_advanceWith * fontScale;
+            offset      += advance;    
+        }
+        textPointer += codepoint.m_numUtf8Bytes;
+        i           += codepoint.m_numUtf8Bytes;
+    }
+
+    return false;
+}
+
 void PlatformRenderText( void*       renderer, 
                          void*       app,
                          TtfFont*    font, 
@@ -151,15 +185,13 @@ void PlatformRenderText( void*       renderer,
         u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
         Glyph*    g         = GetGlyph( font, glyphId );
         
-        if( codepoint.m_codepoint == '\n' )
+        if( LineBreak( font, textPointer, size, xOffset, CNC_WINDOW_WIDTH - size ) )
         {
             xOffset = position.x;
             f32 lineAdvance = ( font->m_hheaTable.m_ascender - 
                                 font->m_hheaTable.m_descender + font->m_hheaTable.m_lineGap) * 
                                 fontScale;
-            baseline += lineAdvance;
-            textPointer += codepoint.m_numUtf8Bytes;
-            i           += codepoint.m_numUtf8Bytes;
+            baseline    += lineAdvance;
             continue;
         }
         
@@ -189,12 +221,6 @@ void PlatformRenderText( void*       renderer,
         xOffset     += advance;
         textPointer += codepoint.m_numUtf8Bytes;
         i           += codepoint.m_numUtf8Bytes;
-
-        if( xOffset > CNC_WINDOW_WIDTH )
-        {
-            xOffset = position.x;
-            baseline += size * 1.2f;
-        }
     }
 
     if( numBoxes > 0 )

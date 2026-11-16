@@ -51,9 +51,10 @@ void RenderApplication( Application* app )
     static const char* umlauts   = "Ä ä Ü ü ß Ö ö & %";
     static const char* numbers   = "1 2 3 4 5 6 7 8 9";
     static const char* pangram   = "Sphinx of black quartz, judge my vow!";
+    static const char* title     = "Stephen Hawing";
     static const char* hawking   = 
-"A well-known scientist (some say it was Bertrand Russell)\nonce gave a public \
-lecture on astronomy.\nHe described how the earth orbits around the sun and how\n\
+"A well-known scientist (some say it was Bertrand Russell) once gave a public \
+lecture on astronomy. He described how the earth orbits around the sun and how \
 the sun, in turn, orbits around the center of a vast collection of stars called \
 our galaxy.";
 
@@ -66,9 +67,9 @@ our galaxy.";
             fontSize -= 2.0f;
     }
 
-    services->f_renderText( renderer, app, bladerunner, capitals, vec2( 40.0f, 40.0f ),  fontSize, sanzo1.paleRawUmber );
-    services->f_renderText( renderer, app, bladerunner, numbers , vec2( 40.0f, 80.0f ),  fontSize, sanzo1.ochraceousSalmon );
-    services->f_renderText( renderer, app, montserrat,  umlauts , vec2( 40.0f, 120.0f ), fontSize, sanzo1.slateColor );
-    services->f_renderText( renderer, app, montserrat,  pangram , vec2( 40.0f, 160.0f ), fontSize, sanzo1.sulpurYellow );
-    services->f_renderText( renderer, app, montserrat,  hawking,  vec2( 40.0f, 250.0f ), fontSize, sanzo1.paleRawUmber );
+    services->f_renderText( renderer, app, bladerunner, title, vec2( 40.0f, 100.0f ),  fontSize * 2.0, sanzo296.slateColor );
+    //services->f_renderText( renderer, app, bladerunner, numbers , vec2( 40.0f, 80.0f ),  fontSize, sanzo296.ochraceousSalmon );
+    //services->f_renderText( renderer, app, montserrat,  umlauts , vec2( 40.0f, 120.0f ), fontSize, sanzo296.slateColor );
+    //services->f_renderText( renderer, app, montserrat,  pangram , vec2( 40.0f, 160.0f ), fontSize, sanzo296.sulpurYellow );
+    services->f_renderText( renderer, app, montserrat,  hawking,  vec2( 40.0f, 250.0f ), fontSize, sanzo296.paleRawUmber );
 }
