@@ -31,7 +31,7 @@
         id< MTLLibrary >      m_library;
         id< MTLLibrary >      m_textLibrary;
         UniformData           m_uniform;
-        
+
         id< MTLRenderPipelineState > m_renderStateImage;
         id< MTLRenderPipelineState > m_renderStateParticle;
         id< MTLRenderPipelineState > m_renderStateRect;
@@ -46,10 +46,10 @@
         NSMutableArray*       m_vertexBuffers;
         NSMutableArray*       m_modelBuffers;
         NSMutableArray*       m_textBuffers;
-        
+
         u32                   m_nextBoxIndex;
         id< MTLBuffer >       m_boundingBoxBuffer;
-        
+
         u32                   m_numDrawCalls;
         u32                   m_numTextCalls;
         DrawCall              m_drawCalls[MAX_DRAWCALLS];
@@ -77,6 +77,7 @@
 - (u32) uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num points:(v2*)points numPoints:(u32)numPoints contours:(u32*)contours numContours:(u32)numContours;
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c;
+- (void)renderRoundedRect:(v2)pos width:(f32)width height:(f32)height radius:(f32)radius color:(color)c;
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c;
 - (void)renderLine:(v2)start end:(v2)end width:(f32)width color:(color)c;
 - (void)renderText:(BoundingBox*)boxes numBoxes:(u32)num fontId:(u32)id color:(color)c;
@@ -98,7 +99,7 @@
 
         renderDesc.colorAttachments[0].loadAction = MTLLoadActionClear;
         renderDesc.colorAttachments[0].clearColor = m_view.clearColor;
-        
+
         id< MTLCommandBuffer >        commandBuffer  = [m_commandQueue commandBuffer];
         id< MTLRenderCommandEncoder > commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderDesc];
 
@@ -152,7 +153,25 @@
                     [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
                     [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
-                    
+
+                    break;
+                }
+
+                case CNC_ROUNDED_RECT:
+                {
+                    [commandEncoder setRenderPipelineState: m_renderStateRect];
+
+                    PrimitiveData primitive;
+                    primitive.m_pos    = call.m_position;
+                    primitive.m_size   = call.m_size;
+                    primitive.m_data.x = call.m_radius;
+                    primitive.m_color  = call.m_color;
+
+                    [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
+                    [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
+                    [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
+                    [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
+
                     break;
                 }
 
@@ -169,7 +188,7 @@
                     [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
                     [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
-                    
+
                     break;
                 }
 
@@ -187,13 +206,13 @@
                     [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
                     [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
-                    
+
                     break;
                 }
 
                 case CNC_TEXT:
                     break;
-            }         
+            }
         }
 
         CGSize drawableSize = view.drawableSize;
@@ -256,7 +275,7 @@
 - (void)createShader
 {
     NSError*  error        = NULL;
-    NSString* shaderSource = [NSString stringWithContentsOfFile: @"CNC_Shader.metal" 
+    NSString* shaderSource = [NSString stringWithContentsOfFile: @"CNC_Shader.metal"
                                                        encoding: NSUTF8StringEncoding
                                                           error: &error];
     [self checkError: error message: @"shader source"];
@@ -266,16 +285,16 @@
                                     options: options
                                       error: &error];
 
-    [self checkError: error message: @"shader compile"];  
+    [self checkError: error message: @"shader compile"];
 
     NSString* textShader = [NSString stringWithContentsOfFile: @"CNC_TextShader.metal"
-                                                     encoding: NSUTF8StringEncoding 
+                                                     encoding: NSUTF8StringEncoding
                                                      error: &error];
 
     [self checkError: error message: @"text shader source"];
-    m_textLibrary = [m_gpu newLibraryWithSource: textShader 
-                                        options: options 
-                                          error: &error];   
+    m_textLibrary = [m_gpu newLibraryWithSource: textShader
+                                        options: options
+                                          error: &error];
 
     [self checkError: error message: @"text shader compile"];
 }
@@ -305,8 +324,8 @@
     id< MTLBuffer > rectBuffer = [m_gpu newBufferWithBytes: &rectangle
                                                     length: sizeof( VertexInput ) * 6
                                                    options: MTLResourceCPUCacheModeDefaultCache];
-                                                
-    return rectBuffer;                                                
+
+    return rectBuffer;
 }
 
 - (void)createUniform
@@ -346,7 +365,7 @@
     renderDesc.vertexDescriptor                = vertexDesc;
     renderDesc.vertexFunction                  = [m_library newFunctionWithName: @"MainVertexShader"];
     renderDesc.fragmentFunction                = [m_library newFunctionWithName: @"MainFragmentShader"];
-    renderDesc.colorAttachments[0].pixelFormat = m_view.colorPixelFormat;    
+    renderDesc.colorAttachments[0].pixelFormat = m_view.colorPixelFormat;
 
     renderDesc.colorAttachments[0].blendingEnabled     = true;
     renderDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
@@ -423,7 +442,7 @@
 {
     f32 width  = 1.0f;
     f32 height = 1.0f;
-    
+
     v3 A = {   0.0f, height, 0.0f };
     v3 B = {  width, height, 0.0f };
     v3 C = {  width,   0.0f, 0.0f };
@@ -435,18 +454,18 @@
 
     m_quadVertices[3].m_position = C; m_quadVertices[3].m_uv = vec2( 1.0f, 0.0f );
     m_quadVertices[4].m_position = D; m_quadVertices[4].m_uv = vec2( 0.0f, 0.0f );
-    m_quadVertices[5].m_position = A; m_quadVertices[5].m_uv = vec2( 0.0f, 1.0f ); 
+    m_quadVertices[5].m_position = A; m_quadVertices[5].m_uv = vec2( 0.0f, 1.0f );
 }
 
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles
 {
-    m_particleBuffer = [m_gpu newBufferWithBytes: particles 
-                                          length: sizeof( Particle ) * numParticles 
+    m_particleBuffer = [m_gpu newBufferWithBytes: particles
+                                          length: sizeof( Particle ) * numParticles
                                          options: MTLStorageModeShared];
 
     f32 width  = 1.0f;
     f32 height = 1.0f;
-    
+
     v3 A = {   0.0f, height, 0.0f };
     v3 B = {  width, height, 0.0f };
     v3 C = {  width,   0.0f, 0.0f };
@@ -458,7 +477,7 @@
 
     m_particleVertices[3].m_position = C; m_particleVertices[3].m_uv = vec2( 1.0f, 0.0f );
     m_particleVertices[4].m_position = D; m_particleVertices[4].m_uv = vec2( 0.0f, 0.0f );
-    m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );                                         
+    m_particleVertices[5].m_position = A; m_particleVertices[5].m_uv = vec2( 0.0f, 1.0f );
 }
 
 - (u32)uploadGlyphs:(GpuGlyph*)glyphs    numGlyphs:  (u32)numGlyphs
@@ -467,23 +486,23 @@
 {
     TextBuffers* textBuffers = [[TextBuffers alloc] init];
 
-    textBuffers->m_glyphBuffer   = [m_gpu newBufferWithBytes: glyphs 
+    textBuffers->m_glyphBuffer   = [m_gpu newBufferWithBytes: glyphs
                                                       length: sizeof( GpuGlyph ) * numGlyphs
                                                      options: MTLStorageModeShared];
 
-    textBuffers->m_pointBuffer   = [m_gpu newBufferWithBytes: points 
-                                                      length: sizeof( v2 ) * numPoints 
+    textBuffers->m_pointBuffer   = [m_gpu newBufferWithBytes: points
+                                                      length: sizeof( v2 ) * numPoints
                                                      options: MTLStorageModeShared];
 
-    textBuffers->m_contourBuffer = [m_gpu newBufferWithBytes: contours 
-                                                      length: sizeof( u32 ) * numContours 
+    textBuffers->m_contourBuffer = [m_gpu newBufferWithBytes: contours
+                                                      length: sizeof( u32 ) * numContours
                                                      options: MTLStorageModeShared];
 
     [m_textBuffers insertObject: textBuffers atIndex: m_nextFontId];
 
     u32 fontId = m_nextFontId;
     m_nextFontId++;
-    return fontId;                                   
+    return fontId;
 }
 
 - (void)renderImage:(u32)textureId instances:(u32)numInstances
@@ -491,8 +510,9 @@
     m_drawCalls[m_numDrawCalls].m_type         = CNC_IMAGE;
     m_drawCalls[m_numDrawCalls].m_textureId    = textureId;
     m_drawCalls[m_numDrawCalls].m_numInstances = numInstances;
-    
+
     m_numDrawCalls++;
+    assert( m_numDrawCalls < MAX_DRAWCALLS );
 }
 
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask
@@ -502,8 +522,9 @@
     m_drawCalls[m_numDrawCalls].m_snowMask     = snowMask;
     m_drawCalls[m_numDrawCalls].m_skyMask      = skyMask;
     m_drawCalls[m_numDrawCalls].m_numInstances = numParticles;
-    
+
     m_numDrawCalls++;
+    assert( m_numDrawCalls < MAX_DRAWCALLS );
 }
 
 - (void)renderRect:(v2)pos width:(f32)width height:(f32)height color:(color)c
@@ -514,8 +535,26 @@
     m_drawCalls[m_numDrawCalls].m_size         = vec2( width, height );
     m_drawCalls[m_numDrawCalls].m_color        = c;
     m_drawCalls[m_numDrawCalls].m_numInstances = 1;
-    
+
     m_numDrawCalls++;
+    assert( m_numDrawCalls < MAX_DRAWCALLS );
+}
+
+- (void)renderRoundedRect:(v2)pos
+                    width:(f32)width
+                   height:(f32)height
+                   radius:(f32)radius
+                    color:(color)c
+{
+    m_drawCalls[m_numDrawCalls].m_type          = CNC_ROUNDED_RECT;
+    m_drawCalls[m_numDrawCalls].m_position      = pos;
+    m_drawCalls[m_numDrawCalls].m_size          = vec2( width, height );
+    m_drawCalls[m_numDrawCalls].m_color         = c;
+    m_drawCalls[m_numDrawCalls].m_radius        = radius;
+    m_drawCalls[m_numDrawCalls].m_numInstances  = 1;
+
+    m_numDrawCalls++;
+    assert( m_numDrawCalls < MAX_DRAWCALLS );
 }
 
 - (void)renderCircle:(v2)center radius:(f32)radius color:(color)c
@@ -558,11 +597,6 @@
     u8* bufferStart = (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_nextBoxIndex);
     memcpy( bufferStart, boxes, sizeof( BoundingBox ) * num );
 
-    //m_textCall.m_type          = CNC_TEXT;
-    //m_textCall.m_fontId        = id;
-    //memcpy( (u8*)[m_boundingBoxBuffer contents] + (sizeof( BoundingBox ) * m_textCall.m_numInstances), boxes, sizeof( BoundingBox ) * num );
-    //m_textCall.m_numInstances += num;
-
     m_nextBoxIndex += num;
     m_numTextCalls++;
 }
@@ -587,14 +621,14 @@ u32 PlatformUploadImage( void* renderer, Image* image )
     return [r uploadImage: image];
 }
 
-u32 PlatformUploadGlyphs( void*     renderer, 
+u32 PlatformUploadGlyphs( void*     renderer,
                            GpuGlyph* glyphs,   u32 num,
                            v2*       points,   u32 numPoints,
                            u32*      contours, u32 numContours )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    return [r uploadGlyphs: glyphs   numGlyphs:num 
-                    points: points   numPoints:numPoints 
+    return [r uploadGlyphs: glyphs   numGlyphs:num
+                    points: points   numPoints:numPoints
                   contours: contours numContours:numContours];
 }
 
@@ -626,6 +660,12 @@ void PlatformRenderRect( void* renderer, v2 pos, f32 width, f32 height, color c 
 {
     MainRenderer* r = (MainRenderer*)renderer;
     [r renderRect:pos width:width height:height color:c];
+}
+
+void PlatformRoundedRect(void* renderer, v2 pos, f32 width, f32 height, f32 radius, color c)
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    [r renderRoundedRect:pos width:width height:height radius:radius color:c];
 }
 
 void PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c )
@@ -691,6 +731,6 @@ MainRenderer* CreateMainRenderer()
     [renderer createUniform];
     [renderer createPipeline];
     [renderer initUnitQuad];
-    
+
     return renderer;
 }

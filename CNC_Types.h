@@ -88,7 +88,7 @@ typedef struct VertexInput
 {
     v3 m_position;
     v2 m_uv;
-    
+
 } VertexInput;
 
 typedef struct UniformData
@@ -110,21 +110,22 @@ typedef struct ModelData
 
 typedef struct PrimitiveData
 {
-    v2    m_pos; 
+    v2    m_pos;
     v2    m_size;
-    v2    m_data;
+    v2    m_data;   // for lines or for rounded rects
     color m_color;
 
 } PrimitiveData;
 
 enum draw_type
 {
-    CNC_IMAGE    = 0,
-    CNC_PARTICLE = 1,
-    CNC_RECT     = 2,
-    CNC_CIRCLE   = 3,
-    CNC_LINE     = 4,
-    CNC_TEXT     = 5
+    CNC_IMAGE        = 0,
+    CNC_PARTICLE     = 1,
+    CNC_RECT         = 2,
+    CNC_CIRCLE       = 3,
+    CNC_LINE         = 4,
+    CNC_TEXT         = 5,
+    CNC_ROUNDED_RECT = 6
 };
 
 struct StringData
@@ -145,8 +146,9 @@ typedef struct DrawCall
     v2        m_position;
     v2        m_size;
     f32       m_angle;
+    f32       m_radius;
     color     m_color;
-    
+
 } DrawCall;
 
 typedef struct Image
@@ -176,7 +178,7 @@ typedef struct Particle
     f32 m_speed;
     f32 m_size;
     f32 m_time;
-    
+
 } Particle;
 
 typedef struct BoundingBox

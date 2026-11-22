@@ -5,7 +5,6 @@
 #include "libs/stb_image.h"
 #include "CNC_Tools.h"
 #include "CNC_Types.h"
-#include "CNC_Math.h"
 #include "CNC_Constants.h"
 #include "CNC_Application.h"
 #include "CNC_TtfFont.cpp"
@@ -32,7 +31,7 @@ File* PlatformLoadFile( const char* filePath )
         file->m_sizeInBytes = ftell( f );
         rewind( f );
 
-    
+
         file->m_data = malloc( file->m_sizeInBytes );
         memset( file->m_data, 0x00, file->m_sizeInBytes );
         fread( file->m_data, 1, file->m_sizeInBytes, f );
@@ -117,7 +116,7 @@ TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )
 
     u32 fontId = PlatformUploadGlyphs( renderer, gpuGlyphs, numGlyphs, points, numPoints, contours, numContours );
     font->m_fontId = fontId;
-    
+
     free( gpuGlyphs );
     free( points );
     free( contours );
@@ -152,7 +151,7 @@ bool LineBreak( TtfFont* font, const char* text, f32 size, f32 current, f32 end 
         if( g != NULL )
         {
             f32 advance  = g->m_horMetric.m_advanceWith * fontScale;
-            offset      += advance;    
+            offset      += advance;
         }
         textPointer += codepoint.m_numUtf8Bytes;
         i           += codepoint.m_numUtf8Bytes;
@@ -161,11 +160,11 @@ bool LineBreak( TtfFont* font, const char* text, f32 size, f32 current, f32 end 
     return offset > end;
 }
 
-void PlatformRenderText( void*       renderer, 
+void PlatformRenderText( void*       renderer,
                          void*       app,
-                         TtfFont*    font, 
-                         const char* text, 
-                         v2          position, 
+                         TtfFont*    font,
+                         const char* text,
+                         v2          position,
                          f32         size,
                          color       c )
 {
@@ -206,7 +205,7 @@ void PlatformRenderText( void*       renderer,
 
         u16       glyphId   = GetGlyphId( font, codepoint.m_codepoint );
         Glyph*    g         = GetGlyph( font, glyphId );
-        
+
         // Do not repeatedly wrap a word that is wider than an entire line.
         // Once it is at the beginning of a line, render it and allow overflow.
         if( xOffset != position.x &&
@@ -216,21 +215,21 @@ void PlatformRenderText( void*       renderer,
             baseline += lineAdvance;
             continue;
         }
-        
+
         if( g == NULL )
         {
             textPointer += codepoint.m_numUtf8Bytes;
             i           += codepoint.m_numUtf8Bytes;
             continue;
         }
-        
+
         f32 advance = g->m_horMetric.m_advanceWith * fontScale;
         if( !g->m_header.m_emptyGlyph && g->m_header.m_numberOfContours > 0 )
         {
             v2 boxOrigin   = vec2( g->m_header.m_xMin * fontScale, g->m_header.m_yMin * fontScale);
             v2 boxSize     = vec2( (f32)(g->m_header.m_xMax - g->m_header.m_xMin) * fontScale, (f32)(g->m_header.m_yMax - g->m_header.m_yMin) * fontScale );
             v2 boxPosition = vec2( boxOrigin.x + xOffset, baseline - boxOrigin.y - boxSize.y );
-            
+
             boxes[numBoxes].m_position    = boxPosition;
             boxes[numBoxes].m_size        = boxSize;
             boxes[numBoxes].m_glyphOrigin = vec2( (f32)g->m_header.m_xMin,
@@ -253,7 +252,7 @@ void PlatformRenderText( void*       renderer,
     free( boxes );
 }
 
-/* implemented in the Renderer 
+/* implemented in the Renderer
 
     u32  PlatformUploadImage( void* renderer, Image* image );
     void PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles );
@@ -276,6 +275,7 @@ PlatformServices* CreatePlatformServices()
     services->f_renderParticles         = &PlatformRenderParticles;
     services->f_updateImage             = &PlatformUpdateImage;
     services->f_renderRect              = &PlatformRenderRect;
+    services->f_roundedRect             = &PlatformRoundedRect;
     services->f_renderCircle            = &PlatformRenderCircle;
     services->f_renderLine              = &PlatformRenderLine;
     services->f_uploadGlyphs            = &PlatformUploadGlyphs;
