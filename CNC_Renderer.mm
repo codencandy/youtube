@@ -145,13 +145,17 @@
                     [commandEncoder setRenderPipelineState: m_renderStateRect];
 
                     PrimitiveData primitive;
-                    primitive.m_pos   = call.m_position;
-                    primitive.m_size  = call.m_size;
-                    primitive.m_color = call.m_color;
+                    primitive.m_pos    = call.m_position;
+                    primitive.m_size   = call.m_size;
+                    primitive.m_color  = call.m_color;
+                    primitive.m_data.y = 0.0;
 
                     [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
                     [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
                     [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
+
+                    [commandEncoder setFragmentBytes: &primitive length: sizeof( PrimitiveData )      atIndex: 1];
+
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
 
                     break;
@@ -165,11 +169,15 @@
                     primitive.m_pos    = call.m_position;
                     primitive.m_size   = call.m_size;
                     primitive.m_data.x = call.m_radius;
+                    primitive.m_data.y = 1.0;
                     primitive.m_color  = call.m_color;
 
                     [commandEncoder setVertexBytes: &m_quadVertices length: sizeof( VertexInput ) * 6 atIndex: 0];
                     [commandEncoder setVertexBytes: &m_uniform      length: sizeof( UniformData )     atIndex: 1];
                     [commandEncoder setVertexBytes: &primitive      length: sizeof( PrimitiveData )   atIndex: 2];
+
+                    [commandEncoder setFragmentBytes: &primitive length: sizeof( PrimitiveData )      atIndex: 1];
+
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
 
                     break;

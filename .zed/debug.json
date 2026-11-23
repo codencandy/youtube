@@ -1,0 +1,13 @@
+[
+  {
+    "label": "(lldb) Launch",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/demo",
+    "args": [],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "stopOnEntry": false,
+    "env": {},
+    "terminal": "integrated"
+  }
+]

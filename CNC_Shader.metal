@@ -1,6 +1,9 @@
 #include <metal_stdlib>
 using namespace metal;
 
+typedef float2 v2;
+typedef float3 v3;
+
 struct VertexInput
 {
     float3 m_position [[attribute(0)]];
@@ -39,21 +42,13 @@ struct Particle
 
 struct PrimitiveData
 {
-    float2 m_pos; 
+    float2 m_pos;
     float2 m_size;
     float2 m_data;
     float4 m_color;
 };
 
 constexpr sampler textureSampler( mag_filter::linear, min_filter::linear );
-
-// Application colors are specified in sRGB; the render target blends in linear light.
-float4 LinearColor( float4 color )
-{
-    color.rgb = select( pow( (color.rgb + 0.055f) / 1.055f, float3( 2.4f ) ),
-                        color.rgb / 12.92f, color.rgb <= 0.04045f );
-    return color;
-}
 
 vertex VertexOutput MainVertexShader( VertexInput           in         [[stage_in]],
                                       constant UniformData& uniform    [[buffer(1)]],
@@ -121,7 +116,7 @@ vertex VertexOutput ParticleVertexShader( VertexInput           in         [[sta
 
         float t  = particles[instanceId].m_time;
         float dt = uniform.m_time - t;
-        
+
         if( dt > 5.0 && dt < t )
         {
             particles[instanceId].m_position.y = -40.0;
@@ -144,7 +139,7 @@ vertex VertexOutput ParticleVertexShader( VertexInput           in         [[sta
     {
         out.m_color = float4( 1.0, 1.0, 0.0, 1.0 );
         out.m_color.a = 0.3 + sin( (uniform.m_time + y) * 3.0 ) * 0.7;
-        
+
 
         if( skyAlpha != 0.0 )
         {
@@ -160,7 +155,7 @@ vertex VertexOutput ParticleVertexShader( VertexInput           in         [[sta
 
 fragment float4 ParticleFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color = LinearColor( in.m_color );
+    float4 color = in.m_color;
 
     float2 center = float2( 0.5 );
     float  d      = distance( center, in.m_uv );
@@ -199,9 +194,15 @@ vertex VertexOutput RectVertexShader( VertexInput             in         [[stage
     return out;
 }
 
-fragment float4 RectFragmentShader( VertexOutput in [[stage_in]] )
+fragment float4 RectFragmentShader( VertexOutput            in         [[stage_in]],
+                                    constant PrimitiveData& data       [[buffer(1)]] )
 {
-    float4 color = LinearColor( in.m_color );
+    float4 color = in.m_color;
+
+    if( data.m_data.y > 0 )
+    {
+        color.xyz = float3( 1.0, 1.0, 1.0 );
+    }
     return color;
 }
 
@@ -215,7 +216,7 @@ vertex VertexOutput CircleVertexShader( VertexInput             in         [[sta
     float4 position = float4( in.m_position, 1.0 );
     float  x        = data.m_pos.x;
     float  y        = data.m_pos.y;
-    float  radius   = data.m_size.x; 
+    float  radius   = data.m_size.x;
 
     float4x4 modelMatrix = float4x4(
          radius*2.0,  0.0,        0.0, 0.0,
@@ -233,7 +234,7 @@ vertex VertexOutput CircleVertexShader( VertexInput             in         [[sta
 
 fragment float4 CircleFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color  = LinearColor( in.m_color );
+    float4 color  = in.m_color;
     float2 center = float2( 0.5 );
     float  d      = distance( center, in.m_uv );
     float  edge   = 0.05;
@@ -246,7 +247,7 @@ fragment float4 CircleFragmentShader( VertexOutput in [[stage_in]] )
 
 vertex VertexOutput LineVertexShader( VertexInput             in         [[stage_in]],
                                       constant UniformData&   uniform    [[buffer(1)]],
-                                      constant PrimitiveData& data       [[buffer(2)]],  
+                                      constant PrimitiveData& data       [[buffer(2)]],
                                       uint                    instanceId [[instance_id]] )
 {
     VertexOutput out;
@@ -290,6 +291,6 @@ vertex VertexOutput LineVertexShader( VertexInput             in         [[stage
 
 fragment float4 LineFragmentShader( VertexOutput in [[stage_in]] )
 {
-    float4 color = LinearColor( in.m_color );
+    float4 color = in.m_color;
     return color;
 }
