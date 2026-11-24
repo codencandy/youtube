@@ -3,6 +3,7 @@ using namespace metal;
 
 typedef float2 v2;
 typedef float3 v3;
+typedef float  f32;
 
 struct VertexInput
 {
@@ -199,9 +200,22 @@ fragment float4 RectFragmentShader( VertexOutput            in         [[stage_i
 {
     float4 color = in.m_color;
 
-    if( data.m_data.y > 0 )
+    if( data.m_data.y > 0 ) // rounded rect
     {
-        color.xyz = float3( 1.0, 1.0, 1.0 );
+        f32    radius       = data.m_data.x;
+        v2     uv           = in.m_uv * data.m_size;
+        v2     center       = data.m_size / 2.0;
+        v2     centerCircle = center - data.m_data.x;
+
+        // projected into the upper right quadrant
+        v2     pos          = abs(uv - center);
+        v2     q            = pos - centerCircle;
+        f32    d            = length( max( q, v2( 0.0 ) ) ) +
+                              min( max( q.x, q.y ), 0.0 )   - radius;
+
+        // Smooth the boundary over approximately one screen pixel.
+        f32 edge            = max( fwidth( d ), 0.0001 );
+        color.a            *= 1.0 - smoothstep( -0.5 * edge, 0.5 * edge, d );
     }
     return color;
 }
