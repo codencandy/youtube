@@ -3,3 +3,4 @@ CompileFlags:
     - "-I/Users/holgerkretzschmar/projects/youtube"
     - "-I/Users/holgerkretzschmar/projects/youtube/platform"
     - "-I/Users/holgerkretzschmar/projects/youtube/engine"
+    - "-I/Users/holgerkretzschmar/projects/youtube/platform/libs"

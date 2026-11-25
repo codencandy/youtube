@@ -7,6 +7,19 @@ This repository contains the code shown in my graphics programming videos for Ma
 In order to build the project just execute 
 ```sh build.sh``` in the terminal.
 
+## VS Code alternative
+
+As of short I have switch from VS Code to the Zed editor - just personal preference. For the language server to function properly you need to install the extensions for Metal and ObjC. Once done you need a .clangd file with the list of includes:
+
+```
+CompileFlags:
+  Add:
+    - "-I/{abosulte_project_path}"
+    - "-I/{abosulte_project_path}/platform"
+    - "-I/{abosulte_project_path}/engine"
+    - "-I/{abosulte_project_path}/platform/libs"
+```
+
 ## Dependencies (MacOS)
 
 - XCode commandline tools
@@ -33,5 +46,3 @@ In order to build the project just execute
 |   Analaog Clock Part 3    |  [part #3](https://youtu.be/FKXx3EizUyU)                         | instanced-rendering      |       |
 |   Snow Particle System    |  [snow particles](https://youtu.be/jeTSjqUOKJ4)                  | christmas-particles      |       |
 |   Load Code At Runtime    |  [load code](https://)                                           | load-code-dynamically    |       |
-
-
