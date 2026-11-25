@@ -13,12 +13,12 @@
 AppLib loadLib( const char* libName )
 {
     AppLib lib;
-    
+
     void* dylib = dlopen( libName, RTLD_NOW  );
 
     if( dylib != NULL )
     {
-        lib.f_loadApp   = (loadapp_fcn)dlsym( dylib, "LoadApplication" );
+        lib.f_loadApp   = (loadapp_fcn)dlsym(   dylib, "LoadApplication" );
         lib.f_updateApp = (updateapp_fcn)dlsym( dylib, "UpdateApplication" );
         lib.f_renderApp = (renderapp_fcn)dlsym( dylib, "RenderApplication" );
     }
@@ -33,7 +33,7 @@ int main()
     Input input;
     InitInput( &input );
 
-    AppLib textdemoLib  = loadLib( "textdemo.dylib" );
+    AppLib textdemoLib  = loadLib( "bin/textdemo.dylib" );
     NSApplication* app  = [NSApplication sharedApplication];
 
     [app setPresentationOptions: NSApplicationPresentationDefault];
@@ -48,7 +48,7 @@ int main()
 
     Application* textdemo  = textdemoLib.f_loadApp( services, renderer );
     textdemo->m_input      = &input;
-    
+
     while( running )
     {
         @autoreleasepool
@@ -66,7 +66,7 @@ int main()
                 {
                     break;
                 }
-                
+
                 if( !ProcessInput( event, &input ) )
                 {
                     [app sendEvent: event];

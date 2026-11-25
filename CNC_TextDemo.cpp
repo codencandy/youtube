@@ -3,10 +3,6 @@
 #include "CNC_TtfTypes.h"
 #include "CNC_Constants.h"
 
-void fontDemo1( Application* app );
-void fontDemo2( Application* app );
-
-
 Application* LoadApplication( PlatformServices* services, void* renderer )
 {
     TextDemo* textdemo = (TextDemo*)malloc( sizeof( TextDemo ) );

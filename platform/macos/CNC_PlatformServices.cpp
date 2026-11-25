@@ -7,7 +7,7 @@
 #include "CNC_Types.h"
 #include "CNC_Constants.h"
 #include "CNC_Application.h"
-#include "CNC_TtfFont.cpp"
+#include "../CNC_TtfFont.cpp"
 
 Image* PlatformLoadImage( const char* imagePath )
 {
