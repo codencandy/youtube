@@ -1,6 +1,7 @@
 window
 christmas
 demo
+.clangd
 *.dSYM
 *.dylib
 .DS_Store

@@ -1,7 +1,4 @@
 #include "CNC_TextDemo.h"
-#include "CNC_PlatformServices.h"
-#include "CNC_TtfTypes.h"
-#include "CNC_Constants.h"
 
 Application* LoadApplication( PlatformServices* services, void* renderer )
 {

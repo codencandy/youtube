@@ -3,7 +3,7 @@
 FRAMEWORKS='-framework AppKit -framework CoreVideo -framework Metal -framework MetalKit'
 IGNORE='-Wno-nullability-completeness -Wno-int-to-pointer-cast'
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INCLUDES="-I$PROJECT_DIR"
+INCLUDES="-I$PROJECT_DIR -I$PROJECT_DIR/engine -I$PROJECT_DIR/platform"
 FLAGS='--debug'
 TIMEFORMAT=%R
 
