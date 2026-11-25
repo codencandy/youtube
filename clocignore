@@ -1,6 +1,9 @@
 libs
 doc
-.vscode
-.res
+res
 *.md
 .gitignore
+.clangd
+.zed
+*.dSYM
+bin

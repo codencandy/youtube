@@ -16,7 +16,7 @@ demo ()
 platform ()
 {
     echo "build platform"
-    clang++ platform/macos/CNC_Main.mm -o demo $INCLUDES ${FRAMEWORKS} ${IGNORE}  ${FLAGS}
+    clang++ platform/macos/CNC_Main.mm -o demo $INCLUDES ${FRAMEWORKS} ${IGNORE} ${FLAGS}
 }
 
 main ()

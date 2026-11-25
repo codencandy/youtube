@@ -53,12 +53,12 @@ our galaxy.";
     if( MouseWheelScrolled( app->m_input ) )
     {
         if( app->m_input->m_mouse.m_wheel > 0 )
-            fontSize += 2.0f;
+            fontSize += 1.0f;
         else
-            fontSize -= 2.0f;
+            fontSize -= 1.0f;
     }
 
-    services->f_renderText(  renderer, app, bladerunner, title, vec2( 40.0f, 100.0f ),  fontSize * 2.0, sanzo296.slateColor );
-    services->f_renderText(  renderer, app, montserrat,  hawking,  vec2( 40.0f, 250.0f ), fontSize, sanzo296.paleRawUmber );
+    services->f_renderText(  renderer, app, bladerunner, title,   vec2( 40.0f, 100.0f ), fontSize * 2.0, sanzo296.slateColor );
+    services->f_renderText(  renderer, app, montserrat,  hawking, vec2( 40.0f, 250.0f ), fontSize,       sanzo296.paleRawUmber );
     services->f_roundedRect( renderer, vec2( 40.0f, 500.0f ), 100.0f, 40.0f, 5.0f, sanzo296.slateColor );
 }

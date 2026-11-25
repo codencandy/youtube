@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "*.mm" : "objective-c",
-        "*.metal" : "hlsl"
-    }
-}
