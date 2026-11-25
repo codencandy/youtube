@@ -429,7 +429,7 @@
     textureDesc.width       = image->m_width;
     textureDesc.height      = image->m_height;
     // Decode image RGB into linear light when sampled; alpha remains linear.
-    textureDesc.pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
+    textureDesc.pixelFormat = MTLPixelFormatRGBA8Unorm;
 
     id< MTLTexture > texture      = [m_gpu newTextureWithDescriptor: textureDesc];
     id< MTLBuffer >  vertexBuffer = [self createGeometry: image->m_width height: image->m_height];
@@ -715,7 +715,7 @@ MainRenderer* CreateMainRenderer()
     renderer->m_gpu               = MTLCreateSystemDefaultDevice();
     renderer->m_commandQueue      = [renderer->m_gpu newCommandQueue];
     renderer->m_view              = [[MTKView alloc] initWithFrame: renderFrame device: renderer->m_gpu];
-    renderer->m_view.colorPixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    renderer->m_view.colorPixelFormat = MTLPixelFormatBGRA8Unorm;
 
     renderer->m_view.paused       = true;
     renderer->m_view.needsDisplay = false;
