@@ -200,6 +200,13 @@ typedef struct GpuGlyph
 
 } GpuGlyph;
 
+enum window_props
+{
+    CNC_FULLSCREEN = 0,
+    CNC_SCREENSIZE = 1,
+    CNC_BGCOLOR    = 2
+};
+
 typedef struct WindowProperties
 {
     bool  m_fullscreen;

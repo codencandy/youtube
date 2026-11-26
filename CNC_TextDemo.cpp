@@ -1,25 +1,19 @@
 #include "CNC_TextDemo.h"
+#include "CNC_CandyEngine.h"
+#include "CNC_Constants.h"
+#include "CNC_Types.h"
 
 Application* LoadApplication( PlatformServices* services, void* renderer )
 {
     TextDemo* textdemo = (TextDemo*)malloc( sizeof( TextDemo ) );
-    textdemo->m_services = services;
-    textdemo->m_renderer = renderer;
+
+    cnc::InitCandyEngine( services, renderer, textdemo);
+    cnc::SetWindowProperties( CNC_BGCOLOR, &GREY );
 
     StartTimer( &textdemo->m_timer );
 
-    File* montserratFile  = services->f_loadFile( "./res/montserrat-regular.ttf" );
-    File* bladerunnerFile = services->f_loadFile( "./res/bladerunner.ttf" );
-    montserratFile->m_endianess  = BIGENDIAN;
-    bladerunnerFile->m_endianess = BIGENDIAN;
-
-    TtfFont* montserrat  = services->f_loadFont( montserratFile, renderer );
-    TtfFont* bladerunner = services->f_loadFont( bladerunnerFile, renderer );
-
-    textdemo->m_montserrat                          = montserrat;
-    textdemo->m_bladerunner                         = bladerunner;
-    textdemo->m_windowProperties.m_backgroundColor  = GREY;
-    services->f_windowProperties( renderer, &textdemo->m_windowProperties );
+    textdemo->m_montserrat  = cnc::LoadFont( "./res/montserrat-regular.ttf" );
+    textdemo->m_bladerunner = cnc::LoadFont( "./res/bladerunner.ttf" );
 
     return textdemo;
 }
@@ -31,11 +25,7 @@ void UpdateApplication( Application* app )
 
 void RenderApplication( Application* app )
 {
-    PlatformServices* services = app->m_services;
-    void*             renderer = app->m_renderer;
-
-    TextDemo* textDemo   = (TextDemo*)app;
-
+    TextDemo* textDemo    = (TextDemo*)app;
     TtfFont*  montserrat  = textDemo->m_montserrat;
     TtfFont*  bladerunner = textDemo->m_bladerunner;
 
@@ -55,7 +45,7 @@ our galaxy.";
             fontSize -= 1.0f;
     }
 
-    services->f_renderText(  renderer, app, bladerunner, title,   vec2( 40.0f, 100.0f ), fontSize * 2.0, sanzo296.slateColor );
-    services->f_renderText(  renderer, app, montserrat,  hawking, vec2( 40.0f, 250.0f ), fontSize,       sanzo296.paleRawUmber );
-    services->f_roundedRect( renderer, vec2( 40.0f, 500.0f ), 100.0f, 40.0f, 5.0f, sanzo296.slateColor );
+    cnc::DrawText( bladerunner, title,   vec2( 40.0f, 100.0f ), fontSize * 2.0, sanzo296.slateColor );
+    cnc::DrawText( montserrat,  hawking, vec2( 40.0f, 250.0f ), fontSize,       sanzo296.paleRawUmber );
+    cnc::DrawRoundedRect( vec2( 40.0f, 500.0f ), 100.0f, 40.0f, 5.0f, sanzo296.slateColor );
 }

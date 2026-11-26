@@ -7,11 +7,8 @@
 
 typedef struct Application
 {
-    PlatformServices* m_services;
-    void*             m_renderer;
     Timer             m_timer;
     Input*            m_input;
-    WindowProperties  m_windowProperties;
 
 } Application;
 

@@ -169,7 +169,6 @@ void PlatformRenderText( void*       renderer,
                          color       c )
 {
     Application*      application = (Application*)app;
-    PlatformServices* services    = application->m_services;
     Timer*            t           = &application->m_timer;
     f32               fontScale   = (f32)(size / font->m_headTable.m_unitsPerEm);
     f32               xOffset     = position.x;
