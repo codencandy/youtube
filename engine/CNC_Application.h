@@ -1,7 +1,6 @@
 #ifndef CNC_APPLICATION_H
 #define CNC_APPLICATION_H
 
-#include "CNC_PlatformServices.h"
 #include "CNC_Timer.h"
 #include "CNC_Input.h"
 
@@ -14,11 +13,11 @@ typedef struct Application
 
 extern "C"
 {
-    Application* LoadApplication( PlatformServices* services, void* renderer );
+    Application* LoadApplication( void* services, void* renderer );
     void         UpdateApplication( Application* app );
     void         RenderApplication( Application* app );
 
-    typedef Application*(*loadapp_fcn)(PlatformServices*, void*);
+    typedef Application*(*loadapp_fcn)(void*, void*);
     typedef void (*updateapp_fcn)(Application*);
     typedef void (*renderapp_fcn)(Application*);
 }

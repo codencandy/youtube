@@ -6,13 +6,12 @@
 #include "CNC_Input.h"
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
-#include "CNC_PlatformServices.h"
 #include "CNC_Timer.h"
 #include "CNC_TtfTypes.h"
 
 typedef struct CandyEngine
 {
-    PlatformServices* m_services;
+    void*             m_services;
     void*             m_renderer;
     Application*      m_app;
     WindowProperties  m_windowProperties;
@@ -21,7 +20,7 @@ typedef struct CandyEngine
 
 namespace cnc
 {
-    void     InitCandyEngine( PlatformServices* services, void* renderer, Application* app );
+    void     InitCandyEngine( void* services, void* renderer, Application* app );
     void     SetWindowProperties( window_props p, void* prop );
 
     TtfFont* LoadFont( const char* font );

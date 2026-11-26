@@ -3,12 +3,12 @@
 #include "CNC_Constants.h"
 #include "CNC_Types.h"
 
-Application* LoadApplication( PlatformServices* services, void* renderer )
+Application* LoadApplication( void* services, void* renderer )
 {
     TextDemo* textdemo = (TextDemo*)malloc( sizeof( TextDemo ) );
 
     cnc::InitCandyEngine( services, renderer, textdemo);
-    cnc::SetWindowProperties( CNC_BGCOLOR, &GREY );
+    cnc::SetWindowProperties( CNC_BGCOLOR, &WHITE );
 
     StartTimer( &textdemo->m_timer );
 
