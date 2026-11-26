@@ -27,7 +27,10 @@ namespace cnc
     TtfFont* LoadFont( const char* font );
 
     void     DrawText( TtfFont* font, const char* text, v2 position, f32 size, color c );
+    void     DrawRect( v2 pos, f32 width, f32 height, color c );
     void     DrawRoundedRect( v2 pos, f32 width, f32 height, f32 radius, color c );
+    void     DrawCircle( v2 center, f32 radius, color c );
+    void     DrawLine( v2 start, v2 end, f32 width, color c );
 }
 
 #ifdef CNC_CANDY_IMPLEMENTATION

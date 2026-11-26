@@ -9,15 +9,14 @@ File*     PlatformLoadFile( const char* filePath, void* renderer );
 TtfFont*  PlatformLoadFont( File* ttfFontFile );
 
 void   PlatformUploadParticles( void* renderer, Particle* particles, u32 numParticles );
-void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask );
-
 u32    PlatformUploadImage( void* renderer, Image* image );
-void   PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances = 1 );
 void   PlatformUpdateImage( void* renderer, Image* image );
 u32    PlatformUploadGlyphs( void* renderer, GpuGlyph* glyphs, u32 numGlphys, v2* points, u32 numPoints, u32* contours, u32 numContours );
 void   PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 numBoxes, u32 fontId, color c );
-void   PlatformRenderText ( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size, color c );
 
+void   PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask );
+void   PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances = 1 );
+void   PlatformRenderText ( void* renderer, void* app, TtfFont* font, const char* text, v2 position, f32 size, color c );
 void   PlatformRenderRect( void*renderer, v2 pos, f32 width, f32 height, color c);
 void   PlatformRoundedRect( void* renderer, v2 pos, f32 width, f32 height, f32 radius, color c );
 void   PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c );

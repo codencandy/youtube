@@ -57,8 +57,23 @@ namespace cnc
         CNC_ENGINE.m_services->f_renderText(  CNC_ENGINE.m_renderer, CNC_ENGINE.m_app, font, text, position, size, c );
     }
 
+    void DrawRect( v2 pos, f32 width, f32 height, color c )
+    {
+        CNC_ENGINE.m_services->f_renderRect( CNC_ENGINE.m_renderer, pos, width, height, c );
+    }
+
     void DrawRoundedRect( v2 pos, f32 width, f32 height, f32 radius, color c )
     {
         CNC_ENGINE.m_services->f_roundedRect( CNC_ENGINE.m_renderer, pos, width, height, radius, c );
+    }
+
+    void DrawCircle( v2 center, f32 radius, color c )
+    {
+        CNC_ENGINE.m_services->f_renderCircle( CNC_ENGINE.m_renderer, center, radius, c );
+    }
+
+    void DrawLine( v2 start, v2 end, f32 width, color c )
+    {
+        CNC_ENGINE.m_services->f_renderLine( CNC_ENGINE.m_renderer, start, end, width, c );
     }
 }
