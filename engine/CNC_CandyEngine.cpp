@@ -37,8 +37,11 @@ namespace cnc
 
     void SetWindowSize( v2int size )
     {
+        if( size.x <= 0 || size.y <= 0 )
+            return;
+
         CNC_ENGINE.m_windowProperties.m_size = size;
-        CNC_ENGINE.m_services->f_windowProperties( CNC_ENGINE.m_renderer, &CNC_ENGINE.m_windowProperties );
+        CNC_ENGINE.m_services->f_setWindowSize( CNC_ENGINE.m_renderer, size );
     }
 
     TtfFont* LoadFont( const char* font )

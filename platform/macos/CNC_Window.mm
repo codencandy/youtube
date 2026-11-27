@@ -46,7 +46,7 @@ MainWindow* CreateMainWindow( bool* running )
 {
     NSRect contentRecct = NSMakeRect( 0, 400, CNC_WINDOW_WIDTH, CNC_WINDOW_HEIGHT );
     MainWindow* window = [[MainWindow alloc] initWithContentRect: contentRecct
-                                                       styleMask: NSWindowStyleMaskClosable | NSWindowStyleMaskTitled
+                                                       styleMask: NSWindowStyleMaskClosable | NSWindowStyleMaskTitled | NSWindowStyleMaskResizable
                                                          backing: NSBackingStoreBuffered
                                                            defer: false];
 

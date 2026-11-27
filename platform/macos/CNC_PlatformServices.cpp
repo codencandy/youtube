@@ -5,7 +5,6 @@
 #include "libs/stb_image.h"
 #include "CNC_Tools.h"
 #include "CNC_Types.h"
-#include "CNC_Constants.h"
 #include "CNC_Application.h"
 #include "CNC_TtfTypes.h"
 #include "../CNC_TtfFont.cpp"
@@ -171,7 +170,7 @@ void PlatformRenderText( void*       renderer,
                          color       c )
 {
     Application*      application = (Application*)app;
-    Timer*            t           = &application->m_timer;
+    f32               wrapWidth   = PlatformGetWindowSize( renderer ).x - size;
     f32               fontScale   = (f32)(size / font->m_headTable.m_unitsPerEm);
     f32               xOffset     = position.x;
     f32               baseline    = position.y;
@@ -210,7 +209,7 @@ void PlatformRenderText( void*       renderer,
         // Do not repeatedly wrap a word that is wider than an entire line.
         // Once it is at the beginning of a line, render it and allow overflow.
         if( xOffset != position.x &&
-            LineBreak( font, textPointer, size, xOffset, CNC_WINDOW_WIDTH - size ) )
+            LineBreak( font, textPointer, size, xOffset, wrapWidth ) )
         {
             xOffset  = position.x;
             baseline += lineAdvance;
@@ -283,6 +282,7 @@ PlatformServices* CreatePlatformServices()
     services->f_uploadBoxes             = &PlatformUploadBoxes;
     services->f_renderText              = &PlatformRenderText;
     services->f_windowProperties        = &PlatformSetWindowProperties;
+    services->f_setWindowSize           = &PlatformSetWindowSize;
 
     return services;
 }

@@ -83,7 +83,7 @@
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
 {
-
+    [self createUniform];
 }
 
 - (void)drawInMTKView:(nonnull MTKView *)view
@@ -326,8 +326,14 @@
 
 - (void)createUniform
 {
-    f32 a =  2.0f/CNC_WINDOW_WIDTH;
-    f32 b = -2.0f/CNC_WINDOW_HEIGHT;
+    // Drawing coordinates use logical points, not Retina drawable pixels.
+    f32 width  = (f32)m_view.bounds.size.width;
+    f32 height = (f32)m_view.bounds.size.height;
+    if( width <= 0.0f || height <= 0.0f )
+        return;
+
+    f32 a =  2.0f/width;
+    f32 b = -2.0f/height;
     f32 e = -1.0f;
     f32 f =  1.0f;
 
@@ -337,8 +343,8 @@
     v4 row4 = { 0.0f, 0.0, 0.0, 1.0 };
 
     m_uniform.m_projection2D = simd_matrix_from_rows( row1, row2, row3, row4 );
-    m_uniform.m_screenWidth  = CNC_WINDOW_WIDTH;
-    m_uniform.m_screenHeight = CNC_WINDOW_HEIGHT;
+    m_uniform.m_screenWidth  = width;
+    m_uniform.m_screenHeight = height;
 }
 
 - (void)createPipeline
@@ -682,6 +688,30 @@ void PlatformUploadBoxes( void* renderer, BoundingBox* boxes, u32 num, u32 fontI
     [r renderText: boxes numBoxes:num fontId:fontId color:c];
 }
 
+v2 PlatformGetWindowSize( void* renderer )
+{
+    MainRenderer* r = (MainRenderer*)renderer;
+    CGSize size = r->m_view.bounds.size;
+    return vec2( (f32)size.width, (f32)size.height );
+}
+
+void PlatformSetWindowSize( void* renderer, v2int size )
+{
+    if( size.x <= 0 || size.y <= 0 )
+        return;
+
+    MainRenderer* r = (MainRenderer*)renderer;
+    NSWindow* window = r->m_view.window;
+    if( !window )
+        return;
+
+    NSSize requested = NSMakeSize( size.x, size.y );
+    if( !NSEqualSizes( window.contentView.bounds.size, requested ) )
+        [window setContentSize: requested];
+
+    [r createUniform];
+}
+
 void PlatformSetWindowProperties( void* renderer, WindowProperties* props )
 {
     MainRenderer* r = (MainRenderer*)renderer;
@@ -704,6 +734,7 @@ MainRenderer* CreateMainRenderer()
     renderer->m_commandQueue      = [renderer->m_gpu newCommandQueue];
     renderer->m_view              = [[MTKView alloc] initWithFrame: renderFrame device: renderer->m_gpu];
     renderer->m_view.colorPixelFormat = MTLPixelFormatBGRA8Unorm;
+    renderer->m_view.autoResizeDrawable = true;
 
     renderer->m_view.paused       = true;
     renderer->m_view.needsDisplay = false;

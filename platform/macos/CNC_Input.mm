@@ -95,9 +95,15 @@ bool ProcessInput( NSEvent* event, Input* input )
 
     if( event.type == NSEventTypeMouseMoved )
     {
-        NSPoint p = event.locationInWindow;
-        s16 x = p.x;
-        s16 y = CNC_WINDOW_HEIGHT - p.y;
+        NSView* view = event.window.contentView;
+        if( !view )
+            return false;
+
+        NSPoint p = [view convertPoint: event.locationInWindow fromView: nil];
+        NSRect bounds = view.bounds;
+        s16 x = (s16)(p.x - NSMinX( bounds ));
+        s16 y = (s16)(view.isFlipped ? p.y - NSMinY( bounds )
+                                    : NSMaxY( bounds ) - p.y);
         input->m_mouse.m_position = vec2( (s16)x, (s16)y );
     }
 

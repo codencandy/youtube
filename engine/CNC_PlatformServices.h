@@ -22,6 +22,9 @@ void   PlatformRenderCircle( void* renderer, v2 center, f32 radius, color c );
 void   PlatformRenderLine(   void* renderer, v2 start, v2 end, f32 width, color c );
 
 void   PlatformSetWindowProperties( void* renderer, WindowProperties* properties );
+void   PlatformSetWindowSize( void* renderer, v2int size );
+// Current content size in logical points.
+v2     PlatformGetWindowSize( void* renderer );
 
 typedef struct PlatformServices
 {
@@ -41,6 +44,7 @@ typedef struct PlatformServices
     void     (*f_uploadBoxes)(void*, BoundingBox*, u32, u32, color);
     void     (*f_renderText)(void*, void*, TtfFont*, const char*, v2, f32, color );
     void     (*f_windowProperties)(void*,WindowProperties*);
+    void     (*f_setWindowSize)(void*, v2int);
 
 } PlatformServices;
 
