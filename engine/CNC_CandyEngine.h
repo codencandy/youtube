@@ -7,7 +7,6 @@
 #include "CNC_Math.h"
 #include "CNC_Constants.h"
 #include "CNC_Timer.h"
-#include "CNC_TtfTypes.h"
 
 namespace cnc
 {

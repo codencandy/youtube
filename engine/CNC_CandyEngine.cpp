@@ -43,11 +43,16 @@ namespace cnc
 
     TtfFont* LoadFont( const char* font )
     {
-        File* fontFile        = CNC_ENGINE.m_services->f_loadFile( font );
-        fontFile->m_endianess = BIGENDIAN;
+        File* fontFile = CNC_ENGINE.m_services->f_loadFile( font );
+        if( fontFile != NULL )
+        {
+            fontFile->m_endianess = BIGENDIAN;
 
-        TtfFont* ttfFont = CNC_ENGINE.m_services->f_loadFont( fontFile, CNC_ENGINE.m_renderer );
-        return ttfFont;
+            TtfFont* ttfFont = CNC_ENGINE.m_services->f_loadFont( fontFile, CNC_ENGINE.m_renderer );
+            return ttfFont;
+        }
+
+        return NULL;
     }
 
     void DrawText( TtfFont* font, const char* text, v2 position, f32 size, color c )

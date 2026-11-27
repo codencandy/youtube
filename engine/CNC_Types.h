@@ -1,6 +1,9 @@
 #ifndef CNC_TYPES_H
 #define CNC_TYPES_H
 
+// forward declared TtfFont
+struct TtfFont;
+
 #include <simd/simd.h>
 
 typedef float              f32;

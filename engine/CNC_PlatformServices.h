@@ -2,7 +2,6 @@
 #define CNC_PLATFORMSERVICES_H
 
 #include "CNC_Types.h"
-#include "CNC_TtfTypes.h"
 
 Image*    PlatformLoadImage( const char* imagePath );
 File*     PlatformLoadFile( const char* filePath, void* renderer );

@@ -7,6 +7,7 @@
 #include "CNC_Types.h"
 #include "CNC_Constants.h"
 #include "CNC_Application.h"
+#include "CNC_TtfTypes.h"
 #include "../CNC_TtfFont.cpp"
 
 Image* PlatformLoadImage( const char* imagePath )
@@ -19,14 +20,13 @@ Image* PlatformLoadImage( const char* imagePath )
 
 File* PlatformLoadFile( const char* filePath )
 {
-    File* file = (File*)malloc( sizeof( File ) );
-
     u32 length = StringLength( filePath );
-    memcpy( file->m_filename, filePath, length );
 
     FILE* f = fopen( filePath, "rb" );
     if( f != NULL )
     {
+        File* file = (File*)malloc( sizeof( File ) );
+        memcpy( file->m_filename, filePath, length );
         fseek( f, 0, SEEK_END );
         file->m_sizeInBytes = ftell( f );
         rewind( f );
@@ -36,9 +36,11 @@ File* PlatformLoadFile( const char* filePath )
         memset( file->m_data, 0x00, file->m_sizeInBytes );
         fread( file->m_data, 1, file->m_sizeInBytes, f );
         fclose( f );
+
+        return file;
     }
 
-    return file;
+    return NULL;
 }
 
 TtfFont* PlatformLoadFont( File* ttfFontFile, void* renderer )

@@ -1,7 +1,5 @@
 #include "CNC_TextDemo.h"
 #include "CNC_CandyEngine.h"
-#include "CNC_Constants.h"
-#include "CNC_Types.h"
 
 Application* LoadApplication( void* services, void* renderer )
 {
@@ -9,8 +7,6 @@ Application* LoadApplication( void* services, void* renderer )
 
     cnc::InitCandyEngine( services, renderer, textdemo);
     cnc::SetBackgroundColor( WHITE );
-
-    StartTimer( &textdemo->m_timer );
 
     textdemo->m_montserrat  = cnc::LoadFont( "./res/montserrat-regular.ttf" );
     textdemo->m_bladerunner = cnc::LoadFont( "./res/bladerunner.ttf" );
@@ -20,7 +16,6 @@ Application* LoadApplication( void* services, void* renderer )
 
 void UpdateApplication( Application* app )
 {
-    UpdateTimer( &app->m_timer );
 }
 
 void RenderApplication( Application* app )
@@ -29,6 +24,7 @@ void RenderApplication( Application* app )
     TtfFont*  montserrat  = textDemo->m_montserrat;
     TtfFont*  bladerunner = textDemo->m_bladerunner;
 
+    static       f32   fontSize  = 32.0f;
     static const char* title     = "Stephen Hawing";
     static const char* hawking   =
 "A well-known scientist (some say it was Bertrand Russell) once gave a public \
@@ -36,7 +32,6 @@ lecture on astronomy. He described how the earth orbits around the sun and how \
 the sun, in turn, orbits around the center of a vast collection of stars called \
 our galaxy.";
 
-    static f32 fontSize = 32.0f;
     if( MouseWheelScrolled( app->m_input ) )
     {
         if( app->m_input->m_mouse.m_wheel > 0 )
