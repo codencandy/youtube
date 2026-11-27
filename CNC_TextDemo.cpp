@@ -10,6 +10,7 @@ Application* LoadApplication( void* services, void* renderer )
 
     textdemo->m_montserrat  = cnc::LoadFont( "./res/montserrat-regular.ttf" );
     textdemo->m_bladerunner = cnc::LoadFont( "./res/bladerunner.ttf" );
+    textdemo->m_background  = cnc::LoadImage( "./res/cnc_backdrop_hd.png" );
 
     return textdemo;
 }
@@ -23,6 +24,7 @@ void RenderApplication( Application* app )
     TextDemo* textDemo    = (TextDemo*)app;
     TtfFont*  montserrat  = textDemo->m_montserrat;
     TtfFont*  bladerunner = textDemo->m_bladerunner;
+    Image*    background  = textDemo->m_background;
 
     static       f32   fontSize  = 32.0f;
     static const char* title     = "Stephen Hawing";
@@ -40,6 +42,7 @@ our galaxy.";
             fontSize -= 1.0f;
     }
 
+    cnc::DrawImage( background, vec2( 0.0f, 0.0f ) );
     cnc::DrawText( bladerunner, title,   vec2( 40.0f, 100.0f ), fontSize * 2.0, sanzo296.slateColor );
     cnc::DrawText( montserrat,  hawking, vec2( 40.0f, 250.0f ), fontSize,       sanzo296.paleRawUmber );
     cnc::DrawRoundedRect( vec2( 40.0f, 500.0f ), 100.0f, 40.0f, 5.0f, sanzo296.slateColor );

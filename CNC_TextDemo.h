@@ -8,6 +8,7 @@ typedef struct TextDemo : Application
 {
     TtfFont* m_montserrat;
     TtfFont* m_bladerunner;
+    Image*   m_background;
 
 } TextDemo;
 

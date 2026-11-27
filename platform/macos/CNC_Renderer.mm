@@ -67,7 +67,7 @@
 
 - (u32) uploadImage:(Image*)image;
 - (void)updateImage:(Image*)image;
-- (void)renderImage:(u32)textureId instances:(u32)numInstances;
+- (void)renderImage:(u32)textureId position:(v2)pos instances:(u32)numInstances;
 - (void)uploadParticles:(Particle*)particles numParticles:(u32)numParticles;
 - (u32) uploadGlyphs:(GpuGlyph*)glyphs numGlyphs:(u32)num points:(v2*)points numPoints:(u32)numPoints contours:(u32*)contours numContours:(u32)numContours;
 - (void)renderParticles:(u32)numParticles snowMask:(u32)snowMask skyMask:(u32)skyMask;
@@ -112,8 +112,13 @@
                     id< MTLTexture > texture      = m_textures[call.m_textureId];
                     id< MTLBuffer >  modelBuffer  = m_modelBuffers[call.m_textureId];
 
+                    // Apply each draw's position without changing the shared image transform.
+                    ModelData model;
+                    memcpy( &model, [modelBuffer contents], sizeof( ModelData ) );
+                    model.m_modelMatrix = translationMatrix( call.m_position.x, call.m_position.y ) * model.m_modelMatrix;
+
                     [commandEncoder setVertexBuffer: vertexBuffer offset: 0 atIndex: 0];
-                    [commandEncoder setVertexBuffer: modelBuffer  offset: 0 atIndex: 2];
+                    [commandEncoder setVertexBytes: &model length: sizeof( ModelData ) atIndex: 2];
                     [commandEncoder setFragmentTexture: texture atIndex: 0];
                     [commandEncoder drawPrimitives: MTLPrimitiveTypeTriangle vertexStart: 0 vertexCount: 6 instanceCount: call.m_numInstances];
                     break;
@@ -422,7 +427,7 @@
     MTLTextureDescriptor* textureDesc = [MTLTextureDescriptor new];
     textureDesc.width       = image->m_width;
     textureDesc.height      = image->m_height;
-    // Decode image RGB into linear light when sampled; alpha remains linear.
+    // Preserve the PNG's encoded values for the non-sRGB render target.
     textureDesc.pixelFormat = MTLPixelFormatRGBA8Unorm;
 
     id< MTLTexture > texture      = [m_gpu newTextureWithDescriptor: textureDesc];
@@ -507,11 +512,12 @@
     return fontId;
 }
 
-- (void)renderImage:(u32)textureId instances:(u32)numInstances
+- (void)renderImage:(u32)textureId position:(v2)pos instances:(u32)numInstances
 {
     m_drawCalls[m_numDrawCalls].m_type         = CNC_IMAGE;
     m_drawCalls[m_numDrawCalls].m_textureId    = textureId;
     m_drawCalls[m_numDrawCalls].m_numInstances = numInstances;
+    m_drawCalls[m_numDrawCalls].m_position     = pos;
 
     m_numDrawCalls++;
     assert( m_numDrawCalls < MAX_DRAWCALLS );
@@ -640,10 +646,10 @@ void PlatformUploadParticles( void* renderer, Particle* particles, u32 numPartic
     [r uploadParticles: particles numParticles: numParticles];
 }
 
-void PlatformRenderImage( void* renderer, u32 textureId, u32 numInstances )
+void PlatformRenderImage( void* renderer, u32 textureId, v2 pos, u32 numInstances )
 {
     MainRenderer* r = (MainRenderer*)renderer;
-    [r renderImage: textureId instances: numInstances];
+    [r renderImage: textureId position:pos instances:numInstances];
 }
 
 void PlatformRenderParticles( void* renderer, u32 numParticles, u32 snowMask, u32 skyMask )

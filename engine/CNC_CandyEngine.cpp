@@ -58,6 +58,24 @@ namespace cnc
         return NULL;
     }
 
+    Image* LoadImage( const char* image )
+    {
+        Image* i       = CNC_ENGINE.m_services->f_loadImage( image );
+        if( i == NULL )
+            return NULL;
+
+        i->m_textureId = CNC_ENGINE.m_services->f_uploadImage( CNC_ENGINE.m_renderer, i );
+        return i;
+    }
+
+    void DrawImage( Image* image, v2 position )
+    {
+        if( image == NULL )
+            return;
+
+        CNC_ENGINE.m_services->f_renderImage( CNC_ENGINE.m_renderer, image->m_textureId, position, 1 );
+    }
+
     void DrawText( TtfFont* font, const char* text, v2 position, f32 size, color c )
     {
         CNC_ENGINE.m_services->f_renderText(  CNC_ENGINE.m_renderer, CNC_ENGINE.m_app, font, text, position, size, c );

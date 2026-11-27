@@ -14,11 +14,12 @@ namespace cnc
 
     void     SetBackgroundColor( color c );
     void     SetFullscreen( bool fullscreen );
-    // Content size in logical points; nonpositive dimensions are ignored.
     void     SetWindowSize( v2int size );
 
     TtfFont* LoadFont( const char* font );
+    Image*   LoadImage( const char* image );
 
+    void     DrawImage( Image* image, v2 position );
     void     DrawText( TtfFont* font, const char* text, v2 position, f32 size, color c );
     void     DrawRect( v2 pos, f32 width, f32 height, color c );
     void     DrawRoundedRect( v2 pos, f32 width, f32 height, f32 radius, color c );

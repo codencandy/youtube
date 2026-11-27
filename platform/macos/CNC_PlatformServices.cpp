@@ -5,14 +5,28 @@
 #include "libs/stb_image.h"
 #include "CNC_Tools.h"
 #include "CNC_Types.h"
+#include "CNC_Math.h"
 #include "CNC_Application.h"
 #include "CNC_TtfTypes.h"
 #include "../CNC_TtfFont.cpp"
 
 Image* PlatformLoadImage( const char* imagePath )
 {
-    Image* image  = (Image*)malloc( sizeof( Image ) );
+    Image* image  = (Image*)calloc( 1, sizeof( Image ) );
+    if( image == NULL )
+        return NULL;
+
     image->m_data = stbi_load( imagePath, &image->m_width, &image->m_height, &image->m_channels, 4 );
+    if( image->m_data == NULL )
+    {
+        fprintf( stderr, "Failed to load image '%s': %s\n", imagePath, stbi_failure_reason() );
+        free( image );
+        return NULL;
+    }
+
+    image->m_modelData.m_modelMatrix = identityMatrix();
+    image->m_modelData.m_pivotMatrix = identityMatrix();
+    image->m_modelData.m_rotation    = 0.0f;
 
     return image;
 }
