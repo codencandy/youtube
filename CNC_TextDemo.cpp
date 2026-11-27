@@ -8,7 +8,7 @@ Application* LoadApplication( void* services, void* renderer )
     TextDemo* textdemo = (TextDemo*)malloc( sizeof( TextDemo ) );
 
     cnc::InitCandyEngine( services, renderer, textdemo);
-    cnc::SetWindowProperties( CNC_BGCOLOR, &WHITE );
+    cnc::SetBackgroundColor( WHITE );
 
     StartTimer( &textdemo->m_timer );
 

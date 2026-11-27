@@ -9,19 +9,13 @@
 #include "CNC_Timer.h"
 #include "CNC_TtfTypes.h"
 
-typedef struct CandyEngine
-{
-    void*             m_services;
-    void*             m_renderer;
-    Application*      m_app;
-    WindowProperties  m_windowProperties;
-
-} CandyEngine;
-
 namespace cnc
 {
     void     InitCandyEngine( void* services, void* renderer, Application* app );
-    void     SetWindowProperties( window_props p, void* prop );
+
+    void     SetBackgroundColor( color c );
+    void     SetFullscreen( bool fullscreen );
+    void     SetWindowSize( v2int size );
 
     TtfFont* LoadFont( const char* font );
 
