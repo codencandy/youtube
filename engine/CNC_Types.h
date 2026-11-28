@@ -44,7 +44,14 @@ v2int vec2( s16 x, s16 y )
     result.x = x;
     result.y = y;
     return result;
+}
 
+v2int int2( v2 p )
+{
+    v2int result;
+    result.x = p.x;
+    result.y = p.y;
+    return result;
 }
 
 enum ENDIANESS
@@ -85,6 +92,21 @@ v2 vec2( f32 x, f32 y )
     result.y = y;
 
     return result;
+}
+
+typedef struct Area
+{
+    v2int m_pos;
+    v2int m_size;
+
+} Area;
+
+Area area( v2 pos, v2 size )
+{
+    Area a;
+    a.m_pos  = int2(pos);
+    a.m_size = int2(size);
+    return a;
 }
 
 typedef struct VertexInput

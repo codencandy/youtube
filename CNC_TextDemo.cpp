@@ -1,5 +1,6 @@
 #include "CNC_TextDemo.h"
 #include "CNC_CandyEngine.h"
+#include "CNC_Constants.h"
 
 Application* LoadApplication( void* services, void* renderer )
 {
@@ -45,5 +46,9 @@ our galaxy.";
     cnc::DrawImage( background, vec2( 0.0f, 0.0f ) );
     cnc::DrawText( bladerunner, title,   vec2( 40.0f, 100.0f ), fontSize * 2.0, sanzo296.slateColor );
     cnc::DrawText( montserrat,  hawking, vec2( 40.0f, 250.0f ), fontSize,       sanzo296.paleRawUmber );
-    cnc::DrawRoundedRect( vec2( 40.0f, 500.0f ), 100.0f, 40.0f, 5.0f, sanzo296.slateColor );
+
+    if( cnc::Button( "label", vec2( 40.0f, 500.0f), vec2( 100.0f, 32.0f ) ) )
+    {
+        fontSize += 2.0f;
+    }
 }

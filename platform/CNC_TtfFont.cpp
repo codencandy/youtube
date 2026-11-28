@@ -50,12 +50,12 @@ bool IsTrueType( TtfFont* font )
 void ReadTableOffsets( TtfFont* font )
 {
     // read the offset table
-    // the offset tabel is 12 bytes so no zero bytes 
+    // the offset tabel is 12 bytes so no zero bytes
     // are appending for padding to 4 byte boundaries
     TableOffsets offsetTable;
     memcpy( &offsetTable, font->m_fontFile->m_data, sizeof( TableOffsets ) );
 
-    font->m_offsets = offsetTable;    
+    font->m_offsets = offsetTable;
 
     offsetTable.m_numTables     = BigToLittle( offsetTable.m_numTables );
     offsetTable.m_searchRange   = BigToLittle( offsetTable.m_searchRange );
@@ -69,11 +69,11 @@ void ReadTableOffsets( TtfFont* font )
 
 bool GetPointFlag( u8 flag, point_flag bit )
 {
-    if( (flag & bit) == bit ) 
+    if( (flag & bit) == bit )
     {
         return true;
     }
-    
+
     return false;
 }
 
@@ -244,10 +244,10 @@ void* DecodePoints( Glyph* g, void* data, s16* dest, u32 numPoints, bool x )
     for( u32 i=0; i<numPoints; ++i )
     {
         u8 flag = g->m_flags[i];
-        
+
         bool shortBit = false;
         bool sameBit  = false;
-        
+
         if( x )
         {
             shortBit = GetPointFlag( flag, X_SHORT_1BYTE );
@@ -298,7 +298,7 @@ void InsertImpliedPoints( TtfFont* font )
     for( u32 i=0; i<font->m_glyphTable.m_numGlyphs; ++i )
     {
         Glyph*g = &font->m_glyphTable.m_glyphs[i];
-        
+
         if( g->m_header.m_emptyGlyph || g->m_header.m_numberOfContours <= 0 )
         {
             continue;
@@ -390,11 +390,11 @@ void PrintGlyphData( Glyph* g )
         printf( "contour %d:\t[%d .. %d]\n", i, index1, index2 );
         index1 = index2 + 1;
     }
-    
+
     for( u32 i=0; i<g->m_numPoints; ++i )
     {
         printf( "point %d:\t%d | %d \t ", i, g->m_x[i], g->m_y[i] );
-        if( g->m_onCurve[i] ) 
+        if( g->m_onCurve[i] )
             printf( "(on curve)\n" );
         else
             printf( "(not on curve)\n" );
@@ -521,7 +521,7 @@ void ReadTables( TtfFont* font )
         TableEntry* entry = &font->m_tableEntries[i];
         memcpy( entry, tablememory, sizeof( TableEntry ) );
 
-        //strings are not big endian encoded 
+        //strings are not big endian encoded
         //entry->m_tag      = BigToLittle( entry->m_tag );
         entry->m_checksum = BigToLittle( entry->m_checksum );
         entry->m_offset   = BigToLittle( entry->m_offset );
@@ -550,7 +550,7 @@ u32 GetTableOffset( TtfFont* font, const char* tag )
         if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;
         if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;
         if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;
-        if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;         
+        if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;
         if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;
         if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;
         if( memcmp( (char*)&entry->m_tag, tag, 4 ) == 0 ) return entry->m_offset;
@@ -617,7 +617,7 @@ void ReadGlyphTable( TtfFont* font )
             }
             g->m_instructionLength = BigToLittleU16( glyphData, startOffset + headerSize + numEndpoints * 2 );
 
-            
+
             g->m_numPoints  = g->m_endPtsOfContours[numEndpoints-1] + 1;
             u32 pointOffset = startOffset + headerSize + (numEndpoints * 2) + 2 + g->m_instructionLength;
 
@@ -632,7 +632,7 @@ void ReadGlyphTable( TtfFont* font )
             for( u32 i=0; i<g->m_numPoints; ++i )
             {
                 u8 flag = *((u8*)glyphData + pointOffset);
-            
+
                 if( GetPointFlag( flag, REPEAT_FLAG ) )
                 {
                     u8 repeatCount = *((u8*)glyphData + pointOffset + 1);
@@ -678,7 +678,7 @@ void ReadGlyphTable( TtfFont* font )
                         onCurve = g->m_onCurve[index];
                         nextOnCurve = g->m_onCurve[index + 1];
                     }
-                    
+
                     if( onCurve == nextOnCurve )
                     {
                         newNumPoints++;
@@ -689,7 +689,7 @@ void ReadGlyphTable( TtfFont* font )
             g->m_realNumPoints = newNumPoints;
 
             void* xData = (u8*)glyphData + pointOffset;
-            
+
             // decode all coordinates
             void* data = DecodePoints( g, xData, g->m_x, g->m_numPoints, true );
             data       = DecodePoints( g, data,  g->m_y, g->m_numPoints, false );
@@ -841,18 +841,18 @@ void ReadHeadTable( TtfFont* font )
     head->m_majorVersion        = BigToLittleU16( headData, 0 );       // 1
     head->m_minorVersion        = BigToLittleU16( headData, 2 );       // 0
     head->m_fontRevision        = (s32)BigToLittleU32( headData, 4 );  // signed 16.16 fixed-point
-    head->m_checksumAdjustment  = BigToLittleU32( headData, 8 ); 
+    head->m_checksumAdjustment  = BigToLittleU32( headData, 8 );
     head->m_magicNumber         = BigToLittleU32( headData, 12 );      // 0x5F0F3CF5
-    head->m_flags               = BigToLittleU16( headData, 16 );              
-    head->m_unitsPerEm          = BigToLittleU16( headData, 18 );         
-    head->m_created             = 0; // dont read            
-    head->m_modified            = 0; // dont read          
-    head->m_xMin                = (s16)BigToLittleU16( headData, 36 );               
-    head->m_yMin                = (s16)BigToLittleU16( headData, 38 );               
-    head->m_xMax                = (s16)BigToLittleU16( headData, 40 );               
-    head->m_yMax                = (s16)BigToLittleU16( headData, 42 );               
-    head->m_macStyle            = BigToLittleU16( headData, 44 );           
-    head->m_lowestRecPPEM       = BigToLittleU16( headData, 46 );      
+    head->m_flags               = BigToLittleU16( headData, 16 );
+    head->m_unitsPerEm          = BigToLittleU16( headData, 18 );
+    head->m_created             = 0; // dont read
+    head->m_modified            = 0; // dont read
+    head->m_xMin                = (s16)BigToLittleU16( headData, 36 );
+    head->m_yMin                = (s16)BigToLittleU16( headData, 38 );
+    head->m_xMax                = (s16)BigToLittleU16( headData, 40 );
+    head->m_yMax                = (s16)BigToLittleU16( headData, 42 );
+    head->m_macStyle            = BigToLittleU16( headData, 44 );
+    head->m_lowestRecPPEM       = BigToLittleU16( headData, 46 );
     head->m_fontDirectionHint   = (s16)BigToLittleU16( headData, 48 );  // deprecated, normally 2
     head->m_indexToLocFormat    = (s16)BigToLittleU16( headData, 50 );  // 0 = short, 1 = long
     head->m_glyphDataFormat     = (s16)BigToLittleU16( headData, 52 );  // 0
@@ -870,24 +870,24 @@ void ReadMaxpTable( TtfFont* font )
     printf( "read maxp:\t%d (offset)\n", maxpOffset );
 
     void* maxpData = (u8*)font->m_fontFile->m_data + maxpOffset;
-    
+
     MaxpTable* maxp = &font->m_maxpTable;
 
-    maxp->m_version               = BigToLittleU32( maxpData, 0  );                
-    maxp->m_numGlyphs             = BigToLittleU16( maxpData, 4  );              
-    maxp->m_maxPoints             = BigToLittleU16( maxpData, 6  );              
-    maxp->m_maxContours           = BigToLittleU16( maxpData, 8  );            
-    maxp->m_maxCompositePoints    = BigToLittleU16( maxpData, 10 );     
-    maxp->m_maxCompositeContours  = BigToLittleU16( maxpData, 12 );   
-    maxp->m_maxZones              = BigToLittleU16( maxpData, 14 );               
-    maxp->m_maxTwilightPoints     = BigToLittleU16( maxpData, 16 );      
-    maxp->m_maxStorage            = BigToLittleU16( maxpData, 18 );             
-    maxp->m_maxFunctionDefs       = BigToLittleU16( maxpData, 20 );        
-    maxp->m_maxInstructionDefs    = BigToLittleU16( maxpData, 22 );     
-    maxp->m_maxStackElements      = BigToLittleU16( maxpData, 24 );       
-    maxp->m_maxSizeOfInstructions = BigToLittleU16( maxpData, 26 );  
-    maxp->m_maxComponentElements  = BigToLittleU16( maxpData, 28 );   
-    maxp->m_maxComponentDepth     = BigToLittleU16( maxpData, 30 );      
+    maxp->m_version               = BigToLittleU32( maxpData, 0  );
+    maxp->m_numGlyphs             = BigToLittleU16( maxpData, 4  );
+    maxp->m_maxPoints             = BigToLittleU16( maxpData, 6  );
+    maxp->m_maxContours           = BigToLittleU16( maxpData, 8  );
+    maxp->m_maxCompositePoints    = BigToLittleU16( maxpData, 10 );
+    maxp->m_maxCompositeContours  = BigToLittleU16( maxpData, 12 );
+    maxp->m_maxZones              = BigToLittleU16( maxpData, 14 );
+    maxp->m_maxTwilightPoints     = BigToLittleU16( maxpData, 16 );
+    maxp->m_maxStorage            = BigToLittleU16( maxpData, 18 );
+    maxp->m_maxFunctionDefs       = BigToLittleU16( maxpData, 20 );
+    maxp->m_maxInstructionDefs    = BigToLittleU16( maxpData, 22 );
+    maxp->m_maxStackElements      = BigToLittleU16( maxpData, 24 );
+    maxp->m_maxSizeOfInstructions = BigToLittleU16( maxpData, 26 );
+    maxp->m_maxComponentElements  = BigToLittleU16( maxpData, 28 );
+    maxp->m_maxComponentDepth     = BigToLittleU16( maxpData, 30 );
 
     printf( "version: \t%d\n",   ( maxp->m_version == 0x00010000 ) ? 1 : 0  );
     printf( "num glyphs:\t%d\n", maxp->m_numGlyphs );
@@ -971,7 +971,7 @@ void ReadCmapTable( TtfFont* font )
     for( u32 i=0; i<numRecords; ++i )
     {
         CmapRecord* record = &font->m_cmapTable.m_cmapRecords[i];
-        
+
         record->m_platformID = BigToLittleU16( encodingRecords, offset );
         record->m_encodingID = BigToLittleU16( encodingRecords, offset + 2 );
         record->m_offset     = BigToLittleU32( encodingRecords, offset + 4 );
@@ -1041,7 +1041,7 @@ void ReadCmapTable( TtfFont* font )
 
             u16 segCount = format4->m_segCountX2 / 2;
 
-            format4->m_endCount       = (u16*)malloc( sizeof( u16 ) * segCount );  
+            format4->m_endCount       = (u16*)malloc( sizeof( u16 ) * segCount );
             format4->m_startCount     = (u16*)malloc( sizeof( u16 ) * segCount );
             format4->m_idDelta        = (u16*)malloc( sizeof( u16 ) * segCount );
             format4->m_idRangeOffset  = (u16*)malloc( sizeof( u16 ) * segCount );
@@ -1094,69 +1094,4 @@ void ReadCmapTable( TtfFont* font )
             // no-op
         }
     }
-}
-
-u32 CalculateIntersections( v2 p1, v2 p2, v2 p3, v2 ray, bool* onPath )
-{
-    f32 t1               = -1.0f;
-    f32 t2               = -1.0f;
-    u32 numIntersections = 0;
-    f32 epsilon          = 0.01f;
-
-    if( !bezierIntersection( p1, p2, p3, &t1, &t2, ray.y ) )
-    {
-        if( t1 >= 0 && t1 <= 1.0f )
-        {
-            v2 p = bezier( p1, p2, p3, t1 );
-
-            if( fabsf( p.x - ray.x ) <= epsilon )
-            {
-                *onPath = true;
-            }
-
-            // This check is valid for a piece that does not turn in Y.
-            f32 minY = fminf( p1.y, p3.y );
-            f32 maxY = fmaxf( p1.y, p3.y );
-
-            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
-            {
-                numIntersections++;
-            }
-        }
-    
-        if( t2 >= 0 && t2 <= 1.0f )
-        {
-            v2 p = bezier( p1, p2, p3, t2 );
-
-            if( fabsf( p.x - ray.x ) <= epsilon )
-            {
-                *onPath = true;
-            }
-
-            // this checks if the ray is between p1 and p3 
-            // or between p3 and p1 which is both possible
-            f32 minY = fminf( p1.y, p3.y );
-            f32 maxY = fmaxf( p1.y, p3.y );
-
-            if( p.x > ray.x && ray.y >= minY && ray.y < maxY )
-            {
-                numIntersections++;
-            }
-        }
-    }
-    else
-    {
-        // in this case the ray and the bezier path overlap
-        // that means that p1 and p3 are the intersection points
-        // now we check if the starting point of the ray is on the path
-        f32 left  = fminf( p1.x, p3.x );
-        f32 right = fmaxf( p1.x, p3.x );
-
-        if( ray.x >= left && ray.x <= right )
-        {
-            *onPath = true;
-        }
-    }
-
-    return numIntersections;
 }

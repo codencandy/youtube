@@ -25,6 +25,8 @@ namespace cnc
     void     DrawRoundedRect( v2 pos, f32 width, f32 height, f32 radius, color c );
     void     DrawCircle( v2 center, f32 radius, color c );
     void     DrawLine( v2 start, v2 end, f32 width, color c );
+
+    bool     Button( const char* text, v2 pos, v2 size );
 }
 
 #ifdef CNC_CANDY_IMPLEMENTATION

@@ -1,5 +1,7 @@
 #include "CNC_CandyEngine.h"
 #include "CNC_Application.h"
+#include "CNC_Constants.h"
+#include "CNC_Input.h"
 #include "CNC_Types.h"
 #include "CNC_PlatformServices.h"
 
@@ -9,6 +11,7 @@ typedef struct CandyEngine
     void*             m_renderer;
     Application*      m_app;
     WindowProperties  m_windowProperties;
+    TtfFont*          m_uiFont;
 
 } CandyEngine;
 
@@ -21,6 +24,7 @@ namespace cnc
         CNC_ENGINE.m_renderer = renderer;
         CNC_ENGINE.m_services = (PlatformServices*)services;
         CNC_ENGINE.m_app      = app;
+        CNC_ENGINE.m_uiFont   = cnc::LoadFont( "./res/montserrat-regular.ttf" );
     }
 
     void SetBackgroundColor( color c )
@@ -99,5 +103,41 @@ namespace cnc
     void DrawLine( v2 start, v2 end, f32 width, color c )
     {
         CNC_ENGINE.m_services->f_renderLine( CNC_ENGINE.m_renderer, start, end, width, c );
+    }
+
+    bool Button( const char* text, v2 pos, v2 size )
+    {
+        color textColor = sanzo296.sulpurYellow;
+        color bgColor   = sanzo296.ochraceousSalmon;
+
+        f32 fontSize    = 14.0f;
+        f32 centerLine  = pos.y + (size.y / 2.0f);
+        f32 halfFont    = fontSize / 2.0f;
+        Area buttonArea = area( pos, size );
+
+        centerLine += halfFont;
+        v2 fontPositon = vec2( pos.x + fontSize, centerLine );
+
+        Application* app = CNC_ENGINE.m_app;
+        v2int mousePosition = app->m_input->m_mouse.m_position;
+
+        textColor.a = 0.5f;
+        bgColor.a   = 0.5f;
+
+        if( MouseHit( buttonArea, mousePosition ) )
+        {
+            bgColor.a   = 1.0f;
+            textColor.a = 1.0f;
+
+            if( MouseClick( app->m_input ) )
+            {
+                return true;
+            }
+        }
+
+        cnc::DrawRoundedRect( pos, size.x, size.y, 5.0f, bgColor );
+        cnc::DrawText( CNC_ENGINE.m_uiFont, text, fontPositon, fontSize, textColor );
+
+        return false;
     }
 }

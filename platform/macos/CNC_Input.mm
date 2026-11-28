@@ -1,3 +1,4 @@
+#include <AppKit/AppKit.h>
 #include "CNC_Input.h"
 #include "CNC_Constants.h"
 
@@ -48,7 +49,8 @@ void ResetInput( Input* input )
         input->m_functionKeys[i].m_transitions = 0;
     }
 
-    input->m_mouse.m_wheel = 0.0f;
+    input->m_mouse.m_wheel  = 0.0f;
+    input->m_mouse.m_isDown = false;
 }
 
 bool ProcessInput( NSEvent* event, Input* input )
@@ -105,6 +107,11 @@ bool ProcessInput( NSEvent* event, Input* input )
         s16 y = (s16)(view.isFlipped ? p.y - NSMinY( bounds )
                                     : NSMaxY( bounds ) - p.y);
         input->m_mouse.m_position = vec2( (s16)x, (s16)y );
+    }
+
+    if( event.type == NSEventTypeLeftMouseDown )
+    {
+        input->m_mouse.m_isDown = true;
     }
 
     return false;

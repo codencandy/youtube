@@ -29,6 +29,7 @@ typedef struct Key
 typedef struct Mouse
 {
     v2int m_position;
+    bool  m_isDown;
     f32   m_wheel;
 
 } Mouse;
@@ -66,6 +67,29 @@ bool KeyPressed( Input* input, function_keys key )
 bool MouseWheelScrolled( Input* input )
 {
     return input->m_mouse.m_wheel != 0.0f;
+}
+
+bool MouseClick( Input* input )
+{
+    return input->m_mouse.m_isDown;
+}
+
+bool MouseHit( Area a, v2int mouse )
+{
+    bool hit = false;
+
+    u32 xMin = a.m_pos.x;
+    u32 xMax = a.m_pos.x + a.m_size.x;
+    u32 yMin = a.m_pos.y;
+    u32 yMax = a.m_pos.y + a.m_size.y;
+
+    if( (mouse.x >= xMin && mouse.x <= xMax) &&
+        (mouse.y >= yMin && mouse.y <= yMax) )
+    {
+        hit = true;
+    }
+
+    return hit;
 }
 
 #endif//CNC_INPUT_H

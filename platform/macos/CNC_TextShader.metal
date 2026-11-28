@@ -48,7 +48,7 @@ struct GpuGlyph
 bool isNull( f32 value, f32 scale )
 {
     f32 absoluteEpsilon = 1e-12;
-    f32 relativeEpsilon = 1e-6; 
+    f32 relativeEpsilon = 1e-6;
     return abs( value ) <= absoluteEpsilon + relativeEpsilon * scale;
 }
 
@@ -79,8 +79,8 @@ v2 bezier( v2 p1, v2 p2, v2 p3, f32 t )
 bool bezierIntersection( v2 p1, v2 p2, v2 p3, thread f32* t1, thread f32* t2, f32 s )
 {
     /*
-        This function solves if a given scanline intersects with the quadratic 
-        function at² + bt + c which is derived from the bezier curve given by p1, 
+        This function solves if a given scanline intersects with the quadratic
+        function at² + bt + c which is derived from the bezier curve given by p1,
         p2 and p3 where p2 is the control point. More specifically it calculates
         where this function is 0. The two potential results are stored in t1 and t2.
 
@@ -107,7 +107,7 @@ bool bezierIntersection( v2 p1, v2 p2, v2 p3, thread f32* t1, thread f32* t2, f3
                                             p1 + p2t - p1t
                                             p1 - p1t + p2t
                                             (1 - t)p1 + p2t
-        
+
         (2) Add two interpolations:         (1 - t)A + Bt          where A and B are interpolations
                                             (1-t)[(1-t)p1 + p2t] + t[(1-t)p2 + p3t]
 
@@ -122,9 +122,9 @@ bool bezierIntersection( v2 p1, v2 p2, v2 p3, thread f32* t1, thread f32* t2, f3
                                                  = p₁ + 2p₂t - 2p₁t + (p₁ - 2p₂ + p₃)t²
                                                  = p₁ + 2(p₂ - p₁)t + (p₁ - 2p₂ + p₃)t²
 
-        (6) Determine a, b and c:           B(t) = at² + bt + c                                                 
+        (6) Determine a, b and c:           B(t) = at² + bt + c
                                                  = (p₁ - 2p₂ + p₃)t² + 2(p₂ - p₁)t + p₁
-                                                 
+
                                             a = (p₁ - 2p₂ + p₃)
                                             b = 2(p₂ - p₁)
                                             c = p₁
@@ -149,9 +149,9 @@ bool bezierIntersection( v2 p1, v2 p2, v2 p3, thread f32* t1, thread f32* t2, f3
     f32 bScale = 2.0*(abs( y2 ) + abs( y1 ));
 
     /*
-        check if the bezier curve is a linear function which constitutes a 
-        line with f(t) = b*t + c where a is 0 
-        
+        check if the bezier curve is a linear function which constitutes a
+        line with f(t) = b*t + c where a is 0
+
             0 = bt + c
             t = -c/b
 
@@ -233,7 +233,7 @@ int4 CalculateWinding( v2 p1,
                 if( p.x > rayX.w ) winding.w += direction;
             }
         }
-    
+
         if( t2 >= 0.0f && t2 < 1.0f )
         {
             v2 p = bezier( p1, p2, p3, t2 );
@@ -273,7 +273,7 @@ int4 CalculateWinding( v2 p1,
 }
 
 vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer(0)]],
-                                      constant UniformData& uniform     [[buffer(1)]],    
+                                      constant UniformData& uniform     [[buffer(1)]],
                                       constant StringData&  stringData  [[buffer(2)]],
                                       uint                  instanceId  [[instance_id]],
                                       uint                  vertexId    [[vertex_id]])
@@ -329,7 +329,7 @@ vertex VertexOutput TextVertexShader( constant BoundingBox* box         [[buffer
     out.m_color    = stringData.m_color;
 
     return out;
-}              
+}
 
 f32 GlyphCoverage( GpuGlyph          g,
                    float4            rayX,
@@ -403,7 +403,7 @@ fragment float4 TextFragmentShader( VertexOutput       in            [[stage_in]
     coverage /= 4.0f;
 
     v4 color = in.m_color;
-    color.a = coverage;
+    color.a *= coverage;
 
     return color;
 }
